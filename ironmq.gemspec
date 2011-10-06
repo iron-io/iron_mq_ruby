@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{ironmq}
-  s.version = "1.1.2"
+  s.name = "ironmq"
+  s.version = "1.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = [%q{Keith Rarick}]
-  s.date = %q{2011-10-06}
-  s.description = %q{Ruby client for beanstalkd}
-  s.email = %q{kr@xph.us}
+  s.authors = ["Travis Reeder"]
+  s.date = "2011-10-06"
+  s.description = "Ruby client for IronMQ"
+  s.email = "travis@iron.io"
   s.extra_rdoc_files = [
     "README.markdown"
   ]
@@ -19,20 +19,27 @@ Gem::Specification.new do |s|
     "README.markdown",
     "Rakefile",
     "VERSION.yml",
-    "lib/ironmq.rb"
+    "ironmq.gemspec",
+    "lib/ironmq.rb",
+    "lib/ironmq/client.rb",
+    "test/ironmq_tests.rb"
   ]
-  s.homepage = %q{http://github.com/kr/beanstalk-client-ruby}
-  s.require_paths = [%q{lib}]
-  s.rubygems_version = %q{1.8.5}
-  s.summary = %q{Ruby client for beanstalkd}
+  s.homepage = "http://www.iron.io"
+  s.require_paths = ["lib"]
+  s.required_ruby_version = Gem::Requirement.new(">= 1.9")
+  s.rubygems_version = "1.8.11"
+  s.summary = "Ruby client for IronMQ"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<rest-client>, [">= 0"])
     else
+      s.add_dependency(%q<rest-client>, [">= 0"])
     end
   else
+    s.add_dependency(%q<rest-client>, [">= 0"])
   end
 end
 
