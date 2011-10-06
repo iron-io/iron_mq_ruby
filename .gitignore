@@ -3,3 +3,4 @@ pkg
 doc
 .idea
 log
+test/config.yml
