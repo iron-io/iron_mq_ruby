@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = "ironmq"
-  s.version = "1.2.0"
+  s.name = %q{ironmq}
+  s.version = "1.2.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Travis Reeder"]
-  s.date = "2011-10-06"
-  s.description = "Ruby client for IronMQ"
-  s.email = "travis@iron.io"
+  s.authors = [%q{Travis Reeder}]
+  s.date = %q{2011-10-12}
+  s.description = %q{Ruby client for IronMQ}
+  s.email = %q{travis@iron.io}
   s.extra_rdoc_files = [
     "README.markdown"
   ]
@@ -24,11 +24,11 @@ Gem::Specification.new do |s|
     "lib/ironmq/client.rb",
     "test/ironmq_tests.rb"
   ]
-  s.homepage = "http://www.iron.io"
-  s.require_paths = ["lib"]
+  s.homepage = %q{http://www.iron.io}
+  s.require_paths = [%q{lib}]
   s.required_ruby_version = Gem::Requirement.new(">= 1.9")
-  s.rubygems_version = "1.8.11"
-  s.summary = "Ruby client for IronMQ"
+  s.rubygems_version = %q{1.8.8}
+  s.summary = %q{Ruby client for IronMQ}
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
