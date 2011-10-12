@@ -6,7 +6,7 @@ module IronMQ
 
   class Client
 
-    attr_accessor :token, :project_id, :queue_name
+    attr_accessor :token, :project_id, :queue_name, :base_url
 
     def initialize(options={})
       @token = options[:token] || options['token']
@@ -63,26 +63,27 @@ module IronMQ
       @client = client
     end
 
+    def path(options={})
+       path = "/projects/#{@client.project_id}/queues/#{options[:queue_name] || @client.queue_name}/messages"
+    end
 
     # options:
     #  :queue_name => can specify an alternative queue name
     def get(options={})
-      path = "/projects/#{@client.project_id}/queues/#{options[:queue_name] || @client.queue_name}/messages"
-      res = @client.get(path)
+      res = @client.get(path(options))
       res
     end
 
     # options:
     #  :queue_name => can specify an alternative queue name
     def post(payload, options={})
-      path = "/projects/#{@client.project_id}/queues/#{options[:queue_name] || @client.queue_name}/messages"
-      res = @client.post(path, :payload=>payload)
+      res = @client.post(path(options), :payload=>payload)
       res
     end
 
     def delete(message_id, options={})
-      path = "/projects/#{@client.project_id}/queues/#{options[:queue_name] || @client.queue_name}/messages/#{message_id}"
-      res = @client.delete(path)
+      path2 = "#{self.path(options)}/#{message_id}"
+      res = @client.delete(path2)
       res
     end
 
