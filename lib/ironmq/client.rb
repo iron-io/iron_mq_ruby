@@ -1,5 +1,4 @@
 require 'json'
-require 'rest_client'
 require 'patron'
 
 
@@ -12,7 +11,7 @@ module IronMQ
     def initialize(options={})
       @token = options[:token] || options['token']
       @project_id = options[:project_id] || options['project_id']
-      @queue_name = options[:queue_name] || options['queue_name']
+      @queue_name = options[:queue_name] || options['queue_name'] || "default"
       @scheme = options[:scheme] || options['scheme'] || "http"
       @host = options[:host] || options['host'] || "mq-aws-us-east-1.iron.io"
       @port = options[:port] || options['port'] || 80

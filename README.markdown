@@ -33,3 +33,13 @@ a timeout if you don't delete it (default timeout is 10 minutes).
     p res
 
 Delete a message from the queue when you're done with it.
+
+Queue Selection
+===============
+
+One of the following:
+
+1. Pass `:queue_name=>'my_queue'` into IronMQ::Client.new
+1. `@client.queue_name = 'my_queue'`
+1. Pass `:queue_name=>'my_queue'` into any post(), get(), or delete()
+
