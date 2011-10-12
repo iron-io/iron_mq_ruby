@@ -1,3 +1,5 @@
+# Put config.yml file in ~/Dropbox/configs/ironmq_gem/test/config.yml
+
 gem 'test-unit'
 require 'test/unit'
 require 'yaml'
@@ -11,7 +13,7 @@ end
 class IronMQTests < Test::Unit::TestCase
   def setup
     puts 'setup'
-    @config = YAML::load_file(File.join(File.dirname(__FILE__), "config.yml"))
+    @config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "ironmq_gem", "test", "config.yml")))
     @client = IronMQ::Client.new(@config['ironmq'])
     @client.queue_name = 'ironmq-gem-tests'
   end
