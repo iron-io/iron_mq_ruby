@@ -1,5 +1,6 @@
 require 'json'
 require 'rest_client'
+require 'patron'
 
 
 module IronMQ
@@ -17,6 +18,14 @@ module IronMQ
       @port = options[:port] || options['port'] || 80
       # todo: default https
       @base_url = "#{@scheme}://#{@host}:#{@port}/1"
+
+      sess = Patron::Session.new
+      sess.timeout = 10
+      sess.base_url = @base_url
+      sess.headers['User-Agent'] = 'IronMQ Ruby Client'
+      #sess.enable_debug "/tmp/patron.debug"
+      @http_sess = sess
+
     end
 
     def messages
@@ -27,28 +36,33 @@ module IronMQ
     def post(path, params={})
       url = "#{@base_url}#{path}"
       puts 'url=' + url
-      response = RestClient.post(url, {'oauth' => @token}.merge(params),
-                                 :content_type => :json)
+      response = @http_sess.post(path, {'oauth' => @token}.merge(params))
+      #{:content_type => 'application/json'})
       puts 'response: ' + response.inspect
-      res = JSON.parse(response)
+      body = response.body
+      res = JSON.parse(body)
       res
     end
 
     def get(path, params={})
       url = "#{@base_url}#{path}"
       puts 'url=' + url
-      response = RestClient.get(url,
-                                {:params => {'oauth'=>@token}.merge(params)})
-      res = JSON.parse(response)
+      response = @http_sess.request(:get, path,
+                                    {},
+                                    :query=>{'oauth'=>@token}.merge(params))
+      body = response.body
+      res = JSON.parse(body)
       res
     end
 
     def delete(path, params={})
       url = "#{@base_url}#{path}"
       puts 'url=' + url
-      response = RestClient.delete(url,
-                                         {:params => {'oauth'=>@token}.merge(params)})
-      res = JSON.parse(response)
+      response = @http_sess.request(:delete, path,
+                                    {},
+                                    :query=>{'oauth'=>@token}.merge(params))
+      body = response.body
+      res = JSON.parse(body)
       puts 'response: ' + res.inspect
       res
     end
@@ -64,7 +78,7 @@ module IronMQ
     end
 
     def path(options={})
-       path = "/projects/#{@client.project_id}/queues/#{options[:queue_name] || @client.queue_name}/messages"
+      path = "/projects/#{@client.project_id}/queues/#{options[:queue_name] || @client.queue_name}/messages"
     end
 
     # options:
