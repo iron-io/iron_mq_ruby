@@ -1,14 +1,17 @@
 require 'json'
 require 'patron'
-
+require 'logger'
 
 module IronMQ
 
   class Client
 
-    attr_accessor :token, :project_id, :queue_name, :base_url
+    attr_accessor :token, :project_id, :queue_name, :base_url, :logger
 
     def initialize(options={})
+      @logger = Logger.new(STDOUT)
+      @logger.level=Logger::INFO
+
       @token = options[:token] || options['token']
       @project_id = options[:project_id] || options['project_id']
       @queue_name = options[:queue_name] || options['queue_name'] || "default"
@@ -34,38 +37,62 @@ module IronMQ
 
     def post(path, params={})
       url = "#{@base_url}#{path}"
-      puts 'url=' + url
-      response = @http_sess.post(path, {'oauth' => @token}.merge(params))
-      #{:content_type => 'application/json'})
-      puts 'response: ' + response.inspect
+      @logger.debug 'url=' + url
+      response = @http_sess.post(path + "?oauth=#{@token}", {'oauth' => @token}.merge(params).to_json, {"Content-Type" => 'application/json'})
+      check_response(response)
+      @logger.debug 'response: ' + response.inspect
       body = response.body
       res = JSON.parse(body)
-      res
+      return res, response.status
     end
 
     def get(path, params={})
       url = "#{@base_url}#{path}"
-      puts 'url=' + url
+      @logger.debug 'url=' + url
       response = @http_sess.request(:get, path,
                                     {},
                                     :query=>{'oauth'=>@token}.merge(params))
-      body = response.body
-      res = JSON.parse(body)
-      res
+      res = check_response(response)
+
+      return res, response.status
     end
 
     def delete(path, params={})
       url = "#{@base_url}#{path}"
-      puts 'url=' + url
+      @logger.debug 'url=' + url
       response = @http_sess.request(:delete, path,
                                     {},
                                     :query=>{'oauth'=>@token}.merge(params))
+      check_response(response)
       body = response.body
       res = JSON.parse(body)
-      puts 'response: ' + res.inspect
+      @logger.debug 'response: ' + res.inspect
+      return res, response.status
+    end
+
+    def check_response(response)
+      status = response.status
+      body = response.body
+      res = JSON.parse(body)
+      if status < 400
+        
+      else
+        raise IronMQ::Error.new(res["msg"], :status=>status)
+      end
       res
     end
 
+  end
+
+  class Error < StandardError
+    def initialize(msg, options={})
+      super(msg)
+      @options = options
+    end
+
+    def status
+      @options[:status]
+    end
   end
 
   class Messages
@@ -83,23 +110,58 @@ module IronMQ
     # options:
     #  :queue_name => can specify an alternative queue name
     def get(options={})
-      res = @client.get(path(options))
-      res
+      begin
+        res, status = @client.get(path(options))
+        return Message.new(self, res)
+      rescue IronMQ::Error => ex
+        if ex.status == 404
+          return nil
+        end
+      end
+
+
     end
 
     # options:
     #  :queue_name => can specify an alternative queue name
     def post(payload, options={})
-      res = @client.post(path(options), :payload=>payload)
-      res
+      res, status = @client.post(path(options), :body=>payload)
     end
 
     def delete(message_id, options={})
       path2 = "#{self.path(options)}/#{message_id}"
-      res = @client.delete(path2)
+      res, status = @client.delete(path2)
       res
     end
 
+  end
+
+  class Message
+
+    def initialize(messages, res)
+      @messages = messages
+      @data = res
+    end
+
+    def raw
+      @data
+    end
+
+    def [](key)
+      raw[key]
+    end
+
+    def id
+      raw["id"]
+    end
+
+    def body
+      raw["body"]
+    end
+
+    def delete
+      @messages.delete(self.id)
+    end
   end
 
 end
