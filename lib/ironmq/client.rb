@@ -125,7 +125,7 @@ module IronMQ
     # options:
     #  :queue_name => can specify an alternative queue name
     def post(payload, options={})
-      res, status = @client.post(path(options), :body=>payload)
+      res, status = @client.post(path(options), :body=>payload.to_s)
     end
 
     def delete(message_id, options={})
