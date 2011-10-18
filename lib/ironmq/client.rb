@@ -15,9 +15,9 @@ module IronMQ
       @token = options[:token] || options['token']
       @project_id = options[:project_id] || options['project_id']
       @queue_name = options[:queue_name] || options['queue_name'] || "default"
-      @scheme = options[:scheme] || options['scheme'] || "http"
+      @scheme = options[:scheme] || options['scheme'] || "https"
       @host = options[:host] || options['host'] || "mq-aws-us-east-1.iron.io"
-      @port = options[:port] || options['port'] || 80
+      @port = options[:port] || options['port'] || 443
       # todo: default https
       @base_url = "#{@scheme}://#{@host}:#{@port}/1"
 
