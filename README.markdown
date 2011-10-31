@@ -4,6 +4,10 @@ IronMQ Ruby Client
 Getting Started
 ==============
 
+Install the gem:
+
+    gem install ironmq
+
 Create an IronMQ client object:
 
     @client = IronMQ::Client.new('token'=>'MYTOKEN', 'project_id'=>'MYPROJECTID')
