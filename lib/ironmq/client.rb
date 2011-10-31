@@ -6,7 +6,7 @@ module IronMQ
 
   class Client
 
-    attr_accessor :token, :project_id, :queue_name, :base_url, :logger
+    attr_accessor :token, :project_id, :queue_name, :logger
 
     def initialize(options={})
       @logger = Logger.new(STDOUT)
@@ -18,7 +18,7 @@ module IronMQ
       @scheme = options[:scheme] || options['scheme'] || "https"
       @host = options[:host] || options['host'] || "mq-aws-us-east-1.iron.io"
       @port = options[:port] || options['port'] || 443
-      # todo: default https
+
       @base_url = "#{@scheme}://#{@host}:#{@port}/1"
 
       sess = Patron::Session.new
@@ -35,8 +35,14 @@ module IronMQ
     end
 
 
+      def base_url
+        #"#{scheme}://#{host}:#{port}/1"
+        @base_url
+      end
+
+
     def post(path, params={})
-      url = "#{@base_url}#{path}"
+      url = "#{base_url}#{path}"
       @logger.debug 'url=' + url
       response = @http_sess.post(path + "?oauth=#{@token}", {'oauth' => @token}.merge(params).to_json, {"Content-Type" => 'application/json'})
       check_response(response)
@@ -47,7 +53,7 @@ module IronMQ
     end
 
     def get(path, params={})
-      url = "#{@base_url}#{path}"
+      url = "#{base_url}#{path}"
       @logger.debug 'url=' + url
       response = @http_sess.request(:get, path,
                                     {},
@@ -58,7 +64,7 @@ module IronMQ
     end
 
     def delete(path, params={})
-      url = "#{@base_url}#{path}"
+      url = "#{base_url}#{path}"
       @logger.debug 'url=' + url
       response = @http_sess.request(:delete, path,
                                     {},
@@ -117,6 +123,7 @@ module IronMQ
         if ex.status == 404
           return nil
         end
+        raise ex
       end
 
 
@@ -126,6 +133,7 @@ module IronMQ
     #  :queue_name => can specify an alternative queue name
     def post(payload, options={})
       res, status = @client.post(path(options), :body=>payload)
+      return Message.new(self, res)
     end
 
     def delete(message_id, options={})
