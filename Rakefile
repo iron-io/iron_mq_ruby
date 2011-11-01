@@ -10,7 +10,7 @@ begin
     gem.email = "travis@iron.io"
     gem.homepage = "http://www.iron.io"
     gem.authors = ["Travis Reeder"]
-    gem.add_dependency 'patron'
+    gem.add_dependency 'typhoeus'
     gem.required_ruby_version = '>= 1.9'
   end
   Jeweler::GemcutterTasks.new

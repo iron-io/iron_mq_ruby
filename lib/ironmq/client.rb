@@ -1,5 +1,5 @@
 require 'json'
-require 'patron'
+require 'typhoeus'
 require 'logger'
 
 module IronMQ
@@ -21,67 +21,80 @@ module IronMQ
 
       @base_url = "#{@scheme}://#{@host}:#{@port}/1"
 
-      sess = Patron::Session.new
-      sess.timeout = 10
-      sess.base_url = @base_url
-      sess.headers['User-Agent'] = 'IronMQ Ruby Client'
-      #sess.enable_debug "/tmp/patron.debug"
-      @http_sess = sess
-
     end
 
     def messages
       return Messages.new(self)
     end
 
+    def base_url
+      #"#{scheme}://#{host}:#{port}/1"
+      @base_url
+    end
 
-      def base_url
-        #"#{scheme}://#{host}:#{port}/1"
-        @base_url
-      end
+    def full_url(path)
+      url = "#{base_url}#{path}"
+      url
+    end
 
+    def common_req_hash
+      {
+          :headers=>{"Content-Type" => 'application/json',
+                     "Authorization"=>"OAuth #{@token}"}
+      }
+    end
 
     def post(path, params={})
-      url = "#{base_url}#{path}"
+      url = full_url(path)
       @logger.debug 'url=' + url
-      response = @http_sess.post(path + "?oauth=#{@token}", {'oauth' => @token}.merge(params).to_json, {"Content-Type" => 'application/json'})
+      #response = @http_sess.post(path + "?oauth=#{@token}", {'oauth' => @token}.merge(params).to_json, {"Content-Type" => 'application/json'})
+      req_hash = common_req_hash
+      req_hash[:body] = params.to_json
+      response = Typhoeus::Request.post(url, req_hash)
       check_response(response)
       @logger.debug 'response: ' + response.inspect
       body = response.body
       res = JSON.parse(body)
-      return res, response.status
+      return res, response.code
     end
 
     def get(path, params={})
-      url = "#{base_url}#{path}"
+      url = full_url(path)
       @logger.debug 'url=' + url
-      response = @http_sess.request(:get, path,
-                                    {},
-                                    :query=>{'oauth'=>@token}.merge(params))
+      req_hash = common_req_hash
+      req_hash[:params] = params
+      response = Typhoeus::Request.get(url, req_hash)
       res = check_response(response)
-
-      return res, response.status
+      return res, response.code
     end
 
     def delete(path, params={})
       url = "#{base_url}#{path}"
       @logger.debug 'url=' + url
-      response = @http_sess.request(:delete, path,
-                                    {},
-                                    :query=>{'oauth'=>@token}.merge(params))
+      req_hash = common_req_hash
+      req_hash[:params] = params
+      response = Typhoeus::Request.delete(url, req_hash)
       check_response(response)
       body = response.body
       res = JSON.parse(body)
       @logger.debug 'response: ' + res.inspect
-      return res, response.status
+      return res, response.code
     end
 
     def check_response(response)
-      status = response.status
+      # response.code    # http status code
+      #response.time    # time in seconds the request took
+      #response.headers # the http headers
+      #response.headers_hash # http headers put into a hash
+      #response.body    # the response body
+      status = response.code
       body = response.body
+      # todo: check content-type == application/json before parsing
+      @logger.debug "response code=" + status.to_s
+      @logger.debug "response body=" + body.inspect
       res = JSON.parse(body)
       if status < 400
-        
+
       else
         raise IronMQ::Error.new(res["msg"], :status=>status)
       end
