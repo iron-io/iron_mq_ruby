@@ -23,8 +23,10 @@ class IronMQTests < Test::Unit::TestCase
     while res != nil
       res = @client.messages.get()
       p res
+      puts res.body.to_s
       res.delete
     end
+    puts 'cleared.'
 
   end
 
@@ -37,6 +39,10 @@ class IronMQTests < Test::Unit::TestCase
 
     res = @client.messages.delete(res["id"])
     p res
+    puts "shouldn't be any more"
+    res = @client.messages.get()
+    p res
+    assert res.nil?
 
     res = @client.messages.post("hello world 2!")
     p res
@@ -54,20 +60,25 @@ class IronMQTests < Test::Unit::TestCase
   end
 
   def test_timeout
-    res = @client.messages.post("hello world 2!")
+    res = @client.messages.post("hello world timeout!")
     p res
 
     msg = @client.messages.get()
     p msg
 
+    msg4 = @client.messages.get()
+    p msg4
+    assert msg4.nil?
+
     puts 'sleeping 45 seconds...'
     sleep 45
 
     msg3 = @client.messages.get()
+    p msg3
     assert msg3.nil?
 
-    puts 'sleeping 90 seconds...'
-    sleep 90
+    puts 'sleeping another 45 seconds...'
+    sleep 45
 
     msg2 = @client.messages.get()
     assert msg.id == msg2.id
