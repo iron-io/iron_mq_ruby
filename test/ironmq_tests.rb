@@ -25,8 +25,17 @@ class IronMQTests < Test::Unit::TestCase
 
     res = @client.messages.get()
     p res
-    
+
     res = @client.messages.delete(res["id"])
+    p res
+
+    res = @client.messages.post("hello world 2!")
+    p res
+
+    msg = @client.messages.get()
+    p msg
+
+    res = msg.delete
     p res
   end
 end
