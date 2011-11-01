@@ -17,6 +17,15 @@ class IronMQTests < Test::Unit::TestCase
     @client = IronMQ::Client.new(@config['ironmq'])
     @client.logger.level = Logger::DEBUG
     @client.queue_name = 'ironmq-gem-tests'
+
+    puts 'clearing queue'
+    res = nil
+    while res != nil
+      res = @client.messages.get()
+      p res
+      res.delete
+    end
+
   end
 
   def test_basics
@@ -34,6 +43,25 @@ class IronMQTests < Test::Unit::TestCase
 
     msg = @client.messages.get()
     p msg
+
+    res = msg.delete
+    p res
+
+    puts "shouldn't be any more"
+    res = @client.messages.get()
+    p res
+    assert res.nil?
+  end
+
+  def test_timeout
+    res = @client.messages.post("hello world 2!")
+    p res
+
+    msg = @client.messages.get()
+    p msg
+
+    puts 'sleeping 90 seconds...'
+    sleep 90
 
     res = msg.delete
     p res
