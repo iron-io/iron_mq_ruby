@@ -60,11 +60,20 @@ class IronMQTests < Test::Unit::TestCase
     msg = @client.messages.get()
     p msg
 
+    puts 'sleeping 45 seconds...'
+    sleep 45
+
+    msg3 = @client.messages.get()
+    assert msg3.nil?
+
     puts 'sleeping 90 seconds...'
     sleep 90
 
-    res = msg.delete
-    p res
+    msg2 = @client.messages.get()
+    assert msg.id == msg2.id
+
+    msg2.delete
+
   end
 end
 
