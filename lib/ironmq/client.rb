@@ -40,7 +40,8 @@ module IronMQ
     def common_req_hash
       {
           :headers=>{"Content-Type" => 'application/json',
-                     "Authorization"=>"OAuth #{@token}"}
+                     "Authorization"=>"OAuth #{@token}",
+                     "User-Agent"=>"IronMQ Ruby Client"}
       }
     end
 
