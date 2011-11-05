@@ -27,6 +27,14 @@ executor = Concur::Executor.new_thread_pool_executor(50)
   end
 end
 
+i = 0
+while executor.queue_size > 0 do
+  i += 1
+  puts "waiting #{i}, queue size=#{executor.queue_size}"
+  sleep 0.5
+end
+
+
 put_time = (Time.now.to_f - start.to_f)
 puts "Finished pushing in #{put_time} seconds"
 

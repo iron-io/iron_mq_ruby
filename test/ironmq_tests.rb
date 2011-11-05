@@ -15,7 +15,7 @@ class IronMQTests < Test::Unit::TestCase
     puts 'setup'
     @config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "ironmq_gem", "test", "config.yml")))
     @client = IronMQ::Client.new(@config['ironmq'])
-    @client.logger.level = Logger::DEBUG
+    #@client.logger.level = Logger::DEBUG
     @client.queue_name = 'ironmq-gem-tests'
 
     puts 'clearing queue'

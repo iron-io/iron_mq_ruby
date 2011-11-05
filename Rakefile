@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rake'
 
 begin
-  require 'jeweler'
+  require 'jeweler2'
   Jeweler::Tasks.new do |gem|
     gem.name = "ironmq"
     gem.summary = "Ruby client for IronMQ"
@@ -15,7 +15,7 @@ begin
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
-  puts "Jeweler (or a dependency) not available. Install it with: gem install jeweler"
+  puts "Jeweler (or a dependency) not available. Install it with: gem install jeweler2"
 end
 
 require 'rake/testtask'
