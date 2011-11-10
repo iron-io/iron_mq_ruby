@@ -13,9 +13,14 @@ module IronMQ
 
     # options:
     #  :queue_name => can specify an alternative queue name
+    #  :timeout => amount of time before message goes back on the queue
     def get(options={})
       begin
-        res, status = @client.get(path(options))
+        params = nil
+        if options[:timeout]
+          params = {:timeout => options[:timeout]}
+        end
+        res, status = @client.get(path(options), params)
         return Message.new(self, res)
       rescue IronMQ::Error => ex
         if ex.status == 404
