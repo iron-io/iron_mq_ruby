@@ -19,9 +19,7 @@ class IronMQTests < Test::Unit::TestCase
     @client.queue_name = 'ironmq-gem-tests'
 
     puts 'clearing queue'
-    res = nil
-    while res != nil
-      res = @client.messages.get()
+    while res = @client.messages.get()
       p res
       puts res.body.to_s
       res.delete
@@ -85,6 +83,23 @@ class IronMQTests < Test::Unit::TestCase
 
     msg2.delete
 
+  end
+
+  def test_consumer_timeout
+    res = @client.messages.post("hello world consumer timeout!")
+    p res
+
+    msg = @client.messages.get(:timeout => 2)
+    assert_not_nil msg
+
+    msg3 = @client.messages.get()
+    assert msg3.nil?
+
+    sleep 2
+    msg2 = @client.messages.get()
+    assert_equal msg2.id, msg.id
+
+    msg2.delete
   end
 end
 
