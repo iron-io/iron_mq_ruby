@@ -47,3 +47,10 @@ One of the following:
 1. `@client.queue_name = 'my_queue'`
 1. Pass `:queue_name=>'my_queue'` into any post(), get(), or delete()
 
+Queue Information
+=================
+
+    queue = @client.queues.get(:name=>@client.queue_name)
+    puts "size: #{queue.size}"
+
+ 

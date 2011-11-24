@@ -27,6 +27,10 @@ module IronMQ
       return Messages.new(self)
     end
 
+    def queues
+      return Queues.new(self)
+    end
+
     def base_url
       #"#{scheme}://#{host}:#{port}/1"
       @base_url

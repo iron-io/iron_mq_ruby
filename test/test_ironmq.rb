@@ -16,7 +16,10 @@ class IronMQTests < Test::Unit::TestCase
     @config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "ironmq_gem", "test", "config.yml")))
     @client = IronMQ::Client.new(@config['ironmq'])
     #@client.logger.level = Logger::DEBUG
-    @client.queue_name = 'ironmq-gem-tests'
+    @client.queue_name = 'ironmq-tests'
+
+    queue = @client.queues.get(:name=>@client.queue_name)
+    puts 'queue size=' + queue.size.to_s
 
     puts 'clearing queue'
     while res = @client.messages.get()
@@ -29,8 +32,11 @@ class IronMQTests < Test::Unit::TestCase
   end
 
   def test_basics
+
     res = @client.messages.post("hello world!")
     p res
+    queue = @client.queues.get(:name=>@client.queue_name)
+    assert queue.size == 1
 
     res = @client.messages.get()
     p res
@@ -41,6 +47,9 @@ class IronMQTests < Test::Unit::TestCase
     res = @client.messages.get()
     p res
     assert res.nil?
+
+    queue = @client.queues.get(:name=>@client.queue_name)
+    assert queue.size == 0
 
     res = @client.messages.post("hello world 2!")
     p res
@@ -57,6 +66,7 @@ class IronMQTests < Test::Unit::TestCase
     assert res.nil?
   end
 
+  # TODO: pass :timeout in post/get messages and test those
   def test_timeout
     res = @client.messages.post("hello world timeout!")
     p res
@@ -83,6 +93,10 @@ class IronMQTests < Test::Unit::TestCase
 
     msg2.delete
 
+  end
+
+  def test_delay
+    # TODO
   end
 end
 
