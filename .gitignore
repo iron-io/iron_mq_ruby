@@ -1,6 +1,7 @@
 .DS_Store
-pkg
+pkg/
 doc
 .idea
 log
 test/config.yml
+*.sublime*

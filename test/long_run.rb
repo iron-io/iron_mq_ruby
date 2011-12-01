@@ -1,7 +1,7 @@
 require 'yaml'
 require 'concur'
 begin
-  require File.join(File.dirname(__FILE__), '../lib/ironmq')
+  require File.join(File.dirname(__FILE__), '..', 'lib', 'ironmq')
 rescue Exception => ex
   puts "Could NOT load current ironmq: " + ex.message
   raise ex

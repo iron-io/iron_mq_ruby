@@ -3,23 +3,11 @@
 gem 'test-unit'
 require 'test/unit'
 require 'yaml'
-begin
-  require File.join(File.dirname(__FILE__), '../lib/ironmq')
-rescue Exception => ex
-  puts "Could NOT load current ironmq: " + ex.message
-  raise ex
-end
+require_relative 'test_base'
 
-class IronMQTests < Test::Unit::TestCase
-  def setup
-    puts 'setup'
-    @config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "ironmq_gem", "test", "config.yml")))
-    @client = IronMQ::Client.new(@config['ironmq'])
-    #@client.logger.level = Logger::DEBUG
-    @client.queue_name = 'ironmq-tests'
-
-    queue = @client.queues.get(:name=>@client.queue_name)
-    puts 'queue size=' + queue.size.to_s
+class IronMQTests < TestBase
+  def setup 
+    super
 
     puts 'clearing queue'
     while res = @client.messages.get()

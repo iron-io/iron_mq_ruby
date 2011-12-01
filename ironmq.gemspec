@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
     "lib/ironmq.rb",
     "lib/ironmq/client.rb",
     "lib/ironmq/messages.rb",
-    "test/ironmq_tests.rb",
+    "test/test_ironmq.rb",
     "test/long_run.rb"
   ]
   s.homepage = %q{http://www.iron.io}
