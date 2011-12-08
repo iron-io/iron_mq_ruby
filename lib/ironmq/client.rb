@@ -69,6 +69,7 @@ module IronMQ
       @logger.debug 'url=' + url
       req_hash = common_req_hash
       req_hash[:params] = params
+      @logger.debug 'req_hash=' + req_hash.inspect
       response = Typhoeus::Request.get(url, req_hash)
       res = check_response(response)
       return res, response.code

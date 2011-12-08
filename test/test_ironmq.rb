@@ -6,7 +6,7 @@ require 'yaml'
 require_relative 'test_base'
 
 class IronMQTests < TestBase
-  def setup 
+  def setup
     super
 
     puts 'clearing queue'
@@ -83,8 +83,29 @@ class IronMQTests < TestBase
 
   end
 
+  def test_queues
+    res = @client.queues.list()
+    puts "res.size=" + res.size.to_s
+    res.each do |q|
+      puts "queue_name: " + q.name
+      puts "queue size: " + q.size.to_s
+      assert q.size >= 0
+    end
+    assert res.size > 0
+
+    res = @client.queues.list(:page=>2)
+    puts "res.size=" + res.size.to_s
+    res.each do |q|
+      p q.name
+    end
+    assert res.size == 0
+
+
+  end
+
   def test_delay
     # TODO
   end
+
 end
 

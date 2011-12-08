@@ -11,11 +11,22 @@ module IronMQ
       path = "/projects/#{@client.project_id}/queues"
     end
 
+    def list(options={})
+      ret = []
+      res, status = @client.get("#{path(options)}", options)
+      res.each do |q|
+        #p q
+        q = Queue.new(self, q)
+        ret << q
+      end
+      ret
+    end
+
     # options:
     #  :name => can specify an alternative queue name
     def get(options={})
-	    res, status = @client.get("#{path(options)}/#{options[:name]}")
-	    return Queue.new(self, res)
+      res, status = @client.get("#{path(options)}/#{options[:name]}")
+      return Queue.new(self, res)
     end
 
 
@@ -40,12 +51,20 @@ module IronMQ
       raw["id"]
     end
 
+    def name
+      raw["name"]
+    end
+
     def size
-      raw["size"]
-	end
+      return raw["size"] if raw["size"]
+      return @size if @size
+      q = @queues.get(:name=>name)
+      @size = q.size
+      return @size
+    end
 
     # def delete
-      # @messages.delete(self.id)
+    # @messages.delete(self.id)
     # end
   end
 
