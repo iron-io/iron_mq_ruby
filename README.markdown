@@ -26,7 +26,7 @@ The Basics
 **Pop** a message off the queue:
 
     msg = @ironmq.messages.get()
-    p res
+    p msg
 
 When you pop/get a message from the queue, it will NOT be deleted. It will eventually go back onto the queue after
 a timeout if you don't delete it (default timeout is 10 minutes).
