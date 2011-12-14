@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "iron_mq"
-  s.version = "1.2.7"
+  s.version = "1.2.8"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Travis Reeder"]
@@ -19,15 +19,15 @@ Gem::Specification.new do |s|
     "README.markdown",
     "Rakefile",
     "VERSION.yml",
-    "ironmq.gemspec",
-    "lib/ironmq.rb",
-    "lib/ironmq/client.rb",
-    "lib/ironmq/messages.rb",
-    "lib/ironmq/queues.rb",
+    "iron_mq.gemspec",
+    "lib/iron_mq.rb",
+    "lib/iron_mq/client.rb",
+    "lib/iron_mq/messages.rb",
+    "lib/iron_mq/queues.rb",
     "test/long_run.rb",
     "test/quick_run.rb",
     "test/test_base.rb",
-    "test/test_ironmq.rb"
+    "test/test_iron_mq.rb"
   ]
   s.homepage = "http://www.iron.io"
   s.require_paths = ["lib"]
