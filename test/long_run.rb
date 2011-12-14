@@ -7,7 +7,7 @@ rescue Exception => ex
   raise ex
 end
 
-@config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "ironmq_gem", "test", "config.yml")))
+@config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "ironmq_ruby", "test", "config.yml")))
 @client = IronMQ::Client.new(@config['ironmq'])
 @client.queue_name = 'ironmq-gem-long'
 @num_to_add = @config['count']

@@ -12,7 +12,7 @@ end
 class TestBase < Test::Unit::TestCase
  def setup
     puts 'setup'
-    @config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "ironmq_gem", "test", "config.yml")))
+    @config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "ironmq_ruby", "test", "config.yml")))
     @client = IronMQ::Client.new(@config['ironmq'])
     @client.logger.level = Logger::DEBUG
     @client.queue_name = 'ironmq-ruby-tests'
