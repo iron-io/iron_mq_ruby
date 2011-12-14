@@ -1,13 +1,13 @@
 require 'yaml'
 require 'concur'
 begin
-  require File.join(File.dirname(__FILE__), '..', 'lib', 'ironmq')
+  require File.join(File.dirname(__FILE__), '..', 'lib', 'iron_mq')
 rescue Exception => ex
-  puts "Could NOT load current ironmq: " + ex.message
+  puts "Could NOT load current iron_mq: " + ex.message
   raise ex
 end
 
-@config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "ironmq_ruby", "test", "config.yml")))
+@config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "iron_mq_ruby", "test", "config.yml")))
 @client = IronMQ::Client.new(@config['ironmq'])
 @client.queue_name = 'ironmq-gem-long'
 @num_to_add = @config['count']

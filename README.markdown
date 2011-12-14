@@ -6,7 +6,7 @@ Getting Started
 
 Install the gem:
 
-    gem install ironmq
+    gem install iron_mq
 
 Create an IronMQ client object:
 
