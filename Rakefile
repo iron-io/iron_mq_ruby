@@ -4,7 +4,7 @@ require 'rake'
 begin
   require 'jeweler2'
   Jeweler::Tasks.new do |gem|
-    gem.name = "ironmq"
+    gem.name = "iron_mq"
     gem.summary = "Ruby client for IronMQ"
     gem.description = "Ruby client for IronMQ"
     gem.email = "travis@iron.io"
@@ -32,7 +32,7 @@ Rake::RDocTask.new do |rdoc|
   version = File.exist?('VERSION') ? File.read('VERSION') : ""
 
   rdoc.rdoc_dir = 'doc'
-  rdoc.title = "ironmq_gem #{version}"
+  rdoc.title = "iron_mq #{version}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
