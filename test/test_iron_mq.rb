@@ -93,8 +93,8 @@ class IronMQTests < TestBase
     end
     assert res.size > 0
 
-    res = @client.queues.list(:page=>2)
-    puts "res.size=" + res.size.to_s
+    res = @client.queues.list(:page=>5)
+    puts "res.size 2=" + res.size.to_s
     res.each do |q|
       p q.name
     end

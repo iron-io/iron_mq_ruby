@@ -51,6 +51,19 @@ module IronMQ
       }
     end
 
+
+    def get(path, params={})
+      url = full_url(path)
+      @logger.debug 'url=' + url
+      req_hash = common_req_hash
+      req_hash[:params] = params if params
+      @logger.debug 'req_hash=' + req_hash.inspect
+      response = @rest.get(url, req_hash)
+      @logger.debug 'GET response=' + response.inspect
+      res = check_response(response)
+      return res, response.code
+    end
+
     def post(path, params={})
       url = full_url(path)
       @logger.debug 'url=' + url
@@ -66,17 +79,6 @@ module IronMQ
       return res, response.code
     end
 
-    def get(path, params={})
-      url = full_url(path)
-      @logger.debug 'url=' + url
-      req_hash = common_req_hash
-      req_hash[:params] = params
-      @logger.debug 'req_hash=' + req_hash.inspect
-      response = @rest.get(url, req_hash)
-      @logger.debug 'GET response=' + response.inspect
-      res = check_response(response)
-      return res, response.code
-    end
 
     def delete(path, params={})
       url = "#{base_url}#{path}"
