@@ -1,6 +1,6 @@
 require 'json'
-require 'typhoeus'
 require 'logger'
+require 'rest'
 
 module IronMQ
 
@@ -20,6 +20,8 @@ module IronMQ
       @port = options[:port] || options['port'] || 443
 
       @base_url = "#{@scheme}://#{@host}:#{@port}/1"
+
+      @rest = Rest::Client.new
 
     end
 
@@ -55,8 +57,8 @@ module IronMQ
       #response = @http_sess.post(path + "?oauth=#{@token}", {'oauth' => @token}.merge(params).to_json, {"Content-Type" => 'application/json'})
       req_hash = common_req_hash
       req_hash[:body] = params.to_json
-      response = Typhoeus::Request.post(url, req_hash)
-      @logger.debug 'typhoeus response=' + response.inspect
+      response = @rest.post(url, req_hash)
+      @logger.debug 'POST response=' + response.inspect
       res = check_response(response)
       #@logger.debug 'response: ' + res.inspect
       #body = response.body
@@ -70,7 +72,8 @@ module IronMQ
       req_hash = common_req_hash
       req_hash[:params] = params
       @logger.debug 'req_hash=' + req_hash.inspect
-      response = Typhoeus::Request.get(url, req_hash)
+      response = @rest.get(url, req_hash)
+      @logger.debug 'GET response=' + response.inspect
       res = check_response(response)
       return res, response.code
     end
@@ -80,7 +83,7 @@ module IronMQ
       @logger.debug 'url=' + url
       req_hash = common_req_hash
       req_hash[:params] = params
-      response = Typhoeus::Request.delete(url, req_hash)
+      response = @rest.delete(url, req_hash)
       res = check_response(response)
       #body = response.body
       #res = JSON.parse(body)
