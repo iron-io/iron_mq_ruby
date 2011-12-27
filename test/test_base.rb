@@ -10,12 +10,28 @@ end
 
 
 class TestBase < Test::Unit::TestCase
- def setup
+  def setup
     puts 'setup'
-    @config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "iron_mq_ruby", "test", "config.yml")))
+    # check multiple config locations
+    @config = load_config
+    puts "config=" + @config.inspect
     @client = IronMQ::Client.new(@config['iron_mq'])
     @client.logger.level = Logger::DEBUG
     @client.queue_name = 'ironmq-ruby-tests'
+
+  end
+
+  def load_config
+    # check for config
+    if defined? $abt_config
+      @config = $abt_config
+      return @config
+    end
+    cf = File.expand_path(File.join("~", "Dropbox", "configs", "iron_mq_ruby", "test", "config.yml"))
+    if File.exist?(cf)
+      @config = YAML::load_file(cf)
+      return @config
+    end
 
   end
 end
