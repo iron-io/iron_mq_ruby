@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
     "README.markdown",
     "Rakefile",
     "VERSION.yml",
-    "iron_mq.gemspec",
+    "ironmq.gemspec",
     "lib/ironmq.rb",
     "test/long_run.rb",
     "test/quick_run.rb",
