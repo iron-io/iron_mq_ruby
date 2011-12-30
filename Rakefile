@@ -4,7 +4,7 @@ require 'rake'
 begin
   require 'jeweler2'
   Jeweler::Tasks.new do |gem|
-    gem.name = "iron_mq"
+    gem.name = "ironmq"
     gem.summary = "Ruby client for IronMQ"
     gem.description = "Ruby client for IronMQ"
     gem.email = "travis@iron.io"
