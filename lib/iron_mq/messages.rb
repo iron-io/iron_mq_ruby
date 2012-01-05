@@ -45,7 +45,9 @@ module IronMQ
     #  :timeout => The time in seconds to wait after message is taken off the queue, before it is put back on. Delete before :timeout to ensure it does not go back on the queue.
     #  :expires_in => After this time, message will be automatically removed from the queue.
     def post(payload, options={})
+      batch = false
       if payload.is_a?(Array)
+        batch = true
         msgs = payload
         res, status = @client.post(path(options), payload)
       else
@@ -57,7 +59,11 @@ module IronMQ
       to_send[:messages] = msgs
       res, status = @client.post(path(options), to_send)
       #return Message.new(self, res)
-      return res
+      if batch
+        return res
+      else
+        return res["ids"][0]
+      end
     end
 
     def delete(message_id, options={})
