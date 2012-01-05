@@ -31,7 +31,6 @@ class IronMQTests < TestBase
     p res
     assert res["id"]
     assert res.id
-    assert res.msg
 
     res = @client.messages.delete(res["id"])
     p res
@@ -146,7 +145,7 @@ class IronMQTests < TestBase
     msgs = @client.messages.get(:n=>10)
     assert msgs.is_a?(Array)
     assert msgs.size == 9
-    assert msgs[0].id
+    assert msgs[0]["id"]
 
     msgs.each do |m|
       m.delete
