@@ -17,6 +17,8 @@ class IronMQTests < TestBase
 
 
   def test_basics
+    @client.queue_name = 'test_basics'
+    clear_queue
 
     res = @client.messages.post("hello world!")
     p res
@@ -60,6 +62,9 @@ class IronMQTests < TestBase
 
   # TODO: pass :timeout in post/get messages and test those
   def test_timeout
+    @client.queue_name = "test_timeout"
+    clear_queue
+
     res = @client.messages.post("hello world timeout!")
     p res
 

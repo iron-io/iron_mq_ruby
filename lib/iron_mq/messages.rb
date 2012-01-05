@@ -17,6 +17,7 @@ module IronMQ
     def get(options={})
       begin
         res, status = @client.get(path(options), options)
+        @client.logger.debug "GET response: " + res.inspect
         ret = []
         res["messages"].each do |m|
           ret << Message.new(self, m)
