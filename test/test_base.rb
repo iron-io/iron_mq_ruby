@@ -23,6 +23,7 @@ class TestBase < Test::Unit::TestCase
 
   def load_config
     # check for config
+    # First check if running in abt worker
     if defined? $abt_config
       @config = $abt_config
       return @config
@@ -34,4 +35,18 @@ class TestBase < Test::Unit::TestCase
     end
 
   end
+
+
+  def clear_queue(queue_name=nil)
+    queue_name ||= @client.queue_name
+    puts "clearing queue #{queue_name}"
+    while res = @client.messages.get(:queue_name=>queue_name)
+      p res
+      puts res.body.to_s
+      res.delete
+    end
+    puts 'cleared.'
+  end
+
+
 end

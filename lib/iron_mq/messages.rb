@@ -17,14 +17,25 @@ module IronMQ
     def get(options={})
       begin
         res, status = @client.get(path(options), options)
-        return Message.new(self, res)
+        ret = []
+        res["messages"].each do |m|
+          ret << Message.new(self, res)
+        end
+        if options[:n]
+          return ret
+        else
+          if ret.size > 0
+            return ret[0]
+          else
+            return nil
+          end
+        end
       rescue IronMQ::Error => ex
         if ex.status == 404
           return nil
         end
         raise ex
       end
-
 
     end
 
@@ -34,9 +45,19 @@ module IronMQ
     #  :timeout => The time in seconds to wait after message is taken off the queue, before it is put back on. Delete before :timeout to ensure it does not go back on the queue.
     #  :expires_in => After this time, message will be automatically removed from the queue.
     def post(payload, options={})
-      options[:body] = payload
-      res, status = @client.post(path(options), options)
-      return Message.new(self, res)
+      if payload.is_a?(Array)
+        msgs = payload
+        res, status = @client.post(path(options), payload)
+      else
+        options[:body] = payload
+        msgs = []
+        msgs << options
+      end
+      to_send = {}
+      to_send[:messages] = msgs
+      res, status = @client.post(path(options), to_send)
+      #return Message.new(self, res)
+      return res
     end
 
     def delete(message_id, options={})

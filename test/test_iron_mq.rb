@@ -11,15 +11,10 @@ class IronMQTests < TestBase
   def setup
     super
 
-    puts 'clearing queue'
-    while res = @client.messages.get()
-      p res
-      puts res.body.to_s
-      res.delete
-    end
-    puts 'cleared.'
+    clear_queue()
 
   end
+
 
   def test_basics
 
@@ -108,10 +103,7 @@ class IronMQTests < TestBase
   def test_delay
     puts 'test_delay'
     @client.queue_name = "test_delay"
-    while res = @client.messages.get()
-      p res.inspect
-      res.delete
-    end
+    clear_queue
     msgTxt = "testMessage-"+Time.now.to_s
     puts msgTxt
     @client.messages.post(msgTxt, {:delay => 10})
@@ -122,6 +114,35 @@ class IronMQTests < TestBase
     msg = @client.messages.get
     p msg
     assert msg
+  end
+
+  def test_batch
+    puts 'test_batch'
+    @client.queue_name = "test_batch"
+    clear_queue
+
+    x = []
+    10.times do |i|
+      x << {:body=>"body #{i}"}
+    end
+    resp = @client.messages.post(x)
+    assert resp["ids"]
+    assert resp["ids"].is_a?(Array)
+    assert resp["ids"].size == 10
+
+    msg = @client.messages.get()
+    assert msg
+    assert msg['id']
+    msg.delete
+
+    msgs = @client.messages.get(:n=>10)
+    assert msgs.is_a?(Array)
+    assert msgs.size == 9
+    assert msgs[0].id
+
+    msgs.each do |m|
+      m.delete
+    end
 
 
   end
