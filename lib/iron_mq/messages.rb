@@ -90,6 +90,10 @@ module IronMQ
       raw["id"]
     end
 
+    def msg
+      raw["msg"]
+    end
+
   end
 
   class Message < ResponseBase
