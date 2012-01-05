@@ -87,7 +87,7 @@ class IronMQTests < TestBase
 
   def test_queues
     res = @client.queues.list()
-    puts "res.size=" + res.size.to_s
+    puts "res.size: " + res.size.to_s
     res.each do |q|
       puts "queue_name: " + q.name
       puts "queue size: " + q.size.to_s
@@ -96,7 +96,7 @@ class IronMQTests < TestBase
     assert res.size > 0
 
     res = @client.queues.list(:page=>5)
-    puts "res.size 2=" + res.size.to_s
+    puts "res.size 2: " + res.size.to_s
     res.each do |q|
       p q.name
     end
@@ -106,7 +106,24 @@ class IronMQTests < TestBase
   end
 
   def test_delay
-    # TODO
+    puts 'test_delay'
+    @client.queue_name = "test_delay"
+    while res = @client.messages.get()
+      p res.inspect
+      res.delete
+    end
+    msgTxt = "testMessage-"+Time.now.to_s
+    puts msgTxt
+    @client.messages.post(msgTxt, {:delay => 10})
+    msg = @client.messages.get
+    p msg
+    assert msg.nil?
+    sleep 10
+    msg = @client.messages.get
+    p msg
+    assert msg
+
+
   end
 
 end

@@ -4,7 +4,7 @@ require 'yaml'
 begin
   require File.join(File.dirname(__FILE__), '../lib/iron_mq')
 rescue Exception => ex
-  puts "Could NOT load current ironmq: " + ex.message
+  puts "Could NOT load current iron_mq: " + ex.message
   raise ex
 end
 
