@@ -62,7 +62,7 @@ module IronMQ
       if batch
         return res
       else
-        return res["ids"][0]
+        return {"id"=>res["ids"][0]}
       end
     end
 
