@@ -19,7 +19,7 @@ module IronMQ
         res, status = @client.get(path(options), options)
         ret = []
         res["messages"].each do |m|
-          ret << Message.new(self, res)
+          ret << Message.new(self, m)
         end
         if options[:n]
           return ret
