@@ -49,7 +49,6 @@ module IronMQ
       if payload.is_a?(Array)
         batch = true
         msgs = payload
-        res, status = @client.post(path(options), payload)
       else
         options[:body] = payload
         msgs = []
@@ -62,7 +61,7 @@ module IronMQ
       if batch
         return res
       else
-        return {"id"=>res["ids"][0], "msg"=>res["msg"]}
+        return ResponseBase.new({"id"=>res["ids"][0], "msg"=>res["msg"]})
       end
     end
 
@@ -74,10 +73,8 @@ module IronMQ
 
   end
 
-  class Message
-
-    def initialize(messages, res)
-      @messages = messages
+  class ResponseBase
+    def initialize(res)
       @data = res
     end
 
@@ -92,6 +89,16 @@ module IronMQ
     def id
       raw["id"]
     end
+
+  end
+
+  class Message < ResponseBase
+
+    def initialize(messages, res)
+      super(res)
+      @messages = messages
+    end
+
 
     def body
       raw["body"]

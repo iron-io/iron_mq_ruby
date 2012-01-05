@@ -20,11 +20,18 @@ class IronMQTests < TestBase
 
     res = @client.messages.post("hello world!")
     p res
+    assert res["id"]
+    assert res.id
+    assert res.msg
+
     queue = @client.queues.get(:name=>@client.queue_name)
     assert queue.size == 1
 
     res = @client.messages.get()
     p res
+    assert res["id"]
+    assert res.id
+    assert res.msg
 
     res = @client.messages.delete(res["id"])
     p res
@@ -41,6 +48,7 @@ class IronMQTests < TestBase
 
     msg = @client.messages.get()
     p msg
+    assert msg
 
     res = msg.delete
     p res
