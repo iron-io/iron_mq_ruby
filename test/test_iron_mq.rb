@@ -4,6 +4,7 @@
 
 gem 'test-unit'
 require 'test/unit'
+require 'beanstalk-client'
 require 'yaml'
 require_relative 'test_base'
 
@@ -14,7 +15,6 @@ class IronMQTests < TestBase
     clear_queue()
 
   end
-
 
   def test_basics
     @client.queue_name = 'test_basics'
@@ -155,9 +155,39 @@ class IronMQTests < TestBase
     msgs.each do |m|
       m.delete
     end
-
-
   end
 
+  def test_beanstalk
+    puts 'test_beanstalk'
+    config = @config['iron_mq']
+    h = "#{config['host']}:#{config['beanstalkd_port']||11300}"
+    beanstalk = Beanstalk::Connection.new(h)
+    beanstalk.put("oauth #{config['token']} #{config['project_id']}")
+    beanstalk.use(@client.queue_name)
+    beanstalk.watch(@client.queue_name)
+
+    msg = "hello #{Time.now}"
+    beanstalk.put(msg)
+    job = beanstalk.reserve
+    assert_equal msg, job.body, "body not the same as message."
+    job.delete
+    job = assert_raise(Beanstalk::TimedOut) {
+      beanstalk.reserve(1)
+    }
+
+    hasher = {:x=>1, :y=>"hello", "yo"=>"scooby doo"}
+    beanstalk.put(hasher.to_json)
+    job = beanstalk.reserve(1)
+    got = JSON.parse(job.body)
+    assert got.is_a?(Hash)
+    assert_equal hasher[:x], got['x']
+    job.delete
+
+    msg = "hello there\nthis is a new line"
+    beanstalk.put(msg)
+    job = beanstalk.reserve(1)
+    assert_equal msg, job.body, "#{job.body} does not equal #{msg}"
+    job.delete
+  end
 end
 
