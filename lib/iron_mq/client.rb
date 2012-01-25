@@ -6,7 +6,8 @@ module IronMQ
 
   class Client
 
-    attr_accessor :token, :project_id, :queue_name, :logger
+    attr_accessor :token, :project_id, :queue_name, :logger,
+        :scheme, :host, :port
 
     def initialize(options={})
       @logger = Logger.new(STDOUT)

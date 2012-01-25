@@ -160,7 +160,7 @@ class IronMQTests < TestBase
   def test_beanstalk
     puts 'test_beanstalk'
     config = @config['iron_mq']
-    h = "#{config['host']}:#{config['beanstalkd_port']||11300}"
+    h = "#{config['host']||"mq-aws-us-east-1.iron.io"}:#{config['beanstalkd_port']||11300}"
     beanstalk = Beanstalk::Connection.new(h)
     beanstalk.put("oauth #{config['token']} #{config['project_id']}")
     beanstalk.use(@client.queue_name)
