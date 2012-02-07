@@ -7,51 +7,24 @@ rescue Exception => ex
   raise ex
 end
 
+require_relative 'long_run_worker'
+
 @config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "iron_mq_ruby", "test", "config.yml")))
-@client = IronMQ::Client.new(@config['ironmq'])
-@client.queue_name = 'ironmq-gem-long'
 @num_to_add = @config['count']
 
-start = Time.now
-puts "Queuing #{@num_to_add} items at #{start}..."
-executor = Concur::Executor.new_thread_pool_executor(50)
-@num_to_add.times do |i|
-  task = executor.execute do
-    begin
-      puts "POST #{i}..."
-      res = @client.messages.post("hello world! #{i}")
-    rescue => ex
-      puts "ERROR! #{ex.class.name}: #{ex.message} -- #{ex.backtrace.inspect}"
-      raise ex
-    end
-  end
+IronWorker.configure do |c|
+  c.token = @config['iron_mq']['token']
+  c.project_id = @config['iron_mq']['project_id']
 end
 
-i = 0
-while executor.queue_size > 0 do
-  i += 1
-  puts "waiting #{i}, queue size=#{executor.queue_size}"
-  sleep 0.5
-end
+worker = LongRunWorker.new
+worker.config = @config
+worker.num_to_add = @num_to_add
+#worker.run_local
+worker.queue
+status = worker.wait_until_complete
+p status
+puts worker.get_log
 
 
-put_time = (Time.now.to_f - start.to_f)
-puts "Finished pushing in #{put_time} seconds"
 
-exit if true
-
-start = Time.now
-puts "Getting and deleting #{@num_to_add} items at #{start}..."
-@num_to_add.times do |i|
-  puts "GET #{i}..."
-  res = @client.messages.get()
-  p res
-  puts "DELETE #{i}..."
-  res = @client.messages.delete(res["id"])
-  p res
-end
-
-puts "Finished pushing #{@num_to_add} items in #{put_time} seconds."
-puts "Finished getting and deleting #{@num_to_add} items in #{(Time.now.to_f - start.to_f)} seconds."
-
-executor.shutdown
