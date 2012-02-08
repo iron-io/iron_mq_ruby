@@ -20,6 +20,9 @@ class IronMQTests < TestBase
     @client.queue_name = 'test_basics'
     clear_queue
 
+    queue = @client.queues.get(:name=>@client.queue_name)
+    total_messages = queue.total_messages
+
     res = @client.messages.post("hello world!")
     p res
     assert res["id"]
@@ -28,7 +31,7 @@ class IronMQTests < TestBase
 
     queue = @client.queues.get(:name=>@client.queue_name)
     assert queue.size == 1
-
+    assert queue.total_messages == (total_messages+1)
     res = @client.messages.get()
     p res
     assert res["id"]

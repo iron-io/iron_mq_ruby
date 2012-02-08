@@ -60,7 +60,15 @@ module IronMQ
       return @size if @size
       q = @queues.get(:name=>name)
       @size = q.size
-      return @size
+      @size
+    end
+
+    def total_messages
+      return raw["total_messages"] if raw["total_messages"]
+      return @total_messages if @total_messages
+      q = @queues.get(:name=>name)
+      @total_messages = q.total_messages
+      @total_messages
     end
 
     # def delete
