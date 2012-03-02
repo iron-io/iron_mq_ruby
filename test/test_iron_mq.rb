@@ -107,6 +107,7 @@ class IronMQTests < TestBase
     p msg4
     assert msg4.nil?
     puts 'sleeping 15 seconds...'
+    sleep 15
     msg2 = @client.messages.get()
     assert msg2
     assert msg.id == msg2.id

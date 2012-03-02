@@ -17,7 +17,7 @@ class IronMQTests < TestBase
   def test_beanstalk
     puts 'test_beanstalk'
     config = @config['iron_mq']
-    h = "#{config['host']||"mq-aws-us-east-1.iron.io"}:#{config['beanstalkd_port']||11300}"
+    h = "#{config['host'] || "mq-aws-us-east-1.iron.io"}:#{config['beanstalkd_port'] || 11300}"
     puts "beanstalkd url: #{h}"
     beanstalk = Beanstalk::Connection.new(h)
     beanstalk.put("oauth #{config['token']} #{config['project_id']}")
@@ -29,7 +29,9 @@ class IronMQTests < TestBase
     msg = "hello #{Time.now}"
     beanstalk.put(msg)
     job = beanstalk.reserve
-    assert_equal msg, job.body, "body not the same as message."
+    p job
+    p job.body
+    assert_equal msg, job.body, "job.body #{job.body} not the same as the one we put on #{msg}."
     job.delete
     job = assert_raise(Beanstalk::TimedOut) {
       beanstalk.reserve(1)
