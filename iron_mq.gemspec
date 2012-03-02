@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "iron_mq"
-  s.version = "1.4.1"
+  s.version = "1.5.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Travis Reeder"]
-  s.date = "2012-02-08"
+  s.date = "2012-03-02"
   s.description = "Ruby client for IronMQ"
   s.email = "travis@iron.io"
   s.extra_rdoc_files = [
@@ -29,7 +29,9 @@ Gem::Specification.new do |s|
     "test/long_run.rb",
     "test/long_run_worker.rb",
     "test/quick_run.rb",
+    "test/schedule_abt.rb",
     "test/test_base.rb",
+    "test/test_beanstalkd.rb",
     "test/test_iron_mq.rb"
   ]
   s.homepage = "http://www.iron.io"
