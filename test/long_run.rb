@@ -20,11 +20,11 @@ end
 worker = LongRunWorker.new
 worker.config = @config
 worker.num_to_add = @num_to_add
-#worker.run_local
-worker.queue
-status = worker.wait_until_complete
-p status
-puts worker.get_log
+worker.run_local
+#worker.queue
+#status = worker.wait_until_complete
+#p status
+#puts worker.get_log
 
 
 

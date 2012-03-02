@@ -69,7 +69,7 @@ module IronMQ
     def delete(message_id, options={})
       path2 = "#{self.path(options)}/#{message_id}"
       res, status = @client.delete(path2)
-      res
+      return ResponseBase.new(res)
     end
 
   end
