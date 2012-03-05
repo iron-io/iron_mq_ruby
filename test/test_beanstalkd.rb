@@ -18,6 +18,7 @@ class IronMQTests < TestBase
     puts 'test_beanstalk'
     config = @config['iron_mq']
     h = "#{config['host'] || "mq-aws-us-east-1.iron.io"}:#{config['beanstalkd_port'] || 11300}"
+    return if h.include? 'rackspace' # bypass this test if rackspace
     puts "beanstalkd url: #{h}"
     beanstalk = Beanstalk::Connection.new(h)
     beanstalk.put("oauth #{config['token']} #{config['project_id']}")
