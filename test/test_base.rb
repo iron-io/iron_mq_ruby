@@ -13,7 +13,7 @@ class TestBase < Test::Unit::TestCase
   def setup
     puts 'setup'
     # check multiple config locations
-    @config = load_config
+    @config = TestBase.load_config
     puts "config=" + @config.inspect
     @client = IronMQ::Client.new(@config['iron_mq'])
     #@client.logger.level = Logger::DEBUG
@@ -21,7 +21,7 @@ class TestBase < Test::Unit::TestCase
 
   end
 
-  def load_config
+  def self.load_config
     # check for config
     # First check if running in abt worker
     if defined? $abt_config
