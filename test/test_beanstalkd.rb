@@ -8,7 +8,7 @@ require 'beanstalk-client'
 require 'yaml'
 require_relative 'test_base'
 
-class IronMQTests < TestBase
+class BeanstalkTests < TestBase
   def setup
     super
 
