@@ -16,7 +16,7 @@ class TestBase < Test::Unit::TestCase
     @config = load_config
     puts "config=" + @config.inspect
     @client = IronMQ::Client.new(@config['iron_mq'])
-    @client.logger.level = Logger::DEBUG
+    #@client.logger.level = Logger::DEBUG
     @client.queue_name = 'ironmq-ruby-tests'
 
   end
