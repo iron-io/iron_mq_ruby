@@ -23,9 +23,6 @@ class IronMQTests < TestBase
     @client.queue_name = 'test_basics'
     clear_queue
 
-    queue = @client.queues.get(:name=>@client.queue_name)
-    total_messages = queue.total_messages
-
     res = @client.messages.post("hello world!")
     p res
     assert res["id"]
@@ -93,6 +90,7 @@ class IronMQTests < TestBase
     sleep 45
 
     msg2 = @client.messages.get()
+    assert msg2
     assert msg.id == msg2.id
 
     msg2.delete
