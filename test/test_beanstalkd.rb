@@ -14,7 +14,6 @@ class BeanstalkTests < TestBase
 
     config = @config['iron_mq']
     h = "#{config['host'] || "mq-aws-us-east-1.iron.io"}:#{config['beanstalkd_port'] || 11300}"
-    return if h.include? 'rackspace' # bypass this test if rackspace
     puts "beanstalkd url: #{h}"
     @beanstalk = Beanstalk::Connection.new(h)
     @beanstalk.put("oauth #{config['token']} #{config['project_id']}")
@@ -23,6 +22,7 @@ class BeanstalkTests < TestBase
   end
 
   def test_basics
+    return if h.include? 'rackspace' # bypass this test if rackspace
     puts 'test_beanstalk'
 
     queue_name = "beanstalk_test"
@@ -63,6 +63,7 @@ class BeanstalkTests < TestBase
   end
 
   def clear_tube(tube)
+    return if h.include? 'rackspace' # bypass this test if rackspace
     watched = @beanstalk.list_tubes_watched(true)
     @beanstalk.watch(tube)
     puts "clear #{tube}"
@@ -76,6 +77,7 @@ class BeanstalkTests < TestBase
   end
 
   def test_basics2
+    return if h.include? 'rackspace' # bypass this test if rackspace
     puts 'test_basics'
     msg = "hello #{Time.now}"
     @beanstalk.put(msg)
@@ -106,6 +108,7 @@ class BeanstalkTests < TestBase
   end
 
   def test_timeout
+    return if h.include? 'rackspace' # bypass this test if rackspace
     puts 'test_timeout'
     msg = "timeout message #{Time.now}"
     # timeout of 10 seconds
@@ -128,6 +131,7 @@ class BeanstalkTests < TestBase
   end
 
   def test_delay
+    return if h.include? 'rackspace' # bypass this test if rackspace
     puts 'test_delay'
     msg = "delayed message #{Time.now}"
     # delay of 2 seconds
@@ -146,10 +150,12 @@ class BeanstalkTests < TestBase
   end
 
   def tube_message(tube)
+    return if h.include? 'rackspace' # bypass this test if rackspace
     "hello #{tube}! #{Time.now}"
   end
 
   def reserve(timeout=nil)
+    return if h.include? 'rackspace' # bypass this test if rackspace
     begin
       job = @beanstalk.reserve(timeout)
       puts 'got job: ' + job.inspect
@@ -161,6 +167,7 @@ class BeanstalkTests < TestBase
   end
 
   def test_tubes
+    return if h.include? 'rackspace' # bypass this test if rackspace
     clear_tube('youtube')
     tube1 = 'default'
     msg1 = tube_message(tube1)

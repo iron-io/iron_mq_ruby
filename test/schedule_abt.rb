@@ -9,16 +9,17 @@ IronWorker.configure do |c|
   c.project_id = @abt_config['iron']['project_id']
 end
 
+# IronWorker.logger.level = Logger::DEBUG
 # Config to run iron_mq_ruby tests
 @test_config = TestBase.load_config
 
 worker = Abt::AbtWorker.new
-worker.upload
 worker.git_url = "git://github.com/iron-io/iron_mq_ruby.git"
 worker.test_config = @test_config
 worker.add_notifier(:hip_chat_notifier, :config=>@abt_config["hipchat"])
+worker.upload # Must upload after adding notifier to ensure it's merged
 #worker.run_local
-worker.queue
+#worker.queue
 #status = worker.wait_until_complete
 #p status
 #puts "LOG:"
