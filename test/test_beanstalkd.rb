@@ -23,7 +23,7 @@ class BeanstalkTests < TestBase
 
   def test_basics
     return if @host.include? 'rackspace' # bypass this test if rackspace
-    puts 'test_beanstalk'
+    puts 'test_basics'
 
     queue_name = "beanstalk_test"
     clear_queue(queue_name)
