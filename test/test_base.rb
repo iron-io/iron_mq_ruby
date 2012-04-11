@@ -1,6 +1,7 @@
 gem 'test-unit'
 require 'test/unit'
 require 'yaml'
+require 'uber_config'
 begin
   require File.join(File.dirname(__FILE__), '../lib/iron_mq')
 rescue Exception => ex
