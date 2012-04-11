@@ -13,26 +13,11 @@ class TestBase < Test::Unit::TestCase
   def setup
     puts 'setup'
     # check multiple config locations
-    @config = load_config
+    @config = UberConfig.load
     puts "config=" + @config.inspect
-    @client = IronMQ::Client.new(@config['iron_mq'])
+    @client = IronMQ::Client.new(@config['iron'])
     @client.logger.level = Logger::DEBUG
     @client.queue_name = 'ironmq-ruby-tests'
-
-  end
-
-  def load_config
-    # check for config
-    # First check if running in abt worker
-    if defined? $abt_config
-      @config = $abt_config
-      return @config
-    end
-    cf = File.expand_path(File.join("~", "Dropbox", "configs", "iron_mq_ruby", "test", "config.yml"))
-    if File.exist?(cf)
-      @config = YAML::load_file(cf)
-      return @config
-    end
 
   end
 
