@@ -12,7 +12,7 @@ class BeanstalkTests < TestBase
   def setup
     super
 
-    config = @config['iron_mq']
+    config = @config['iron']
     @host = "#{config['host'] || "mq-aws-us-east-1.iron.io"}:#{config['beanstalkd_port'] || 11300}"
     puts "beanstalkd url: #{@host}"
     @skip = @host.include? 'rackspace'
