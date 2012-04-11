@@ -14,7 +14,7 @@ class LongRunWorker < IronWorker::Base
 
     start = Time.now
     puts "Queuing #{@num_to_add} items at #{start}..."
-    executor = Concur::Executor.new_thread_pool_executor(20)
+    executor = Concur::Executor.new_thread_pool_executor(50)
     @num_to_add.times do |i|
       task = executor.execute do
         begin
@@ -31,7 +31,7 @@ class LongRunWorker < IronWorker::Base
     while executor.queue_size > 0 do
       i += 1
       puts "waiting #{i}, queue size=#{executor.queue_size}"
-      sleep 0.5
+      sleep 2
     end
 
 

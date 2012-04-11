@@ -4,13 +4,15 @@
 
 gem 'test-unit'
 require 'test/unit'
-require 'beanstalk-client'
 require 'yaml'
 require_relative 'test_base'
 
 class IronMQTests < TestBase
   def setup
     super
+
+    queues = @client.queues.list
+    p queues
 
     clear_queue()
 
@@ -20,9 +22,6 @@ class IronMQTests < TestBase
     @client.queue_name = 'test_basics'
     clear_queue
 
-    queue = @client.queues.get(:name=>@client.queue_name)
-    total_messages = queue.total_messages
-
     res = @client.messages.post("hello world!")
     p res
     assert res["id"]
@@ -31,7 +30,6 @@ class IronMQTests < TestBase
 
     queue = @client.queues.get(:name=>@client.queue_name)
     assert queue.size == 1
-    assert queue.total_messages == (total_messages+1)
     res = @client.messages.get()
     p res
     assert res["id"]
@@ -73,6 +71,7 @@ class IronMQTests < TestBase
 
     msg = @client.messages.get()
     p msg
+    assert msg
 
     msg4 = @client.messages.get()
     p msg4
@@ -89,9 +88,25 @@ class IronMQTests < TestBase
     sleep 45
 
     msg2 = @client.messages.get()
+    assert msg2
     assert msg.id == msg2.id
 
     msg2.delete
+
+    # now try explicit timeout
+    res = @client.messages.post("hello world timeout2!", :timeout=>10)
+    p res
+    msg = @client.messages.get()
+    p msg
+    assert msg
+    msg4 = @client.messages.get()
+    p msg4
+    assert msg4.nil?
+    puts 'sleeping 15 seconds...'
+    sleep 15
+    msg2 = @client.messages.get()
+    assert msg2
+    assert msg.id == msg2.id
 
   end
 
@@ -160,37 +175,5 @@ class IronMQTests < TestBase
     end
   end
 
-  def test_beanstalk
-    puts 'test_beanstalk'
-    config = @config['iron_mq']
-    h = "#{config['host']||"mq-aws-us-east-1.iron.io"}:#{config['beanstalkd_port']||11300}"
-    beanstalk = Beanstalk::Connection.new(h)
-    beanstalk.put("oauth #{config['token']} #{config['project_id']}")
-    beanstalk.use(@client.queue_name)
-    beanstalk.watch(@client.queue_name)
-
-    msg = "hello #{Time.now}"
-    beanstalk.put(msg)
-    job = beanstalk.reserve
-    assert_equal msg, job.body, "body not the same as message."
-    job.delete
-    job = assert_raise(Beanstalk::TimedOut) {
-      beanstalk.reserve(1)
-    }
-
-    hasher = {:x=>1, :y=>"hello", "yo"=>"scooby doo"}
-    beanstalk.put(hasher.to_json)
-    job = beanstalk.reserve(1)
-    got = JSON.parse(job.body)
-    assert got.is_a?(Hash)
-    assert_equal hasher[:x], got['x']
-    job.delete
-
-    msg = "hello there\nthis is a new line"
-    beanstalk.put(msg)
-    job = beanstalk.reserve(1)
-    assert_equal msg, job.body, "#{job.body} does not equal #{msg}"
-    job.delete
-  end
 end
 

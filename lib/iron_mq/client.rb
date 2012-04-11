@@ -105,11 +105,16 @@ module IronMQ
       # todo: check content-type == application/json before parsing
       @logger.debug "response code=" + status.to_s
       @logger.debug "response body=" + body.inspect
-      res = JSON.parse(body)
+      begin
+        res = JSON.parse(body)
+      rescue => ex
+        # an unexpected error response
+        raise IronMQ::Error.new("Status #{status}: #{ex.class.name}: #{ex.message}", :status=>status)
+      end
       if status < 400
 
       else
-        raise IronMQ::Error.new(res["msg"], :status=>status)
+        raise IronMQ::Error.new("Status #{status}: #{res["msg"]}", :status=>status)
       end
       res
     end
