@@ -1,9 +1,18 @@
+require 'yaml'
+
 require 'iron_core'
 
 module IronMQ
-  # FIXME: read real version
+  @@version = nil
+
   def self.version
-    '2.0.0'
+    if @@version.nil?
+      v = YAML.load(File.read(File.dirname(__FILE__) + '/../../VERSION.yml'))
+      $stderr.puts v.inspect
+      @@version = [v[:major].to_s, v[:minor].to_s, v[:patch].to_s].join('.')
+    end
+
+    @@version
   end
 
   class Client < IronCore::Client
