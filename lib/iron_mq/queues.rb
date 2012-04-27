@@ -8,12 +8,12 @@ module IronMQ
     end
 
     def path(options={})
-      path = "/projects/#{@client.project_id}/queues"
+      path = "projects/#{@client.project_id}/queues"
     end
 
     def list(options={})
       ret = []
-      res, status = @client.get("#{path(options)}", options)
+      res = @client.parse_response(@client.get("#{path(options)}", options))
       res.each do |q|
         #p q
         q = Queue.new(self, q)
@@ -25,7 +25,7 @@ module IronMQ
     # options:
     #  :name => can specify an alternative queue name
     def get(options={})
-      res, status = @client.get("#{path(options)}/#{options[:name]}")
+      res = @client.parse_response(@client.get("#{path(options)}/#{options[:name]}"))
       return Queue.new(self, res)
     end
 

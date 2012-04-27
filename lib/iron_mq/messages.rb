@@ -8,36 +8,27 @@ module IronMQ
     end
 
     def path(options={})
-      path = "/projects/#{@client.project_id}/queues/#{options[:queue_name] || @client.queue_name}/messages"
+      path = "projects/#{@client.project_id}/queues/#{options[:queue_name] || options['queue_name'] || @client.queue_name}/messages"
     end
 
     # options:
     #  :queue_name => can specify an alternative queue name
     #  :timeout => amount of time before message goes back on the queue
     def get(options={})
-      begin
-        res, status = @client.get(path(options), options)
-        @client.logger.debug "GET response: " + res.inspect
-        ret = []
-        res["messages"].each do |m|
-          ret << Message.new(self, m)
-        end
-        if options[:n]
-          return ret
+      res = @client.parse_response(@client.get(path(options), options))
+      ret = []
+      res["messages"].each do |m|
+        ret << Message.new(self, m)
+      end
+      if options[:n] || options['n']
+        return ret
+      else
+        if ret.size > 0
+          return ret[0]
         else
-          if ret.size > 0
-            return ret[0]
-          else
-            return nil
-          end
-        end
-      rescue IronMQ::Error => ex
-        if ex.status == 404
           return nil
         end
-        raise ex
       end
-
     end
 
     # options:
@@ -57,8 +48,7 @@ module IronMQ
       end
       to_send = {}
       to_send[:messages] = msgs
-      res, status = @client.post(path(options), to_send)
-      #return Message.new(self, res)
+      res = @client.parse_response(@client.post(path(options), to_send))
       if batch
         return res
       else
@@ -68,7 +58,7 @@ module IronMQ
 
     def delete(message_id, options={})
       path2 = "#{self.path(options)}/#{message_id}"
-      res, status = @client.delete(path2)
+      res = @client.parse_response(@client.delete(path2))
       return ResponseBase.new(res)
     end
 
