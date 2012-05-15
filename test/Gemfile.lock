@@ -25,8 +25,18 @@ GEM
       multipart-post (~> 1.1)
       rack (~> 1.1)
     http_parser.rb (0.5.3)
+    iron_core (0.1.1)
+      bundler (> 1.0.0)
+      rest
+      rest-client
+    mime-types (1.18)
     multipart-post (1.1.5)
     rack (1.4.1)
+    rest (0.2.0)
+      rest-client
+      rest-client
+    rest-client (1.6.7)
+      mime-types (>= 1.16)
     test-unit (2.4.8)
     uber_config (0.0.1)
 
@@ -36,5 +46,6 @@ PLATFORMS
 DEPENDENCIES
   beanstalk-client
   concur
+  iron_core
   test-unit
   uber_config
