@@ -28,7 +28,7 @@ class IronMQTests < TestBase
     assert res.id
     assert res.msg
 
-    queue = @client.queues.get(:name=>@client.queue_name)
+    queue = @client.queues.get(:name => @client.queue_name)
     assert queue.size == 1
     res = @client.messages.get()
     p res
@@ -42,7 +42,7 @@ class IronMQTests < TestBase
     p res
     assert res.nil?
 
-    queue = @client.queues.get(:name=>@client.queue_name)
+    queue = @client.queues.get(:name => @client.queue_name)
     assert queue.size == 0
 
     res = @client.messages.post("hello world 2!")
@@ -94,7 +94,7 @@ class IronMQTests < TestBase
     msg2.delete
 
     # now try explicit timeout
-    res = @client.messages.post("hello world timeout2!", :timeout=>10)
+    res = @client.messages.post("hello world timeout2!", :timeout => 10)
     p res
     msg = @client.messages.get()
     p msg
@@ -111,6 +111,13 @@ class IronMQTests < TestBase
   end
 
   def test_queues
+    puts 'test_queues'
+
+    assert_raise IronCore::IronResponseError do
+      # should raise a 404
+      q = @client.queues.get(:name => "some_queue_that_does_not_exist")
+    end
+
     res = @client.queues.list()
     puts "res.size: " + res.size.to_s
     res.each do |q|
@@ -120,7 +127,7 @@ class IronMQTests < TestBase
     end
     assert res.size > 0
 
-    res = @client.queues.list(:page=>5)
+    res = @client.queues.list(:page => 5)
     puts "res.size 2: " + res.size.to_s
     res.each do |q|
       p q.name
@@ -153,7 +160,7 @@ class IronMQTests < TestBase
 
     x = []
     10.times do |i|
-      x << {:body=>"body #{i}"}
+      x << {:body => "body #{i}"}
     end
     resp = @client.messages.post(x)
     assert resp["ids"]
@@ -165,7 +172,7 @@ class IronMQTests < TestBase
     assert msg['id']
     msg.delete
 
-    msgs = @client.messages.get(:n=>10)
+    msgs = @client.messages.get(:n => 10)
     assert msgs.is_a?(Array)
     assert msgs.size == 9, "size should be 9, but it's #{msgs.size}"
     assert msgs[0]["id"]

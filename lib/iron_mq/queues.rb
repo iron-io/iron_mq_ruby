@@ -13,7 +13,9 @@ module IronMQ
 
     def list(options={})
       ret = []
-      res = @client.parse_response(@client.get("#{path(options)}", options))
+      r1 = @client.get("#{path(options)}", options)
+      #p r1
+      res = @client.parse_response(r1)
       res.each do |q|
         #p q
         q = Queue.new(self, q)
