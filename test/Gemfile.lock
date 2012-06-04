@@ -1,7 +1,7 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    addressable (2.2.7)
+    addressable (2.2.8)
     beanstalk-client (1.1.1)
     concur (0.1.2)
       em-http-request
@@ -20,24 +20,21 @@ GEM
     em-socksify (0.2.0)
       eventmachine (>= 1.0.0.beta.4)
     eventmachine (1.0.0.beta.4)
-    faraday (0.7.6)
-      addressable (~> 2.2)
+    faraday (0.8.1)
       multipart-post (~> 1.1)
-      rack (~> 1.1)
     http_parser.rb (0.5.3)
-    iron_core (0.1.1)
+    iron_core (0.1.2)
       bundler (> 1.0.0)
       rest
       rest-client
     mime-types (1.18)
     multipart-post (1.1.5)
-    rack (1.4.1)
     rest (0.2.0)
       rest-client
       rest-client
     rest-client (1.6.7)
       mime-types (>= 1.16)
-    test-unit (2.4.8)
+    test-unit (2.4.9)
     uber_config (0.0.1)
 
 PLATFORMS
