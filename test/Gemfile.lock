@@ -34,8 +34,8 @@ GEM
       rest-client
     rest-client (1.6.7)
       mime-types (>= 1.16)
-    test-unit (2.4.9)
-    uber_config (0.0.1)
+    test-unit (2.5.0)
+    uber_config (0.0.3)
 
 PLATFORMS
   ruby
