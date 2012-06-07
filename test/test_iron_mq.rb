@@ -182,5 +182,50 @@ class IronMQTests < TestBase
     end
   end
 
+  def test_release
+    puts 'test_release'
+    @client.queue_name = "test_release"
+    clear_queue
+    msgTxt = "testMessage-"+Time.now.to_s
+    puts msgTxt
+    msg_id = @client.messages.post(msgTxt, {:timeout => 3600}).id
+    puts "msg_id: #{msg_id}"
+    msg = @client.messages.get
+    p msg
+    assert msg.id == msg_id
+    # Ok, so should have received same message, now let's release it quicker than the original timeout
+
+    # but first, ensure the next get is nil
+    msg = @client.messages.get
+    p msg
+    assert msg.nil?
+
+    # now release it instantly
+    @client.messages.release(msg_id)
+    msg = @client.messages.get
+    p msg
+    assert msg
+    assert msg.id == msg_id
+
+    # ok, so should be reserved again
+    msgr = @client.messages.get
+    p msgr
+    assert msgr.nil?
+
+    # let's release it in 10 seconds
+    client.messages.release(msg_id, :delay=>10)
+    msg = @client.messages.get
+    p msg
+    assert msg.nil?
+
+    sleep 11
+
+    msg = @client.messages.get
+    p msg
+    assert msg
+
+
+  end
+
 end
 

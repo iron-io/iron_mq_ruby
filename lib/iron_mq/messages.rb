@@ -62,6 +62,12 @@ module IronMQ
       return ResponseBase.new(res)
     end
 
+    def release(message_id, options={})
+      path2 = "#{self.path(options)}/#{message_id}/release"
+      res = @client.parse_response(@client.post(path2, options))
+      return ResponseBase.new(res)
+    end
+
   end
 
   class ResponseBase
