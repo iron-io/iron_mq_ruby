@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "iron_mq"
-  s.version = "1.7.0"
+  s.version = "1.7.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Travis Reeder"]
-  s.date = "2012-06-04"
+  s.date = "2012-06-08"
   s.description = "Ruby client for IronMQ"
   s.email = "travis@iron.io"
   s.extra_rdoc_files = [
