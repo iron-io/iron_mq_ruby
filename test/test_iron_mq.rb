@@ -213,7 +213,7 @@ class IronMQTests < TestBase
     assert msgr.nil?
 
     # let's release it in 10 seconds
-    client.messages.release(msg_id, :delay=>10)
+    @client.messages.release(msg_id, :delay=>10)
     msg = @client.messages.get
     p msg
     assert msg.nil?
