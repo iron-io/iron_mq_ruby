@@ -18,7 +18,7 @@ module IronMQ
       res = @client.parse_response(@client.get(path(options), options))
       ret = []
       res["messages"].each do |m|
-        ret << Message.new(self, m)
+        ret << Message.new(self, m, options)
       end
       if options[:n] || options['n']
         return ret
@@ -71,6 +71,7 @@ module IronMQ
   end
 
   class ResponseBase
+
     def initialize(res)
       @data = res
     end
@@ -95,9 +96,10 @@ module IronMQ
 
   class Message < ResponseBase
 
-    def initialize(messages, res)
+    def initialize(messages, res, options={})
       super(res)
       @messages = messages
+      @options = options
     end
 
 
@@ -106,7 +108,7 @@ module IronMQ
     end
 
     def delete
-      @messages.delete(self.id)
+      @messages.delete(self.id, @options)
     end
   end
 

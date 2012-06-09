@@ -11,11 +11,13 @@ class QuickRun < TestBase
   def test_basics
     res = @client.messages.post("hello world!")
     assert res.id
+    post_id = res.id
     assert res.msg
     p res
 
     res = @client.messages.get()
     assert res.id
+    assert res.id == post_id
     assert res.body
     p res
 
@@ -25,6 +27,21 @@ class QuickRun < TestBase
 
     res = @client.messages.get()
     p res
+    assert res.nil?
+
+    res = @client.messages.post("hello world!", :queue_name=>'test2')
+    assert res.id
+    assert res.msg
+    p res
+
+    res = @client.messages.get(:queue_name=>'test2')
+    assert res.id
+    assert res.body
+    p res
+
+    res = res.delete
+    p res
+
 
   end
 
