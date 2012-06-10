@@ -224,6 +224,18 @@ class IronMQTests < TestBase
     p msg
     assert msg
 
+    msg.release(:delay => 5)
+    msg = @client.messages.get
+    p msg
+    assert msg.nil?
+
+    sleep 6
+
+    msg = @client.messages.get
+    p msg
+    assert msg
+
+
 
   end
 

@@ -110,6 +110,12 @@ module IronMQ
     def delete
       @messages.delete(self.id, @options)
     end
+
+    def release(options={})
+      options2 = options || {}
+      options2 = options.merge(@options) if @options
+      @messages.release(self.id, options2)
+    end
   end
 
 end
