@@ -20,7 +20,7 @@ class IronMQTests < TestBase
  
   def test_performance_post_100_messages
     @client.queue_name = 'test_basics'
-    100.times.do 
+    100.times do 
       @client.messages.post("hello world!")
     end
   end
