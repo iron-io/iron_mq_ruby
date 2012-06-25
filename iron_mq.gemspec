@@ -13,10 +13,10 @@ Gem::Specification.new do |s|
   s.description = "Ruby client for IronMQ"
   s.email = "travis@iron.io"
   s.extra_rdoc_files = [
-    "README.markdown"
+    "README.md"
   ]
   s.files = [
-    "README.markdown",
+    "README.md",
     "Rakefile",
     "VERSION.yml",
     "iron_mq.gemspec",
