@@ -22,7 +22,7 @@ module IronMQ
       res = @client.parse_response(r1)
       res.each do |q|
         #p q
-        q = Queue.new(self, q)
+        q = Queue.new(@client, q)
         ret << q
       end
       ret
@@ -33,7 +33,7 @@ module IronMQ
     def get(options={})
       options[:name] ||= @client.queue_name
       res = @client.parse_response(@client.get("#{path(options)}"))
-      return Queue.new(self, res)
+      return Queue.new(@client, res)
     end
 
     # Update a queue
