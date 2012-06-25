@@ -23,7 +23,7 @@ module IronMQ
     def initialize(options={})
       super('mq', options, [:queue_name])
 
-      load_from_hash(:scheme => 'https', :host => IronMQ::Client::AWS_US_EAST_HOST, :port => 443, :api_version => 1, :user_agent => 'iron_mq_ruby-' + IronMQ.version + ' (iron_core_ruby-' + IronCore.version + ')', :queue_name => 'default')
+      load_from_hash('defaults', {:scheme => 'https', :host => IronMQ::Client::AWS_US_EAST_HOST, :port => 443, :api_version => 1, :user_agent => 'iron_mq_ruby-' + IronMQ.version + ' (iron_core_ruby-' + IronCore.version + ')', :queue_name => 'default'})
 
       if (not @token) || (not @project_id)
         IronCore::Logger.error 'IronMQ', 'Both token and project_id must be specified' 
