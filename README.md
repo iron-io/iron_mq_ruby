@@ -4,28 +4,36 @@ IronMQ Ruby Client
 Getting Started
 ==============
 
-Install the gem:
+1. Install the gem:
 
     gem install iron_mq
 
-Create an IronMQ client object:
+2. Setup your Iron.io credentials: http://dev.iron.io/articles/configuration/
 
-    @ironmq = IronMQ::Client.new('token'=>'MYTOKEN', 'project_id'=>'MYPROJECTID')
+3. Create an IronMQ client object:
 
-You can get your `token` and `project_id` at http://www.iron.io .
+    @ironmq = IronMQ::Client.new()
 
 
 The Basics
 =========
 
+**Get a Queue object**
+
+You can have as many queues as you want, each with their own unique set of messages.
+
+    @queue = @ironmq.queue("my_queue")
+
+Now you can use it:
+
 **Push** a message on the queue:
 
-    msg = @ironmq.messages.post("hello world!")
+    msg = @queue.post("hello world!")
     p msg
 
 **Pop** a message off the queue:
 
-    msg = @ironmq.messages.get()
+    msg = @queue.get()
     p msg
 
 When you pop/get a message from the queue, it will NOT be deleted. It will eventually go back onto the queue after
@@ -33,24 +41,14 @@ a timeout if you don't delete it (default timeout is 10 minutes).
 
 **Delete** a message from the queue:
 
-    res = msg.delete # or @ironmq.messages.delete(msg["id"])
+    res = msg.delete # or @queue.delete(msg.id)
     p res
 
 Delete a message from the queue when you're done with it.
 
-Queue Selection
-===============
-
-One of the following:
-
-1. Pass `:queue_name=>'my_queue'` into IronMQ::Client.new
-1. `@client.queue_name = 'my_queue'`
-1. Pass `:queue_name=>'my_queue'` into any post(), get(), or delete()
-
 Queue Information
 =================
 
-    queue = @client.queues.get(:name=>@client.queue_name)
+    queue = @client.queue("my_queue")
     puts "size: #{queue.size}"
 
- 

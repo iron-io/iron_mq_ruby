@@ -10,7 +10,7 @@ module IronMQ
     def path(options={})
       path = "projects/#{@client.project_id}/queues"
       if options[:name]
-        path << "/#{options[:name]}"
+        path << "/#{URI.escape(options[:name])}"
       end
       path
     end
@@ -53,8 +53,8 @@ module IronMQ
 
   class Queue
 
-    def initialize(queues, res)
-      @queues = queues
+    def initialize(client, res)
+      @client = client
       @data = res
     end
 
@@ -74,10 +74,18 @@ module IronMQ
       raw["name"]
     end
 
+    # Used if lazy loading
+    def load_queue
+      q = @client.queues.get(:name=>name)
+      @client.logger.debug "GOT Q: " + q.inspect
+      @data = q.raw
+      q
+    end
+
     def size
       return raw["size"] if raw["size"]
       return @size if @size
-      q = @queues.get(:name=>name)
+      q = load_queue()
       @size = q.size
       @size
     end
@@ -85,14 +93,22 @@ module IronMQ
     def total_messages
       return raw["total_messages"] if raw["total_messages"]
       return @total_messages if @total_messages
-      q = @queues.get(:name=>name)
+      q = load_queue()
       @total_messages = q.total_messages
       @total_messages
     end
 
-    # def delete
-    # @messages.delete(self.id)
-    # end
+    def post(body, options={})
+      @client.messages.post(body, options.merge(:queue_name=>name))
+    end
+
+    def get(options={})
+      @client.messages.get(options.merge(:queue_name=>name))
+    end
+
+    def delete(id, options={})
+      @client.messages.delete(id, options.merge(:queue_name=>name))
+    end
   end
 
 end
