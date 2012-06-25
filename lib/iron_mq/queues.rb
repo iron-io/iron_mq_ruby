@@ -9,6 +9,10 @@ module IronMQ
 
     def path(options={})
       path = "projects/#{@client.project_id}/queues"
+      if options[:name]
+        path << "/#{options[:name]}"
+      end
+      path
     end
 
     def list(options={})
@@ -27,8 +31,21 @@ module IronMQ
     # options:
     #  :name => can specify an alternative queue name
     def get(options={})
-      res = @client.parse_response(@client.get("#{path(options)}/#{options[:name]}"))
+      options[:name] ||= @client.queue_name
+      res = @client.parse_response(@client.get("#{path(options)}"))
       return Queue.new(self, res)
+    end
+
+    # Update a queue
+    # options:
+    #  :name => if not specified, will use global queue name
+    #  :subscriptions => url's to subscribe to
+    def post(options={})
+      options[:name] ||= @client.queue_name
+      res = @client.parse_response(@client.post(path(options), options))
+      p res
+      res
+
     end
 
 

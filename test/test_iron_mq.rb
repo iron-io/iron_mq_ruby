@@ -235,8 +235,6 @@ class IronMQTests < TestBase
     p msg
     assert msg
 
-
-
   end
 
 end
