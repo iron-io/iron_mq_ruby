@@ -43,8 +43,8 @@ module IronMQ
     def post(options={})
       options[:name] ||= @client.queue_name
       res = @client.parse_response(@client.post(path(options), options))
-      p res
       res
+      p res
 
     end
 

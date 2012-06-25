@@ -1,24 +1,6 @@
 require 'rubygems'
 require 'rake'
 
-begin
-  require 'jeweler2'
-  Jeweler::Tasks.new do |gem|
-    gem.name = "iron_mq"
-    gem.summary = "Ruby client for IronMQ"
-    gem.description = "Ruby client for IronMQ"
-    gem.email = "travis@iron.io"
-    gem.homepage = "http://www.iron.io"
-    gem.authors = ["Travis Reeder"]
-    gem.add_dependency 'iron_core', '>= 0.1.4'
-    #gem.add_dependency 'typhoeus'
-    gem.required_ruby_version = '>= 1.9'
-  end
-  Jeweler::GemcutterTasks.new
-rescue LoadError
-  puts "Jeweler (or a dependency) not available. Install it with: gem install jeweler2"
-end
-
 require 'rake/testtask'
 Rake::TestTask.new(:test) do |test|
   test.libs << 'lib' << 'test'
