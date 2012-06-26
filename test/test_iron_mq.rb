@@ -20,7 +20,8 @@ class IronMQTests < TestBase
  
   def test_performance_post_100_messages
     @client.queue_name = 'test_basics'
-    assert_performance 40 do
+    timeout = @client.host.include?('rackspace') ? 40 : 9
+    assert_performance timeout do
       100.times do
         @client.messages.post("hello world!")
       end
@@ -29,7 +30,8 @@ class IronMQTests < TestBase
   
   def test_performance_post_message
     @client.queue_name = 'test_basics'
-    assert_performance 0.4 do
+    timeout = @client.host.include?('rackspace') ? 0.4 : 0.2
+    assert_performance timeout do
       @client.messages.post("hello world!")
     end
   end
