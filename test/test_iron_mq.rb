@@ -20,7 +20,8 @@ class IronMQTests < TestBase
  
   def test_performance_post_100_messages
     @client.queue_name = 'test_basics'
-    timeout = @client.host.include?('rackspace') ? 40 : 13
+    # slower to rackspace since this is running on aws
+    timeout = @client.host.include?('rackspace') ? 40 : 10
     assert_performance timeout do
       100.times do
         @client.messages.post("hello world!")
