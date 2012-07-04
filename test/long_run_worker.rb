@@ -1,16 +1,16 @@
-require 'iron_worker'
+require 'concur'
+require 'iron_mq'
 
-class LongRunWorker < IronWorker::Base
-
-  merge_gem 'concur'
-  merge_gem 'iron_mq'
+class LongRunWorker
 
   attr_accessor :config, :num_to_add
 
   def run
 
-    @client = IronMQ::Client.new(@config['iron_mq'])
+    @client = IronMQ::Client.new(@config['iron'])
     @client.queue_name = 'ironmq-gem-long'
+
+    @error_count = 0
 
     start = Time.now
     puts "Queuing #{@num_to_add} items at #{start}..."
@@ -22,6 +22,7 @@ class LongRunWorker < IronWorker::Base
           res = @client.messages.post("hello world! #{i}")
         rescue => ex
           puts "ERROR! #{ex.class.name}: #{ex.message} -- #{ex.backtrace.inspect}"
+          @error_count += 1
           raise ex
         end
       end
@@ -53,6 +54,7 @@ class LongRunWorker < IronWorker::Base
 
     puts "Finished pushing #{@num_to_add} items in #{put_time} seconds."
     puts "Finished getting and deleting #{@num_to_add} items in #{(Time.now.to_f - start.to_f)} seconds."
+    puts "Errors: #{@error_count}"
 
     executor.shutdown
 
