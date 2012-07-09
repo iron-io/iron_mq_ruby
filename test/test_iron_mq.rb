@@ -163,7 +163,7 @@ class IronMQTests < TestBase
   def test_queues
     puts 'test_queues'
 
-    assert_raise IronCore::IronResponseError do
+    assert_raise IronCore::ResponseError do
       # should raise a 404
       q = @client.queues.get(:name => "some_queue_that_does_not_exist")
     end
