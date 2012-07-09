@@ -49,11 +49,5 @@ module IronMQ
     def queues
       return Queues.new(self)
     end
-
-    def check_id(id, name = 'id', length = 24)
-      if (not id.is_a?(String)) || id.length != length
-        IronCore::Logger.error 'IronMQ', "Expecting #{length} symbol #{name} string", IronCore::Error
-      end
-    end
   end
 end
