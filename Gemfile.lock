@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    iron_mq (1.9.1)
+    iron_mq (2.0.0)
       iron_core (>= 0.2.0)
 
 GEM
