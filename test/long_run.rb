@@ -1,5 +1,6 @@
 require 'yaml'
 require 'concur'
+require 'uber_config'
 begin
   require File.join(File.dirname(__FILE__), '..', 'lib', 'iron_mq')
 rescue Exception => ex
@@ -9,15 +10,11 @@ end
 
 require_relative 'long_run_worker'
 
-@config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "iron_mq_ruby", "config.yml")))
+@config = UberConfig.load
 @num_to_add = 1000
 
-#IronWorker.configure do |c|
-#  c.token = @config['iron_mq']['token']
-#  c.project_id = @config['iron_mq']['project_id']
-#end
-
 worker = LongRunWorker.new
+worker.queue_name = "concur5"
 worker.config = @config
 worker.num_to_add = @num_to_add
 worker.run
