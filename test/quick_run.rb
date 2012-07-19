@@ -5,7 +5,7 @@ class QuickRun < TestBase
 
   def setup
     super
-    @client.queue_name = 'ironmq-gem-quick'
+    @client.queue_name = 'ironmq-gem_quick'
     clear_queue
   end
 

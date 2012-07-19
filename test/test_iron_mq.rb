@@ -19,7 +19,7 @@ class IronMQTests < TestBase
   end
  
   def test_performance_post_100_messages
-    @client.queue_name = 'test_basics'
+    @client.queue_name = 'test_basics2'
     # slower to rackspace since this is running on aws
     timeout = @client.host.include?('rackspace') ? 40 : 10
     assert_performance timeout do
@@ -31,7 +31,7 @@ class IronMQTests < TestBase
 
 
   def test_basics
-    @client.queue_name = 'test_basics'
+    @client.queue_name = 'test_basics2'
     clear_queue
 
     res = @client.messages.post("hello world!")
@@ -41,6 +41,7 @@ class IronMQTests < TestBase
     assert res.msg
 
     queue = @client.queues.get(:name => @client.queue_name)
+    p queue
     assert queue.size == 1
     res = @client.messages.get()
     p res
@@ -75,7 +76,7 @@ class IronMQTests < TestBase
 
 
     # new style of referencing queue
-    queue = @client.queue("test_basics")
+    queue = @client.queue("test_basics2")
     v = "hello big world"
     res = queue.post(v)
     p res
@@ -185,7 +186,7 @@ class IronMQTests < TestBase
     assert res.size == 0
 
 
-    queue = @client.queue("test_basics")
+    queue = @client.queue("test_basics2")
     assert queue.name
     assert queue.size
 
@@ -237,61 +238,60 @@ class IronMQTests < TestBase
     end
   end
 
-  # PUT THIS BACK IN WHEN READY
-  #def test_release
-  #  puts 'test_release'
-  #  @client.queue_name = "test_release"
-  #  clear_queue
-  #  msgTxt = "testMessage-"+Time.now.to_s
-  #  puts msgTxt
-  #  msg_id = @client.messages.post(msgTxt, {:timeout => 3600}).id
-  #  puts "msg_id: #{msg_id}"
-  #  msg = @client.messages.get
-  #  p msg
-  #  assert msg.id == msg_id
-  #  # Ok, so should have received same message, now let's release it quicker than the original timeout
-  #
-  #  # but first, ensure the next get is nil
-  #  msg = @client.messages.get
-  #  p msg
-  #  assert msg.nil?
-  #
-  #  # now release it instantly
-  #  @client.messages.release(msg_id)
-  #  msg = @client.messages.get
-  #  p msg
-  #  assert msg
-  #  assert msg.id == msg_id
-  #
-  #  # ok, so should be reserved again
-  #  msgr = @client.messages.get
-  #  p msgr
-  #  assert msgr.nil?
-  #
-  #  # let's release it in 10 seconds
-  #  @client.messages.release(msg_id, :delay=>10)
-  #  msg = @client.messages.get
-  #  p msg
-  #  assert msg.nil?
-  #
-  #  sleep 11
-  #
-  #  msg = @client.messages.get
-  #  p msg
-  #  assert msg
-  #
-  #  msg.release(:delay => 5)
-  #  msg = @client.messages.get
-  #  p msg
-  #  assert msg.nil?
-  #
-  #  sleep 6
-  #
-  #  msg = @client.messages.get
-  #  p msg
-  #  assert msg
-  #
-  #end
+  def test_release
+    puts 'test_release'
+    @client.queue_name = "test_release"
+    clear_queue
+    msgTxt = "testMessage-"+Time.now.to_s
+    puts msgTxt
+    msg_id = @client.messages.post(msgTxt, {:timeout => 3600}).id
+    puts "msg_id: #{msg_id}"
+    msg = @client.messages.get
+    p msg
+    assert msg.id == msg_id
+    # Ok, so should have received same message, now let's release it quicker than the original timeout
+
+    # but first, ensure the next get is nil
+    msg = @client.messages.get
+    p msg
+    assert msg.nil?
+
+    # now release it instantly
+    @client.messages.release(msg_id)
+    msg = @client.messages.get
+    p msg
+    assert msg
+    assert msg.id == msg_id
+
+    # ok, so should be reserved again
+    msgr = @client.messages.get
+    p msgr
+    assert msgr.nil?
+
+    # let's release it in 10 seconds
+    @client.messages.release(msg_id, :delay=>10)
+    msg = @client.messages.get
+    p msg
+    assert msg.nil?
+
+    sleep 11
+
+    msg = @client.messages.get
+    p msg
+    assert msg
+
+    msg.release(:delay => 5)
+    msg = @client.messages.get
+    p msg
+    assert msg.nil?
+
+    sleep 6
+
+    msg = @client.messages.get
+    p msg
+    assert msg
+
+  end
 
 end
 

@@ -25,7 +25,7 @@ class BeanstalkTests < TestBase
 
   def test_basics
     omit_if @skip # bypass this test if rackspace
-    puts 'test_basics'
+    puts 'test_basics2'
 
     queue_name = "beanstalk_test"
     clear_queue(queue_name)
