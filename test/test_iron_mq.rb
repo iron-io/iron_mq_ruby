@@ -19,7 +19,7 @@ class IronMQTests < TestBase
   end
  
   def test_performance_post_100_messages
-    @client.queue_name = 'test_basics2'
+    @client.queue_name = 'test_basics3'
     # slower to rackspace since this is running on aws
     timeout = @client.host.include?('rackspace') ? 40 : 10
     assert_performance timeout do
@@ -31,7 +31,7 @@ class IronMQTests < TestBase
 
 
   def test_basics
-    @client.queue_name = 'test_basics2'
+    @client.queue_name = 'test_basics3'
     clear_queue
 
     res = @client.messages.post("hello world!")
@@ -76,7 +76,7 @@ class IronMQTests < TestBase
 
 
     # new style of referencing queue
-    queue = @client.queue("test_basics2")
+    queue = @client.queue("test_basics3")
     v = "hello big world"
     res = queue.post(v)
     p res
@@ -186,7 +186,7 @@ class IronMQTests < TestBase
     assert res.size == 0
 
 
-    queue = @client.queue("test_basics2")
+    queue = @client.queue("test_basics3")
     assert queue.name
     assert queue.size
 
