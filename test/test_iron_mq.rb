@@ -244,7 +244,7 @@ class IronMQTests < TestBase
     clear_queue
     msgTxt = "testMessage-"+Time.now.to_s
     puts msgTxt
-    msg_id = @client.messages.post(msgTxt, {:timeout => 3600}).id
+    msg_id = @client.messages.post(msgTxt, {:timeout => 60*5}).id
     puts "msg_id: #{msg_id}"
     msg = @client.messages.get
     p msg
