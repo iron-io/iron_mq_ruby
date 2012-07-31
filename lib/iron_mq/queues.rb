@@ -28,6 +28,13 @@ module IronMQ
       ret
     end
 
+    def clear(options={})
+      @client.logger.debug "Clearing queue #{options[:name]}"
+      r1 = @client.post("#{path(options)}/clear", options)
+      p r1
+      r1
+    end
+
     # options:
     #  :name => can specify an alternative queue name
     def get(options={})
@@ -74,12 +81,20 @@ module IronMQ
       raw["name"]
     end
 
+    def reload
+      load_queue
+    end
+
     # Used if lazy loading
     def load_queue
       q = @client.queues.get(:name=>name)
       @client.logger.debug "GOT Q: " + q.inspect
       @data = q.raw
       q
+    end
+
+    def clear()
+      @client.queues.clear(:name=>name)
     end
 
     def size
@@ -109,6 +124,7 @@ module IronMQ
     def delete(id, options={})
       @client.messages.delete(id, options.merge(:queue_name=>name))
     end
+
   end
 
 end
