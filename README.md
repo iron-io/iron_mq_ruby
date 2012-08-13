@@ -28,8 +28,7 @@ Now you can use it:
 
 **Push** a message on the queue:
 
-    msg = @queue.post("hello world!")
-    p msg
+    @queue.post("hello world!")
 
 **Pop** a message off the queue:
 
