@@ -4,13 +4,13 @@ IronMQ Ruby Client
 Getting Started
 ==============
 
-1. Install the gem:
+1\. Install the gem:
 
     gem install iron_mq
 
-2. Setup your Iron.io credentials: http://dev.iron.io/articles/configuration/
+2\. Setup your Iron.io credentials: http://dev.iron.io/articles/configuration/
 
-3. Create an IronMQ client object:
+3\. Create an IronMQ client object:
 
     @ironmq = IronMQ::Client.new()
 
