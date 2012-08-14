@@ -87,14 +87,14 @@ module IronMQ
 
     # Used if lazy loading
     def load_queue
-      q = @client.queues.get(:name=>name)
+      q = @client.queues.get(:name => name)
       @client.logger.debug "GOT Q: " + q.inspect
       @data = q.raw
       q
     end
 
     def clear()
-      @client.queues.clear(:name=>name)
+      @client.queues.clear(:name => name)
     end
 
     def size
@@ -114,15 +114,39 @@ module IronMQ
     end
 
     def post(body, options={})
-      @client.messages.post(body, options.merge(:queue_name=>name))
+      @client.messages.post(body, options.merge(:queue_name => name))
     end
 
     def get(options={})
-      @client.messages.get(options.merge(:queue_name=>name))
+      @client.messages.get(options.merge(:queue_name => name))
+    end
+
+    # This will continuously poll for a message and pass it to the block. For example:
+    #
+    #     queue.poll { |msg| puts msg.body }
+    #
+    # options:
+    # - :sleep_duration=>seconds => time between polls if msg is nil. default 1.
+    # - :break_on_nil=>true/false => if true, will break if msg is nil (ie: queue is empty)
+    def poll(options={}, &blk)
+      sleep_duration = options[:sleep_duration] || 1
+      while true
+        p options
+        msg = get(options)
+        if msg.nil?
+          if options[:break_if_nil]
+            break
+          else
+            sleep sleep_duration
+          end
+        end
+        yield msg
+        msg.delete
+      end
     end
 
     def delete(id, options={})
-      @client.messages.delete(id, options.merge(:queue_name=>name))
+      @client.messages.delete(id, options.merge(:queue_name => name))
     end
 
   end

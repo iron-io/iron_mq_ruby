@@ -17,7 +17,7 @@ class IronMQTests < TestBase
     clear_queue()
 
   end
- 
+
   def test_performance_post_100_messages
     @client.queue_name = 'test_basics3'
     # slower to rackspace since this is running on aws
@@ -72,7 +72,6 @@ class IronMQTests < TestBase
     res = @client.messages.get()
     p res
     assert res.nil?
-
 
 
     # new style of referencing queue
@@ -269,7 +268,7 @@ class IronMQTests < TestBase
     assert msgr.nil?
 
     # let's release it in 10 seconds
-    @client.messages.release(msg_id, :delay=>10)
+    @client.messages.release(msg_id, :delay => 10)
     msg = @client.messages.get
     p msg
     assert msg.nil?
@@ -293,6 +292,47 @@ class IronMQTests < TestBase
 
   end
 
+  def test_clear
+
+    q = @client.queue("clearer")
+
+    clear_queue(q.name)
+
+    val = "hi mr clean"
+    q.post(val)
+    assert q.size == 1
+
+    q.clear
+    msg = q.get
+    assert msg.nil?
+
+    q.reload
+
+    assert q.size == 0
+
+  end
+
+
+
+  def test_poll
+    queue = @client.queue("test_poll")
+    queue.clear
+
+    v = "hello world"
+    5.times do
+      queue.post(v)
+    end
+
+    i = 0
+    queue.poll(:break_if_nil=>true) do |msg|
+      assert msg.body.include?("hello")
+      i += 1
+    end
+    assert i == 5
+
+    assert queue.reload.size == 0
+
+  end
 
 
 end
