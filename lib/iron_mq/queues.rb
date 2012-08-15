@@ -127,7 +127,7 @@ module IronMQ
     #
     # options:
     # - :sleep_duration=>seconds => time between polls if msg is nil. default 1.
-    # - :break_on_nil=>true/false => if true, will break if msg is nil (ie: queue is empty)
+    # - :break_if_nil=>true/false => if true, will break if msg is nil (ie: queue is empty)
     def poll(options={}, &blk)
       sleep_duration = options[:sleep_duration] || 1
       while true
