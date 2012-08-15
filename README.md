@@ -33,15 +33,20 @@ Now you can use it:
 **Pop** a message off the queue:
 
     msg = @queue.get()
-    p msg
+    puts msg.body
+
+**Poll** for messages:
+
+    @queue.poll do |msg|
+      puts msg.body
+    end
 
 When you pop/get a message from the queue, it will NOT be deleted. It will eventually go back onto the queue after
 a timeout if you don't delete it (default timeout is 10 minutes).
 
 **Delete** a message from the queue:
 
-    res = msg.delete # or @queue.delete(msg.id)
-    p res
+    msg.delete # or @queue.delete(msg.id)
 
 Delete a message from the queue when you're done with it.
 
