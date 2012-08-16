@@ -42,7 +42,7 @@ class IronMQTests < TestBase
 
     queue = @client.queues.get(:name => @client.queue_name)
     p queue
-    assert queue.size == 1
+    assert queue.reload.size == 1, "Size was not 1 after insert, it was: #{queue.size}"
     res = @client.messages.get()
     p res
     assert res["id"]
@@ -308,7 +308,7 @@ class IronMQTests < TestBase
 
     q.reload
 
-    assert q.size == 0
+    assert q.reload.size == 0, "Size was not zero after poll, it was: #{q.size}"
 
   end
 
@@ -328,9 +328,9 @@ class IronMQTests < TestBase
       assert msg.body.include?("hello")
       i += 1
     end
-    assert i == 5
+    assert i == 5, "Polled #{i} messages, but there should have only been five messages in queue. "
 
-    assert queue.reload.size == 0
+    assert queue.reload.size == 0, "Size was not zero after poll, it was: #{queue.size}"
 
   end
 
