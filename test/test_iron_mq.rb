@@ -31,7 +31,8 @@ class IronMQTests < TestBase
 
 
   def test_basics
-    @client.queue_name = 'test_basics3'
+    queue_name = 'test_basics4'
+    @client.queue_name = queue_name
     clear_queue
 
     res = @client.messages.post("hello world!")
@@ -75,7 +76,7 @@ class IronMQTests < TestBase
 
 
     # new style of referencing queue
-    queue = @client.queue("test_basics3")
+    queue = @client.queue(queue_name)
     v = "hello big world"
     res = queue.post(v)
     p res
@@ -113,7 +114,7 @@ class IronMQTests < TestBase
 
   # TODO: pass :timeout in post/get messages and test those
   def test_timeout
-    @client.queue_name = "test_timeout"
+    @client.queue_name = "test_timeout3"
     clear_queue
 
     res = @client.messages.post("hello world timeout!")
@@ -185,7 +186,7 @@ class IronMQTests < TestBase
     assert res.size == 0
 
 
-    queue = @client.queue("test_basics3")
+    queue = @client.queue("test_basics4")
     assert queue.name
     assert queue.size
 
@@ -194,7 +195,7 @@ class IronMQTests < TestBase
 
   def test_delay
     puts 'test_delay'
-    @client.queue_name = "test_delay"
+    @client.queue_name = "test_delay3"
     clear_queue
     msgTxt = "testMessage-"+Time.now.to_s
     puts msgTxt
@@ -210,7 +211,7 @@ class IronMQTests < TestBase
 
   def test_batch
     puts 'test_batch'
-    @client.queue_name = "test_batch"
+    @client.queue_name = "test_batch2"
     clear_queue
 
     x = []
@@ -239,7 +240,7 @@ class IronMQTests < TestBase
 
   def test_release
     puts 'test_release'
-    @client.queue_name = "test_release"
+    @client.queue_name = "test_release3"
     clear_queue
     msgTxt = "testMessage-"+Time.now.to_s
     puts msgTxt
@@ -294,7 +295,7 @@ class IronMQTests < TestBase
 
   def test_clear
 
-    q = @client.queue("clearer")
+    q = @client.queue("clearer2")
 
     clear_queue(q.name)
 
@@ -315,7 +316,7 @@ class IronMQTests < TestBase
 
 
   def test_poll
-    queue = @client.queue("test_poll")
+    queue = @client.queue("test_poll2")
     queue.clear
 
     v = "hello world"
@@ -333,6 +334,25 @@ class IronMQTests < TestBase
     assert queue.reload.size == 0, "Size was not zero after poll, it was: #{queue.size}"
 
   end
+  #
+  #def test_delete
+  #  queue = @client.queue("test_delete")
+  #  queue.post("hi")
+  #  queue.reload
+  #  old_id = queue.id
+  #  queue.delete_queue
+  #
+  #  puts "sleeping for a bit to let queue delete..."
+  #  sleep 60
+  #
+  #  queue.post("hi2")
+  #  p queue
+  #  queue.reload
+  #  assert queue.id != old_id, "old_id: #{old_id} is equal to new id: #{queue.id}"
+  #  assert queue.size == 1
+  #  queue.get("").body == "hi2"
+  #
+  #end
 
 
 end

@@ -31,7 +31,14 @@ module IronMQ
     def clear(options={})
       @client.logger.debug "Clearing queue #{options[:name]}"
       r1 = @client.post("#{path(options)}/clear", options)
-      p r1
+      @client.logger.debug "Clear result: #{r1}"
+      r1
+    end
+
+    def delete(options={})
+      @client.logger.debug "Deleting queue #{options[:name]}"
+      r1 = @client.delete("#{path(options)}", options)
+      @client.logger.debug "Delete result: #{r1}"
       r1
     end
 
@@ -95,6 +102,10 @@ module IronMQ
 
     def clear()
       @client.queues.clear(:name => name)
+    end
+
+    def delete_queue()
+      @client.queues.delete(:name=>name)
     end
 
     def size
