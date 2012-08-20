@@ -10,7 +10,7 @@ module IronMQ
     def path(options={})
       path = "projects/#{@client.project_id}/queues"
       if options[:name]
-        path << "/#{URI.escape(options[:name])}"
+        path << "/#{CGI::escape(options[:name])}"
       end
       path
     end
