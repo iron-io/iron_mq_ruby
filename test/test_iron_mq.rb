@@ -19,7 +19,7 @@ class IronMQTests < TestBase
   end
 
   def test_performance_post_100_messages
-    @client.queue_name = 'test_basics3'
+    @client.queue_name = 'test_basics_5'
     # slower to rackspace since this is running on aws
     timeout = @client.host.include?('rackspace') ? 40 : 12
     assert_performance timeout do
@@ -31,7 +31,7 @@ class IronMQTests < TestBase
 
 
   def test_basics
-    queue_name = 'test_basics4'
+    queue_name = 'test_basics_5'
     @client.queue_name = queue_name
     clear_queue
 
@@ -114,7 +114,7 @@ class IronMQTests < TestBase
 
   # TODO: pass :timeout in post/get messages and test those
   def test_timeout
-    @client.queue_name = "test_timeout3"
+    @client.queue_name = "test_timeout_5"
     clear_queue
 
     res = @client.messages.post("hello world timeout!")
@@ -186,7 +186,7 @@ class IronMQTests < TestBase
     assert res.size == 0
 
 
-    queue = @client.queue("test_basics4")
+    queue = @client.queue("test_basics_5")
     assert queue.name
     assert queue.size
 
@@ -195,7 +195,7 @@ class IronMQTests < TestBase
 
   def test_delay
     puts 'test_delay'
-    @client.queue_name = "test_delay3"
+    @client.queue_name = "test_delay_5"
     clear_queue
     msgTxt = "testMessage-"+Time.now.to_s
     puts msgTxt
@@ -211,7 +211,7 @@ class IronMQTests < TestBase
 
   def test_batch
     puts 'test_batch'
-    @client.queue_name = "test_batch2"
+    @client.queue_name = "test_batch_5"
     clear_queue
 
     x = []
@@ -240,7 +240,7 @@ class IronMQTests < TestBase
 
   def test_release
     puts 'test_release'
-    @client.queue_name = "test_release3"
+    @client.queue_name = "test_release_5"
     clear_queue
     msgTxt = "testMessage-"+Time.now.to_s
     puts msgTxt
@@ -295,7 +295,7 @@ class IronMQTests < TestBase
 
   def test_clear
 
-    q = @client.queue("clearer2")
+    q = @client.queue("clearer_5")
 
     clear_queue(q.name)
 
@@ -309,14 +309,14 @@ class IronMQTests < TestBase
 
     q.reload
 
-    assert q.reload.size == 0, "Size was not zero after poll, it was: #{q.size}"
+    assert q.reload.size == 0, "Size was not zero after clear, it was: #{q.size}"
 
   end
 
 
 
   def test_poll
-    queue = @client.queue("test_poll2")
+    queue = @client.queue("test_poll_5")
     queue.clear
 
     v = "hello world"
