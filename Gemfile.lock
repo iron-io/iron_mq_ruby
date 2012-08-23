@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    iron_mq (2.1.1)
-      iron_core (>= 0.2.0)
+    iron_mq (2.1.2)
+      iron_core (>= 0.4.2)
 
 GEM
   remote: https://rubygems.org/
@@ -11,11 +11,11 @@ GEM
     concur (1.0.0)
       faraday
       faraday
-    faraday (0.8.1)
+    faraday (0.8.4)
       multipart-post (~> 1.1)
-    ffi (1.1.3)
-    iron_core (0.3.3)
-      rest (>= 2.0.0)
+    ffi (1.1.5)
+    iron_core (0.4.2)
+      rest (>= 2.0.2)
     mime-types (1.19)
     multipart-post (1.1.5)
     net-http-persistent (2.7)

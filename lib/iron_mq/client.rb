@@ -11,12 +11,12 @@ module IronMQ
 
     def initialize(options={})
       default_options = {
-        :scheme => 'https',
-        :host => IronMQ::Client::AWS_US_EAST_HOST,
-        :port => 443,
-        :api_version => 1,
-        :user_agent => 'iron_mq_ruby-' + IronMQ::VERSION + ' (iron_core_ruby-' + IronCore.version + ')',
-        :queue_name => 'default'
+          :scheme => 'https',
+          :host => IronMQ::Client::AWS_US_EAST_HOST,
+          :port => 443,
+          :api_version => 1,
+          :user_agent => 'iron_mq_ruby-' + IronMQ::VERSION + ' (iron_core_ruby-' + IronCore.version + ')',
+          :queue_name => 'default'
       }
 
       super('iron', 'mq', options, default_options, [:project_id, :token, :api_version, :queue_name])
@@ -33,14 +33,13 @@ module IronMQ
       super.merge({'Authorization' => "OAuth #{@token}"})
     end
 
-    def url
+    def base_url
       super + @api_version.to_s + '/'
     end
 
     def queue(name)
-      return Queue.new(self, {"name"=>name})
+      return Queue.new(self, {"name" => name})
     end
-
 
     def messages
       return Messages.new(self)
