@@ -43,7 +43,7 @@ class IronMQTests < TestBase
 
     queue = @client.queues.get(:name => @client.queue_name)
     p queue
-    assert queue.reload.size == 1, "Size was not 1 after insert, it was: #{queue.size}"
+    assert_equal 1, queue.reload.size
     res = @client.messages.get()
     p res
     assert res["id"]
@@ -54,10 +54,10 @@ class IronMQTests < TestBase
     puts "shouldn't be any more"
     res = @client.messages.get()
     p res
-    assert res.nil?
+    assert_nil res
 
     queue = @client.queues.get(:name => @client.queue_name)
-    assert queue.size == 0
+    assert_equal 0, queue.size
 
     res = @client.messages.post("hello world 2!")
     p res
@@ -72,7 +72,7 @@ class IronMQTests < TestBase
     puts "shouldn't be any more"
     res = @client.messages.get()
     p res
-    assert res.nil?
+    assert_nil res
 
 
     # new style of referencing queue
@@ -86,14 +86,14 @@ class IronMQTests < TestBase
     p res
     assert res["id"]
     assert res.id
-    assert res.body == v
+    assert_equal v, res.body
 
     res = queue.delete(res.id)
     p res
     puts "shouldn't be any more"
     res = queue.get()
     p res
-    assert res.nil?
+    assert_nil res
 
     # test delete by item
     res = queue.post(v)
@@ -108,7 +108,7 @@ class IronMQTests < TestBase
     puts "shouldn't be any more"
     res = queue.get()
     p res
-    assert res.nil?
+    assert_nil res
 
   end
 
@@ -126,21 +126,21 @@ class IronMQTests < TestBase
 
     msg4 = @client.messages.get()
     p msg4
-    assert msg4.nil?
+    assert_nil msg4
 
     puts 'sleeping 45 seconds...'
     sleep 45
 
     msg3 = @client.messages.get()
     p msg3
-    assert msg3.nil?
+    assert_nil msg3
 
     puts 'sleeping another 45 seconds...'
     sleep 45
 
     msg2 = @client.messages.get()
     assert msg2
-    assert msg.id == msg2.id
+    assert_equal msg2.id, msg.id
 
     msg2.delete
 
@@ -152,12 +152,12 @@ class IronMQTests < TestBase
     assert msg
     msg4 = @client.messages.get()
     p msg4
-    assert msg4.nil?
+    assert_nil msg4
     puts 'sleeping 15 seconds...'
     sleep 15
     msg2 = @client.messages.get()
     assert msg2
-    assert msg.id == msg2.id
+    assert_equal msg2.id, msg.id
 
   end
 
@@ -183,7 +183,7 @@ class IronMQTests < TestBase
     res.each do |q|
       p q.name
     end
-    assert res.size == 0
+    assert_equal 0, res.size
 
 
     queue = @client.queue("test_basics_6")
@@ -202,7 +202,7 @@ class IronMQTests < TestBase
     @client.messages.post(msgTxt, {:delay => 10})
     msg = @client.messages.get
     p msg
-    assert msg.nil?
+    assert_nil msg
     sleep 10
     msg = @client.messages.get
     p msg
@@ -221,7 +221,7 @@ class IronMQTests < TestBase
     resp = @client.messages.post(x)
     assert resp["ids"]
     assert resp["ids"].is_a?(Array)
-    assert resp["ids"].size == 10
+    assert_equal 10, resp["ids"].size
 
     msg = @client.messages.get()
     assert msg
@@ -248,31 +248,31 @@ class IronMQTests < TestBase
     puts "msg_id: #{msg_id}"
     msg = @client.messages.get
     p msg
-    assert msg.id == msg_id
+    assert_equal msg_id, msg.id
     # Ok, so should have received same message, now let's release it quicker than the original timeout
 
     # but first, ensure the next get is nil
     msg = @client.messages.get
     p msg
-    assert msg.nil?
+    assert_nil msg
 
     # now release it instantly
     @client.messages.release(msg_id)
     msg = @client.messages.get
     p msg
     assert msg
-    assert msg.id == msg_id
+    assert_equal msg_id,  msg.id
 
     # ok, so should be reserved again
     msgr = @client.messages.get
     p msgr
-    assert msgr.nil?
+    assert_nil msgr
 
     # let's release it in 10 seconds
     @client.messages.release(msg_id, :delay => 10)
     msg = @client.messages.get
     p msg
-    assert msg.nil?
+    assert_nil msg
 
     sleep 11
 
@@ -283,7 +283,7 @@ class IronMQTests < TestBase
     msg.release(:delay => 5)
     msg = @client.messages.get
     p msg
-    assert msg.nil?
+    assert_nil msg
 
     sleep 6
 
@@ -301,16 +301,17 @@ class IronMQTests < TestBase
 
     val = "hi mr clean"
     q.post(val)
-    assert q.size == 1
+
+    assert_equal 1, q.size
 
     q.clear
+
     msg = q.get
-    assert msg.nil?
+    assert_nil msg
 
     q.reload
 
-    assert q.reload.size == 0, "Size was not zero after clear, it was: #{q.size}"
-
+    assert_equal 0, q.reload.size
   end
 
 
@@ -329,9 +330,10 @@ class IronMQTests < TestBase
       assert msg.body.include?("hello")
       i += 1
     end
-    assert i == 5, "Polled #{i} messages, but there should have only been five messages in queue. "
 
-    assert queue.reload.size == 0, "Size was not zero after poll, it was: #{queue.size}"
+    assert_equal 5, i
+
+    assert_equal 0, queue.reload.size
 
   end
   #
