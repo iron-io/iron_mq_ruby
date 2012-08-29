@@ -302,7 +302,7 @@ class IronMQTests < TestBase
     val = "hi mr clean"
     q.post(val)
 
-    assert_equal 1, q.size
+    assert_equal 1, q.reload.size
 
     q.clear
 
