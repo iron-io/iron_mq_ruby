@@ -302,7 +302,7 @@ class IronMQTests < TestBase
     val = "hi mr clean"
     q.post(val)
 
-    sleep .5 # make sure the counter has time to update
+    sleep 0.5 # make sure the counter has time to update
     assert_equal 1, q.reload.size
 
     q.clear
