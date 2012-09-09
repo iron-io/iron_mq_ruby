@@ -142,7 +142,7 @@ module IronMQ
     def poll(options={}, &blk)
       sleep_duration = options[:sleep_duration] || 1
       while true
-        p options
+        #p options
         msg = get(options)
         if msg.nil?
           if options[:break_if_nil]
@@ -150,9 +150,10 @@ module IronMQ
           else
             sleep sleep_duration
           end
+        else
+          yield msg
+          msg.delete
         end
-        yield msg
-        msg.delete
       end
     end
 
