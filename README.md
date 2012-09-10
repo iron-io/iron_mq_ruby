@@ -26,20 +26,14 @@ You can have as many queues as you want, each with their own unique set of messa
 
 Now you can use it:
 
-**Push** a message on the queue:
+**Post** a message on the queue:
 
     @queue.post("hello world!")
 
-**Pop** a message off the queue:
+**Get** a message off the queue:
 
     msg = @queue.get()
     puts msg.body
-
-**Poll** for messages:
-
-    @queue.poll do |msg|
-      puts msg.body
-    end
 
 When you pop/get a message from the queue, it will NOT be deleted. It will eventually go back onto the queue after
 a timeout if you don't delete it (default timeout is 10 minutes).
@@ -48,7 +42,15 @@ a timeout if you don't delete it (default timeout is 10 minutes).
 
     msg.delete # or @queue.delete(msg.id)
 
-Delete a message from the queue when you're done with it.
+Be sure to delete a message from the queue when you're done with it.
+
+**Poll** for messages:
+
+    @queue.poll do |msg|
+      puts msg.body
+    end
+
+Polling will automatically delete the message at the end of the block.
 
 Queue Information
 =================
