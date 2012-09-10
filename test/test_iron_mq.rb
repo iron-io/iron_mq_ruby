@@ -1,7 +1,3 @@
-# Put config.yml file in ~/Dropbox/configs/ironmq_gem/test/config.yml
-
-#$abt_config = {:hello=>'abt_config_ya'}
-
 gem 'test-unit'
 require 'test/unit'
 require 'yaml'
@@ -303,7 +299,7 @@ class IronMQTests < TestBase
     q.post(val)
 
     sleep 0.5 # make sure the counter has time to update
-    assert_equal 1, q.reload.size
+    assert_equal 1, q.size
 
     q.clear
 

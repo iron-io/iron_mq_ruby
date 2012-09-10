@@ -1,4 +1,3 @@
-# Put config.yml file in ~/Dropbox/configs/ironmq_gem/test/config.yml
 require_relative 'test_base'
 
 class QuickRun < TestBase

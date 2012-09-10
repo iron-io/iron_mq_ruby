@@ -11,12 +11,16 @@ end
 require_relative 'long_run_worker'
 
 @config = UberConfig.load
-@num_to_add = 1000
+@num_to_add = 10000
+
+p @config
 
 worker = LongRunWorker.new
-worker.queue_name = "concur5"
 worker.config = @config
+worker.queue_name = "concur8"
+worker.num_threads = 100
 worker.num_to_add = @num_to_add
+worker.skip_get_and_delete = false
 worker.run
 #worker.queue
 #status = worker.wait_until_complete

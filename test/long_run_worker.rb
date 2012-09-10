@@ -3,7 +3,7 @@ require 'iron_mq'
 
 class LongRunWorker
 
-  attr_accessor :config, :num_to_add, :queue_name
+  attr_accessor :config, :num_to_add, :queue_name, :skip_get_and_delete, :num_threads
 
   def run
 
@@ -14,7 +14,7 @@ class LongRunWorker
 
     start = Time.now
     puts "Queuing #{@num_to_add} items at #{start}..."
-    executor = Concur::Executor.new_thread_pool_executor(50)
+    executor = Concur::Executor.new_thread_pool_executor(num_threads || 20)
     @num_to_add.times do |i|
       task = executor.execute do
         begin
@@ -35,6 +35,7 @@ class LongRunWorker
       sleep 2
     end
     put_time = (Time.now.to_f - start.to_f)
+    sleep 1
     puts "Finished pushing in #{put_time} seconds"
 
     queue = @client.queue(queue_name)
@@ -43,23 +44,26 @@ class LongRunWorker
 
     #exit if true
 
-    start = Time.now
-    puts "Getting and deleting #{@num_to_add} items at #{start}..."
-    @num_to_add.times do |i|
-      task = executor.execute do
-        puts "GET #{i}..."
-        res = queue.get()
-        p res
-        puts "DELETE #{i}..."
-        res = queue.delete(res.id)
-        p res
+    if skip_get_and_delete
+      start = Time.now
+      puts "Getting and deleting #{@num_to_add} items at #{start}..."
+      @num_to_add.times do |i|
+        task = executor.execute do
+          puts "GET #{i}..."
+          res = queue.get()
+          p res
+          puts "DELETE #{i}..."
+          res = queue.delete(res.id)
+          p res
+        end
       end
-    end
-    i = 0
-    while executor.queue_size > 0 do
-      i += 1
-      puts "waiting #{i}, queue size=#{executor.queue_size}"
-      sleep 2
+      i = 0
+      while executor.queue_size > 0 do
+        i += 1
+        puts "waiting #{i}, queue size=#{executor.queue_size}"
+        sleep 2
+      end
+      sleep 1
     end
 
     queue = @client.queue(queue_name)
