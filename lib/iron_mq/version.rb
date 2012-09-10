@@ -1,3 +1,3 @@
 module IronMQ
-  VERSION = "2.1.2"
+  VERSION = "2.1.3"
 end
