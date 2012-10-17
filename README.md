@@ -1,4 +1,3 @@
-
 IronMQ Ruby Client
 -------------
 
