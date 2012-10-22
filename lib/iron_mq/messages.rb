@@ -1,3 +1,5 @@
+require 'cgi'
+
 module IronMQ
   class Messages
 
@@ -8,7 +10,7 @@ module IronMQ
     end
 
     def path(options={})
-      path = "projects/#{@client.project_id}/queues/#{options[:queue_name] || options['queue_name'] || @client.queue_name}/messages"
+      path = "projects/#{@client.project_id}/queues/#{CGI::escape(options[:queue_name] || options['queue_name'] || @client.queue_name)}/messages"
     end
 
     # options:

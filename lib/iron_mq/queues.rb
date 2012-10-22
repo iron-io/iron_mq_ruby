@@ -1,3 +1,5 @@
+require 'cgi'
+
 module IronMQ
   class Queues
 
