@@ -4,13 +4,13 @@ IronMQ Ruby Client
 Getting Started
 ==============
 
-1. Install the gem:
+1\. Install the gem:
 
     gem install iron_mq
 
-2. Setup your Iron.io credentials: http://dev.iron.io/articles/configuration/
+2\. Setup your Iron.io credentials: http://dev.iron.io/articles/configuration/
 
-3. Create an IronMQ client object:
+3\. Create an IronMQ client object:
 
     @ironmq = IronMQ::Client.new()
 
@@ -26,25 +26,31 @@ You can have as many queues as you want, each with their own unique set of messa
 
 Now you can use it:
 
-**Push** a message on the queue:
+**Post** a message on the queue:
 
-    msg = @queue.post("hello world!")
-    p msg
+    @queue.post("hello world!")
 
-**Pop** a message off the queue:
+**Get** a message off the queue:
 
     msg = @queue.get()
-    p msg
+    puts msg.body
 
 When you pop/get a message from the queue, it will NOT be deleted. It will eventually go back onto the queue after
 a timeout if you don't delete it (default timeout is 10 minutes).
 
 **Delete** a message from the queue:
 
-    res = msg.delete # or @queue.delete(msg.id)
-    p res
+    msg.delete # or @queue.delete(msg.id)
 
-Delete a message from the queue when you're done with it.
+Be sure to delete a message from the queue when you're done with it.
+
+**Poll** for messages:
+
+    @queue.poll do |msg|
+      puts msg.body
+    end
+
+Polling will automatically delete the message at the end of the block.
 
 Queue Information
 =================

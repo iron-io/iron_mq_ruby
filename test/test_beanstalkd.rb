@@ -1,7 +1,3 @@
-# Put config.yml file in ~/Dropbox/configs/ironmq_gem/test/config.yml
-
-#$abt_config = {:hello=>'abt_config_ya'}
-
 gem 'test-unit'
 require 'test/unit'
 require 'beanstalk-client'
@@ -25,7 +21,7 @@ class BeanstalkTests < TestBase
 
   def test_basics
     omit_if @skip # bypass this test if rackspace
-    puts 'test_basics'
+    puts 'test_basics3'
 
     queue_name = "beanstalk_test"
     clear_queue(queue_name)

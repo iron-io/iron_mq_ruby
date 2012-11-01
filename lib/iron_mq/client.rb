@@ -10,26 +10,36 @@ module IronMQ
     attr_accessor :queue_name, :logger
 
     def initialize(options={})
-      super('mq', options, [:queue_name])
+      default_options = {
+          :scheme => 'https',
+          :host => IronMQ::Client::AWS_US_EAST_HOST,
+          :port => 443,
+          :api_version => 1,
+          :user_agent => 'iron_mq_ruby-' + IronMQ::VERSION + ' (iron_core_ruby-' + IronCore.version + ')',
+          :queue_name => 'default'
+      }
+
+      super('iron', 'mq', options, default_options, [:project_id, :token, :api_version, :queue_name])
+
+      IronCore::Logger.error 'IronMQ', "Token is not set", IronCore::Error if @token.nil?
+
+      check_id(@project_id, 'project_id')
 
       @logger = Logger.new(STDOUT)
       @logger.level = Logger::INFO
+    end
 
-      load_from_hash('defaults', {:scheme => 'https', :host => IronMQ::Client::AWS_US_EAST_HOST, :port => 443,
-                                  :api_version => 1,
-                                  :user_agent => 'iron_mq_ruby-' + IronMQ::VERSION + ' (iron_core_ruby-' + IronCore.version + ')',
-                                  :queue_name => 'default'})
+    def headers
+      super.merge({'Authorization' => "OAuth #{@token}"})
+    end
 
-      if (not @token) || (not @project_id)
-        IronCore::Logger.error 'IronMQ', 'Both token and project_id must be specified' 
-        raise IronCore::IronError.new('Both token and project_id must be specified')
-      end
+    def base_url
+      super + @api_version.to_s + '/'
     end
 
     def queue(name)
-      return Queue.new(self, {"name"=>name})
+      return Queue.new(self, {"name" => name})
     end
-
 
     def messages
       return Messages.new(self)

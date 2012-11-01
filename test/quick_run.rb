@@ -1,11 +1,10 @@
-# Put config.yml file in ~/Dropbox/configs/ironmq_gem/test/config.yml
 require_relative 'test_base'
 
 class QuickRun < TestBase
 
   def setup
     super
-    @client.queue_name = 'ironmq-gem-quick'
+    @client.queue_name = 'ironmq-gem_quick'
     clear_queue
   end
 

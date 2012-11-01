@@ -1,3 +1,5 @@
+require 'cgi'
+
 module IronMQ
   class Queues
 
@@ -10,7 +12,7 @@ module IronMQ
     def path(options={})
       path = "projects/#{@client.project_id}/queues"
       if options[:name]
-        path << "/#{URI.escape(options[:name])}"
+        path << "/#{CGI::escape(options[:name])}"
       end
       path
     end
@@ -26,6 +28,20 @@ module IronMQ
         ret << q
       end
       ret
+    end
+
+    def clear(options={})
+      @client.logger.debug "Clearing queue #{options[:name]}"
+      r1 = @client.post("#{path(options)}/clear", options)
+      @client.logger.debug "Clear result: #{r1}"
+      r1
+    end
+
+    def delete(options={})
+      @client.logger.debug "Deleting queue #{options[:name]}"
+      r1 = @client.delete("#{path(options)}", options)
+      @client.logger.debug "Delete result: #{r1}"
+      r1
     end
 
     # options:
@@ -74,12 +90,24 @@ module IronMQ
       raw["name"]
     end
 
+    def reload
+      load_queue
+    end
+
     # Used if lazy loading
     def load_queue
-      q = @client.queues.get(:name=>name)
+      q = @client.queues.get(:name => name)
       @client.logger.debug "GOT Q: " + q.inspect
       @data = q.raw
       q
+    end
+
+    def clear()
+      @client.queues.clear(:name => name)
+    end
+
+    def delete_queue()
+      @client.queues.delete(:name=>name)
     end
 
     def size
@@ -99,16 +127,42 @@ module IronMQ
     end
 
     def post(body, options={})
-      @client.messages.post(body, options.merge(:queue_name=>name))
+      @client.messages.post(body, options.merge(:queue_name => name))
     end
 
     def get(options={})
-      @client.messages.get(options.merge(:queue_name=>name))
+      @client.messages.get(options.merge(:queue_name => name))
+    end
+
+    # This will continuously poll for a message and pass it to the block. For example:
+    #
+    #     queue.poll { |msg| puts msg.body }
+    #
+    # options:
+    # - :sleep_duration=>seconds => time between polls if msg is nil. default 1.
+    # - :break_if_nil=>true/false => if true, will break if msg is nil (ie: queue is empty)
+    def poll(options={}, &blk)
+      sleep_duration = options[:sleep_duration] || 1
+      while true
+        #p options
+        msg = get(options)
+        if msg.nil?
+          if options[:break_if_nil]
+            break
+          else
+            sleep sleep_duration
+          end
+        else
+          yield msg
+          msg.delete
+        end
+      end
     end
 
     def delete(id, options={})
-      @client.messages.delete(id, options.merge(:queue_name=>name))
+      @client.messages.delete(id, options.merge(:queue_name => name))
     end
+
   end
 
 end
