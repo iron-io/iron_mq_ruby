@@ -61,7 +61,6 @@ module IronMQ
       res = @client.parse_response(@client.post(path(options), options))
       res
       p res
-
     end
 
 
@@ -92,6 +91,10 @@ module IronMQ
 
     def reload
       load_queue
+    end
+
+    def subscriptions
+      raw["subscriptions"]
     end
 
     # Used if lazy loading
@@ -163,6 +166,14 @@ module IronMQ
       @client.messages.delete(id, options.merge(:queue_name => name))
     end
 
+    # updates the Queue object itself
+    def update(options)
+      @client.queues.post(options.merge(:name=>name))
+    end
+
+    def delete!(options={})
+      @client.queues.delete(options.merge(:name=>name))
+    end
   end
 
 end
