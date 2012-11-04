@@ -16,41 +16,59 @@ class TestPushQueues < TestBase
   #end
 
   def test_queue_subscriptions
-    qname = "subscription-queue"
 
-    num_subscribers = 2
-    subscribers = []
-    num_subscribers.times do |i|
-      subscribers << "http://rest-test.iron.io/code/200?store=pushq#{i}"
-    end
+    types = ["pubsub", "workers"]
+    types.each do |t|
 
-    queue = @client.queue(qname)
-    res = queue.update(:subscriptions => subscribers,
-                       :push_type => "pubsub")
-    queue = @client.queue(qname)
-    p queue
-    p queue.subscriptions
+      qname = "subscription-queue-#{t}"
 
-    x = rand(1000)
-    msg = "hello #{x}"
-    queue.post(msg)
+      num_subscribers = 10
+      subscribers = []
+      num_subscribers.times do |i|
+        key = make_key(i, t)
+        subscribers << "http://rest-test.iron.io/code/200?store=#{key}"
+      end
 
-    puts "sleeping..."
-    sleep 5
-    puts "Checking results..."
-    @rest = Rest::Client.new
-    num_subscribers.times do |i|
-      begin
-        response = @rest.get("http://rest-test.iron.io/stored/pushq#{i}")
-        parsed = JSON.parse(response.body)
-        p parsed
-        assert_equal msg, parsed['body']
-      rescue Rest::HttpError => ex
-        p ex.code
+      queue = @client.queue(qname)
+      res = queue.update(:subscriptions => subscribers,
+                         :push_type => t)
+      queue = @client.queue(qname)
+      p queue
+      p queue.subscriptions
+
+      x = rand(1000)
+      msg = "hello #{x}"
+      queue.post(msg)
+
+      puts "sleeping..."
+      sleep 10
+      puts "Checking results..."
+      @rest = Rest::Client.new
+      found = 0
+      num_subscribers.times do |i|
+        key = make_key(i, t)
+        begin
+          response = @rest.get("http://rest-test.iron.io/stored/#{key}")
+          parsed = JSON.parse(response.body)
+          p parsed['body']
+          assert_equal msg, parsed['body']
+          found += 1
+        rescue Rest::HttpError => ex
+          p ex.code
+          assert_equal 404, ex.code
+        end
+      end
+      if t == "workers"
+        assert_equal 1, found
+      else # pubsub
+        assert_equal num_subscribers, found
       end
     end
-    # assert_equal msg, post_body
 
+  end
+
+  def make_key(i, t)
+    key = "pushq-#{t}-#{i}"
   end
 
 end
