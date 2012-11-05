@@ -15,7 +15,7 @@ class IronMQTests < TestBase
   end
 
   def test_performance_post_100_messages
-    @client.queue_name = 'test_basics_6'
+    @client.queue_name = 'test_perf_100'
     # slower to rackspace since this is running on aws
     timeout = @client.host.include?('rackspace') ? 40 : 12
     assert_performance timeout do
@@ -27,7 +27,7 @@ class IronMQTests < TestBase
 
 
   def test_basics
-    queue_name = 'test_basics_6'
+    queue_name = 'test_basics_7'
     @client.queue_name = queue_name
     clear_queue
 
