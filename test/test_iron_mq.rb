@@ -181,12 +181,6 @@ class IronMQTests < TestBase
     end
     assert_equal 0, res.size
 
-
-    queue = @client.queue("test_basics_6")
-    assert queue.name
-    assert queue.size
-
-
   end
 
   def test_delay
@@ -291,7 +285,7 @@ class IronMQTests < TestBase
 
   def test_clear
 
-    q = @client.queue("clearer_6")
+    q = @client.queue("test_clear_7")
 
     clear_queue(q.name)
 
