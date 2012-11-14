@@ -70,7 +70,7 @@ class TestPushQueues < TestBase
     qname = "failure-queue"
 
     subscribers = []
-    subscribers << {url: "http://rest-test.iron.io/code/503?switch_after=1&switch_to=200"}
+    subscribers << {url: "http://rest-test.iron.io/code/503?switch_after=2&switch_to=200"}
 
     queue = @client.queue(qname)
     res = queue.update_queue(:subscribers => subscribers,
@@ -97,12 +97,11 @@ class TestPushQueues < TestBase
       assert_equal "queued", s["status"]
     end
 
-    sleep 2
+    sleep 5
 
     puts 'getting status'
     subscribers = queue.messages.get(m.id).subscribers
     p subscribers
-    subscribers = subscribers.subscribers
     assert_equal 1, subscribers.size
     subscribers.each do |s|
       p s
