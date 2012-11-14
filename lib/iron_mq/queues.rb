@@ -55,7 +55,7 @@ module IronMQ
     # Update a queue
     # options:
     #  :name => if not specified, will use global queue name
-    #  :subscriptions => url's to subscribe to
+    #  :subscribers => url's to subscribe to
     def post(options={})
       options[:name] ||= @client.queue_name
       res = @client.parse_response(@client.post(path(options), options))
@@ -67,6 +67,8 @@ module IronMQ
   end
 
   class Queue
+
+    attr_reader :client
 
     def initialize(client, res)
       @client = client
@@ -90,18 +92,20 @@ module IronMQ
     end
 
     def reload
-      load_queue
+      load_queue(:force => true)
     end
 
-    def subscriptions
-      raw["subscriptions"]
+    def subscribers
+      raw["subscribers"]
     end
 
     # Used if lazy loading
-    def load_queue
+    def load_queue(options={})
+      return if @loaded && !options[:force]
       q = @client.queues.get(:name => name)
       @client.logger.debug "GOT Q: " + q.inspect
       @data = q.raw
+      @loaded = true
       q
     end
 
@@ -110,23 +114,27 @@ module IronMQ
     end
 
     def delete_queue()
-      @client.queues.delete(:name=>name)
+      @client.queues.delete(:name => name)
+    end
+
+    # updates the Queue object itself
+    def update_queue(options)
+      @client.queues.post(options.merge(:name => name))
     end
 
     def size
-      return raw["size"] if raw["size"]
-      return @size if @size
-      q = load_queue()
-      @size = q.size
-      @size
+      load_queue()
+      return raw["size"]
     end
 
     def total_messages
-      return raw["total_messages"] if raw["total_messages"]
-      return @total_messages if @total_messages
-      q = load_queue()
-      @total_messages = q.total_messages
-      @total_messages
+      load_queue()
+      return raw["total_messages"]
+    end
+
+    def subscribers
+      load_queue()
+      return raw["subscribers"]
     end
 
     def post(body, options={})
@@ -136,6 +144,11 @@ module IronMQ
     def get(options={})
       @client.messages.get(options.merge(:queue_name => name))
     end
+
+    def delete(id, options={})
+      @client.messages.delete(id, options.merge(:queue_name => name))
+    end
+
 
     # This will continuously poll for a message and pass it to the block. For example:
     #
@@ -162,18 +175,10 @@ module IronMQ
       end
     end
 
-    def delete(id, options={})
-      @client.messages.delete(id, options.merge(:queue_name => name))
+    def messages
+      Messages.new(client, self)
     end
 
-    # updates the Queue object itself
-    def update(options)
-      @client.queues.post(options.merge(:name=>name))
-    end
-
-    def delete!(options={})
-      @client.queues.delete(options.merge(:name=>name))
-    end
   end
 
 end

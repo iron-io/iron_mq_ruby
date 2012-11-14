@@ -3,20 +3,37 @@ require 'cgi'
 module IronMQ
   class Messages
 
-    attr_accessor :client
+    attr_reader :client, :queue
 
-    def initialize(client)
+    def initialize(client, queue=nil)
       @client = client
+      @queue = queue
+    end
+
+    def queue_name(options={})
+      options[:queue_name] || options['queue_name'] || (@queue ? @queue.name : nil) || @client.queue_name
     end
 
     def path(options={})
-      path = "projects/#{@client.project_id}/queues/#{CGI::escape(options[:queue_name] || options['queue_name'] || @client.queue_name)}/messages"
+      path = "projects/#{@client.project_id}/queues/#{CGI::escape(queue_name(options))}/messages"
+      if options[:msg_id]
+        path << "/#{options[:msg_id]}"
+      end
+      path
     end
 
     # options:
     #  :queue_name => can specify an alternative queue name
     #  :timeout => amount of time before message goes back on the queue
     def get(options={})
+      if options.is_a?(String)
+        # assume it's an id
+        puts 'get_by_id'
+        return Message.new(self, {'id'=>options}, options)
+        #r = @client.get(path(:msg_id=>options))
+        #p r
+        #return r
+      end
       res = @client.parse_response(@client.get(path(options), options))
       ret = []
       res["messages"].each do |m|
@@ -104,7 +121,6 @@ module IronMQ
       @options = options
     end
 
-
     def body
       raw["body"]
     end
@@ -117,6 +133,12 @@ module IronMQ
       options2 = options || {}
       options2 = options.merge(@options) if @options
       @messages.release(self.id, options2)
+    end
+
+    def subscribers(options={})
+      res = @messages.client.get(@messages.path(options.merge(msg_id: id)) + "/subscribers", options)
+      res = @messages.client.parse_response(res)
+      res['subscribers']
     end
   end
 

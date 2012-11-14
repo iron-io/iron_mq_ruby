@@ -1,6 +1,7 @@
 require 'yaml'
 
 require 'iron_core'
+require_relative 'queues'
 
 module IronMQ
 
