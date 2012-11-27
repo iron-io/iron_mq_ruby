@@ -11,21 +11,21 @@ class IronMQTests < TestBase
 
   end
 
-  def test_put_x
-    q = @client.queue(@queue_name)
-    1000.times do |i|
-      puts "#{i}"
-      q.post("msg #{i}")
-    end
-    p q.reload.size
-    assert_equal 1800, q.size
-  end
-
+  #def test_put_x
+  #  q = @client.queue(@queue_name)
+  #  1000.times do |i|
+  #    puts "#{i}"
+  #    q.post("msg #{i}")
+  #  end
+  #  p q.reload.size
+  #  assert_equal 1800, q.size
+  #end
+  #
   def test_get_x
     #q = @client.queue(@queue_name)
     #puts "q.size: #{q.size}"
     #100.times do |i|
-       # puts "#{i}"
+    # puts "#{i}"
     #  msg = q.get
     #  msg.delete
     #end
@@ -41,5 +41,6 @@ class IronMQTests < TestBase
   #  end
   #  p queue.reload.size
   #end
+
 
 end

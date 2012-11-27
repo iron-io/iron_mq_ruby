@@ -48,7 +48,10 @@ module IronMQ
     #  :name => can specify an alternative queue name
     def get(options={})
       options[:name] ||= @client.queue_name
-      res = @client.parse_response(@client.get("#{path(options)}"))
+      r = @client.get("#{path(options)}")
+      puts "HEADERS"
+      p r.headers
+      res = @client.parse_response(r)
       return Queue.new(@client, res)
     end
 
@@ -135,6 +138,22 @@ module IronMQ
     def subscribers
       load_queue()
       return raw["subscribers"]
+    end
+
+    def add_subscriber(subscriber_hash, options={})
+      puts 'add_subscriber'
+      res = @client.post("#{@client.queues.path(name: name)}/subscribers", subscribers: [subscriber_hash])
+      res = @client.parse_response(res)
+      p res
+      res
+    end
+
+    def remove_subscriber(subscriber_hash)
+      puts 'remove_subscriber'
+      res = @client.delete("#{@client.queues.path(name: name)}/subscribers", subscribers: [subscriber_hash])
+      res = @client.parse_response(res)
+      p res
+      res
     end
 
     def post(body, options={})
