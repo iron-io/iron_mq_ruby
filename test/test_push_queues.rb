@@ -44,6 +44,8 @@ class TestPushQueues < TestBase
       queue.reload
       assert_equal 11, queue.subscribers.size
       queue.remove_subscriber({url: "http://nowhere.com"})
+      queue.reload
+      assert_equal 10, queue.subscribers.size
 
       # todo: assert subscriptions match
 
