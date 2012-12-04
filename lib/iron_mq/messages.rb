@@ -69,7 +69,7 @@ module IronMQ
         msgs << options
       end
       to_send = {}
-      to_send[:subscribers] = msgs
+      to_send[:messages] = msgs
       res = @client.parse_response(@client.post(path(options), to_send))
       if batch
         return res
