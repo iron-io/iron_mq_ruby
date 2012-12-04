@@ -1,4 +1,5 @@
 require 'cgi'
+require_relative 'subscribers'
 
 module IronMQ
   class Queues
@@ -9,12 +10,18 @@ module IronMQ
       @client = client
     end
 
-    def path(options={})
-      path = "projects/#{@client.project_id}/queues"
-      if options[:name]
-        path << "/#{CGI::escape(options[:name])}"
+    def self.path(options)
+      path = "projects/#{options[:project_id]}/queues"
+      name = options[:name] || options[:queue_name] || options['queue_name']
+      if name
+        path << "/#{CGI::escape(name)}"
       end
       path
+    end
+
+    def path(options={})
+      options[:project_id] = @client.project_id
+      Queues.path(options)
     end
 
     def list(options={})
@@ -157,15 +164,15 @@ module IronMQ
     end
 
     def post(body, options={})
-      @client.messages.post(body, options.merge(:queue_name => name))
+      @client.subscribers.post(body, options.merge(:queue_name => name))
     end
 
     def get(options={})
-      @client.messages.get(options.merge(:queue_name => name))
+      @client.subscribers.get(options.merge(:queue_name => name))
     end
 
     def delete(id, options={})
-      @client.messages.delete(id, options.merge(:queue_name => name))
+      @client.subscribers.delete(id, options.merge(:queue_name => name))
     end
 
 

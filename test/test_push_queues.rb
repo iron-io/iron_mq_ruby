@@ -204,19 +204,9 @@ class TestPushQueues < TestBase
         assert_equal 202, s["status_code"]
         assert_equal "reserved", s["status"]
         # now let's delete it to say we're done with it
-
-
+        puts "Acking subscriber"
+        p s.delete
       end
-
-      # now delete them to acknowledge
-      num_subscribers.times do |i|
-        key = make_key(i, t, x)
-
-
-      end
-
-
-
 
     end
 

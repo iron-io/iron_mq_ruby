@@ -10,12 +10,15 @@ module IronMQ
       @queue = queue
     end
 
-    def queue_name(options={})
-      options[:queue_name] || options['queue_name'] || (@queue ? @queue.name : nil) || @client.queue_name
-    end
 
     def path(options={})
-      path = "projects/#{@client.project_id}/queues/#{CGI::escape(queue_name(options))}/messages"
+      options[:queue_name] ||= ((@queue ? @queue.name : nil) || @client.queue_name)
+      options[:project_id] = @client.project_id
+      Messages.path(options)
+    end
+
+    def self.path(options)
+      path = "#{Queues.path(options)}/messages"
       if options[:msg_id]
         path << "/#{options[:msg_id]}"
       end
@@ -66,7 +69,7 @@ module IronMQ
         msgs << options
       end
       to_send = {}
-      to_send[:messages] = msgs
+      to_send[:subscribers] = msgs
       res = @client.parse_response(@client.post(path(options), to_send))
       if batch
         return res
@@ -91,12 +94,10 @@ module IronMQ
 
   class ResponseBase
 
-    def initialize(res)
-      @data = res
-    end
+    attr_reader :raw
 
-    def raw
-      @data
+    def initialize(raw)
+      @raw = raw
     end
 
     def [](key)
@@ -138,7 +139,11 @@ module IronMQ
     def subscribers(options={})
       res = @messages.client.get(@messages.path(options.merge(msg_id: id)) + "/subscribers", options)
       res = @messages.client.parse_response(res)
-      res['subscribers']
+      ret = []
+      res['subscribers'].each do |m|
+        ret << Subscriber.new(self, m, options)
+      end
+      ret
     end
   end
 
