@@ -32,8 +32,10 @@ class TestPushQueues < TestBase
       end
 
       queue = @client.queue(qname)
-      res = queue.update_queue(:subscribers => subscribers,
-                               :push_type => t)
+      res = queue.update_queue(
+        subscribers: subscribers,
+        push_type: t,
+      )
       queue = @client.queue(qname)
       p queue
       p queue.subscribers
@@ -41,10 +43,10 @@ class TestPushQueues < TestBase
 
       # add the last one
       queue.reload # temporary, can remove
-      queue.add_subscriber({url: "http://nowhere.com"})
+      queue.add_subscriber_urls("http://nowhere.com")
       queue.reload
       assert_equal 11, queue.subscribers.size
-      queue.remove_subscriber({url: "http://nowhere.com"})
+      queue.delete_subscriber_urls("http://nowhere.com")
       queue.reload
       assert_equal 10, queue.subscribers.size
 
@@ -102,12 +104,17 @@ class TestPushQueues < TestBase
     res = queue.update_queue(:subscribers => subscribers,
                              :push_type => "multicast",
                              :retries => 3,
-                             :retries_delay => 15
-    )
+                             :retries_delay => 15,
+                            )
     queue = @client.queue(qname)
     p queue
+    p "==========================================================="
     p queue.subscribers
+    p queue
+    p "==========================================================="
     assert_equal 2, queue.subscribers.size
+    p queue
+    p "==========================================================="
 
     x = rand(1000)
     msg = "hello #{x}"
@@ -115,12 +122,28 @@ class TestPushQueues < TestBase
     p m
 
     subscribers = queue.messages.get(m.id).subscribers
-    p subscribers
     assert_equal 2, subscribers.size
-    subscribers.each do |s|
-      p s
-      assert_equal 0, s["status_code"]
-      assert_equal "queued", s["status"]
+
+    sub1 = subscribers.find{|sub|
+      sub.message["url"] == "http://rest-test.iron.io/code/503?switch_after=2&switch_to=200"
+    }
+    if sub1
+      assert_equal "retrying", sub1["status"]
+      assert_equal "http://rest-test.iron.io/code/503", sub1["url"]
+      assert_equal 0, sub1["retries_delay"]
+      assert_equal 3, sub1["retries_remaining"]
+      assert_equal 3, sub1["retries_total"]
+      assert_equal 0, sub1["status_code"]
+    end
+
+    sub2 = subscribers.find{|sub| sub.message["url"] == "http://rest-test.iron.io/code/503" }
+    if sub2
+      assert_equal "retrying", sub2["status"]
+      assert_equal "http://rest-test.iron.io/code/503", sub2["url"]
+      assert_equal 0, sub2["retries_delay"]
+      assert_equal 3, sub2["retries_remaining"]
+      assert_equal 3, sub2["retries_total"]
+      assert_equal 0, sub2["status_code"]
     end
 
     sleep 5
@@ -143,13 +166,16 @@ class TestPushQueues < TestBase
       p s
       assert_equal 200, s["status_code"]
       if i == 0
-      assert_equal "deleted", s["status"]
+        assert_equal "deleted", s["status"]
       else
-      # this one should error out
-      assert_equal "error", s["status"]
+        # this one should error out
+        assert_equal "error", s["status"]
       end
     end
 
+  rescue Exception => ex
+    puts ex, ex.backtrace
+    exit 1
   end
 
 
