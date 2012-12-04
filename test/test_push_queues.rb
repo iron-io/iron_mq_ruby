@@ -40,6 +40,7 @@ class TestPushQueues < TestBase
       assert_equal 10, queue.subscribers.size
 
       # add the last one
+      queue.reload # temporary, can remove
       queue.add_subscriber({url: "http://nowhere.com"})
       queue.reload
       assert_equal 11, queue.subscribers.size
@@ -212,7 +213,4 @@ class TestPushQueues < TestBase
 
   end
 
-
-
 end
-
