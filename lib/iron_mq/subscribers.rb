@@ -13,8 +13,8 @@ module IronMQ
   end
 
   class Subscriber < ResponseBase
+
     attr_accessor :options
-    attr_reader :message
 
     def initialize(raw, message, options={})
       super(raw)
@@ -27,6 +27,7 @@ module IronMQ
       res = @client.parse_response(@message.messages.client.delete(Subscribers.path(options)))
       return ResponseBase.new(res)
     end
+
   end
 end
 

@@ -69,6 +69,7 @@ module IronMQ
     def post(options={})
       options[:name] ||= @client.queue_name
       res = @client.parse_response(@client.post(path(options), options))
+      res
       p res
     end
 
@@ -104,6 +105,10 @@ module IronMQ
       load_queue(:force => true)
     end
 
+    def subscribers
+      raw["subscribers"]
+    end
+
     # Used if lazy loading
     def load_queue(options={})
       return if @loaded && !options[:force]
@@ -120,10 +125,6 @@ module IronMQ
 
     def delete_queue()
       @client.queues.delete(:name => name)
-    end
-
-    def post(body, options={})
-      @client.messages.post(body, options.merge(:queue_name => name))
     end
 
     # updates the Queue object itself
@@ -146,29 +147,34 @@ module IronMQ
       return raw["subscribers"]
     end
 
-    def add_subscriber_urls(*urls)
-      p add_subscriber_urls: urls
-      change_subscriber_urls(add: urls)
+    def add_subscriber(subscriber_hash, options={})
+      puts 'add_subscriber'
+      res = @client.post("#{@client.queues.path(name: name)}/subscribers", subscribers: [subscriber_hash])
+      res = @client.parse_response(res)
+      p res
+      res
     end
 
-    def set_subscriber_urls(*urls)
-      p set_subscriber_urls: urls
-      change_subscriber_urls(set: urls)
+    def remove_subscriber(subscriber_hash)
+      puts 'remove_subscriber'
+      res = @client.delete("#{@client.queues.path(name: name)}/subscribers", subscribers: [subscriber_hash])
+      res = @client.parse_response(res)
+      p res
+      res
     end
 
-    def delete_subscriber_urls(*urls)
-      p delete_subscriber_urls: urls
-      change_subscriber_urls(delete: urls)
+    def post(body, options={})
+      @client.subscribers.post(body, options.merge(:queue_name => name))
     end
 
-    def change_subscriber_urls(changes)
-      wrapped = Hash[changes.map{|k,v| [k, v.map{|url|
-        url.respond_to?(:to_hash) ? url.to_hash : {url: url}
-      }] }]
-      p change_subscriber_urls: wrapped
-      raw = @client.queues.post("#{@client.queues.path(name: name)}/subscribers", wrapped)
-      p @client.parse_response(raw)
+    def get(options={})
+      @client.subscribers.get(options.merge(:queue_name => name))
     end
+
+    def delete(id, options={})
+      @client.subscribers.delete(id, options.merge(:queue_name => name))
+    end
+
 
     # This will continuously poll for a message and pass it to the block. For example:
     #
