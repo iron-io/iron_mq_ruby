@@ -69,8 +69,8 @@ module IronMQ
     def post(options={})
       options[:name] ||= @client.queue_name
       res = @client.parse_response(@client.post(path(options), options))
-      res
       p res
+      res
     end
 
 
@@ -105,8 +105,8 @@ module IronMQ
       load_queue(:force => true)
     end
 
-    def subscribers
-      raw["subscribers"]
+    def messages
+      raw["messages"]
     end
 
     # Used if lazy loading
@@ -157,22 +157,22 @@ module IronMQ
 
     def remove_subscriber(subscriber_hash)
       puts 'remove_subscriber'
-      res = @client.delete("#{@client.queues.path(name: name)}/subscribers", subscribers: [subscriber_hash])
+      res = @client.delete("#{@client.queues.path(name: name)}/subscribers", {subscribers: [subscriber_hash]}, {"Content-Type"=>@client.content_type})
       res = @client.parse_response(res)
       p res
       res
     end
 
     def post(body, options={})
-      @client.subscribers.post(body, options.merge(:queue_name => name))
+      @client.messages.post(body, options.merge(:queue_name => name))
     end
 
     def get(options={})
-      @client.subscribers.get(options.merge(:queue_name => name))
+      @client.messages.get(options.merge(:queue_name => name))
     end
 
     def delete(id, options={})
-      @client.subscribers.delete(id, options.merge(:queue_name => name))
+      @client.messages.delete(id, options.merge(:queue_name => name))
     end
 
 

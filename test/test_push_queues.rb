@@ -114,15 +114,18 @@ class TestPushQueues < TestBase
     m = queue.post(msg)
     p m
 
+    puts 'sleeping 2'
+    sleep 2
     subscribers = queue.messages.get(m.id).subscribers
     p subscribers
     assert_equal 2, subscribers.size
     subscribers.each do |s|
       p s
       assert_equal 0, s["status_code"]
-      assert_equal "queued", s["status"]
+      assert_equal "reserved", s["status"]
     end
 
+    puts 'sleeping 5'
     sleep 5
 
     puts 'getting status'
@@ -195,6 +198,7 @@ class TestPushQueues < TestBase
         assert_equal "reserved", s["status"]
       end
 
+      puts 'sleeping 60'
       sleep 60
 
       subscribers = queue.messages.get(m.id).subscribers

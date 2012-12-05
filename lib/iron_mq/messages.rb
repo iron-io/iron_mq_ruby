@@ -119,7 +119,7 @@ module IronMQ
       res = @messages.client.parse_response(res)
       ret = []
       res['subscribers'].each do |m|
-        ret << Subscriber.new(self, m, options)
+        ret << Subscriber.new(m, self, options)
       end
       ret
     end
