@@ -202,6 +202,15 @@ class TestPushQueues < TestBase
         p s.delete
       end
 
+      subscribers = queue.messages.get(m.id).subscribers
+      p subscribers
+      assert_equal 2, subscribers.size
+      subscribers.each do |s|
+        p s
+        p s["status_code"]
+        assert_equal "deleted", s["status"]
+      end
+
     end
 
   end
