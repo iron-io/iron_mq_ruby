@@ -114,17 +114,6 @@ class TestPushQueues < TestBase
     m = queue.post(msg)
     p m
 
-    puts 'sleeping 2'
-    sleep 2
-    subscribers = queue.messages.get(m.id).subscribers
-    p subscribers
-    assert_equal 2, subscribers.size
-    subscribers.each do |s|
-      p s
-      assert_equal 0, s["status_code"]
-      assert_equal "reserved", s["status"]
-    end
-
     puts 'sleeping 5'
     sleep 5
 
@@ -207,7 +196,7 @@ class TestPushQueues < TestBase
       subscribers.each do |s|
         p s
         assert_equal 202, s["status_code"]
-        assert_equal "reserved", s["status"]
+        assert_equal "retrying", s["status"]
         # now let's delete it to say we're done with it
         puts "Acking subscriber"
         p s.delete
