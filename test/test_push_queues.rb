@@ -12,7 +12,6 @@ class TestPushQueues < TestBase
   end
 
 
-
   def test_queue_subscriptions
 
     types = ["multicast", "unicast"]
@@ -94,22 +93,23 @@ class TestPushQueues < TestBase
     @rest = Rest::Client.new
     qname = "failure-queue"
 
+    x = rand(1000)
+
     subscribers = []
-    subscribers << {url: "http://rest-test.iron.io/code/503?switch_after=2&switch_to=200"}
+    subscribers << {url: "http://rest-test.iron.io/code/503?switch_after=2&switch_to=200&namespace=push-test-failures-#{x}"}
     subscribers << {url: "http://rest-test.iron.io/code/503"}
 
     queue = @client.queue(qname)
     res = queue.update_queue(:subscribers => subscribers,
                              :push_type => "multicast",
                              :retries => 3,
-                             :retries_delay => 15
+                             :retries_delay => 3
     )
     queue = @client.queue(qname)
     p queue
     p queue.subscribers
     assert_equal 2, queue.subscribers.size
 
-    x = rand(1000)
     msg = "hello #{x}"
     m = queue.post(msg)
     p m
@@ -135,15 +135,14 @@ class TestPushQueues < TestBase
       p s
       assert_equal 200, s["status_code"]
       if i == 0
-      assert_equal "deleted", s["status"]
+        assert_equal "deleted", s["status"]
       else
-      # this one should error out
-      assert_equal "error", s["status"]
+        # this one should error out
+        assert_equal "error", s["status"]
       end
     end
 
   end
-
 
 
   def test_202
