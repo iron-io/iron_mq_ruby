@@ -3,20 +3,40 @@ require 'cgi'
 module IronMQ
   class Messages
 
-    attr_accessor :client
+    attr_reader :client, :queue
 
-    def initialize(client)
+    def initialize(client, queue=nil)
       @client = client
+      @queue = queue
     end
 
+
     def path(options={})
-      path = "projects/#{@client.project_id}/queues/#{CGI::escape(options[:queue_name] || options['queue_name'] || @client.queue_name)}/messages"
+      options[:queue_name] ||= ((@queue ? @queue.name : nil) || @client.queue_name)
+      options[:project_id] = @client.project_id
+      Messages.path(options)
+    end
+
+    def self.path(options)
+      path = "#{Queues.path(options)}/messages"
+      if options[:msg_id]
+        path << "/#{options[:msg_id]}"
+      end
+      path
     end
 
     # options:
     #  :queue_name => can specify an alternative queue name
     #  :timeout => amount of time before message goes back on the queue
     def get(options={})
+      if options.is_a?(String)
+        # assume it's an id
+        puts 'get_by_id'
+        return Message.new(self, {'id'=>options}, options)
+        #r = @client.get(path(:msg_id=>options))
+        #p r
+        #return r
+      end
       res = @client.parse_response(@client.get(path(options), options))
       ret = []
       res["messages"].each do |m|
@@ -72,30 +92,6 @@ module IronMQ
 
   end
 
-  class ResponseBase
-
-    def initialize(res)
-      @data = res
-    end
-
-    def raw
-      @data
-    end
-
-    def [](key)
-      raw[key]
-    end
-
-    def id
-      raw["id"]
-    end
-
-    def msg
-      raw["msg"]
-    end
-
-  end
-
   class Message < ResponseBase
 
     def initialize(messages, res, options={})
@@ -103,7 +99,6 @@ module IronMQ
       @messages = messages
       @options = options
     end
-
 
     def body
       raw["body"]
@@ -117,6 +112,16 @@ module IronMQ
       options2 = options || {}
       options2 = options.merge(@options) if @options
       @messages.release(self.id, options2)
+    end
+
+    def subscribers(options={})
+      res = @messages.client.get(@messages.path(options.merge(msg_id: id)) + "/subscribers", options)
+      res = @messages.client.parse_response(res)
+      ret = []
+      res['subscribers'].each do |m|
+        ret << Subscriber.new(m, self, options)
+      end
+      ret
     end
   end
 

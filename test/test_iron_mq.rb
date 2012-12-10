@@ -345,6 +345,26 @@ class IronMQTests < TestBase
   #
   #end
 
+  def test_webhooks
+    qname ="webhook_queue"
+    path = "#{IronMQ::Messages.path(project_id: @client.project_id, queue_name: qname)}/webhook"
+    url = "#{@client.base_url}#{path}"
+    url << "?oauth=#{@client.token}"
+    p url
+
+    v = "hello webhook"
+
+    @rest = Rest::Client.new
+    p @rest.post(url, body: v)
+
+    queue = @client.queue(qname)
+    msg = queue.get
+    p msg
+    assert_equal v, msg.body
+
+
+  end
+
 
 end
 

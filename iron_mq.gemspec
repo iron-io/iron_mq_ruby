@@ -2,7 +2,7 @@ require File.expand_path('../lib/iron_mq/version', __FILE__)
 
 Gem::Specification.new do |gem|
   gem.authors       = ["Travis Reeder"]
-  gem.email         = ["treeder@gmail.com"]
+  gem.email         = ["travis@iron.io"]
   gem.description   = "Ruby client for IronMQ by www.iron.io"
   gem.summary       = "Ruby client for IronMQ by www.iron.io"
   gem.homepage      = "https://github.com/iron-io/iron_mq_ruby"
@@ -16,7 +16,7 @@ Gem::Specification.new do |gem|
 
   gem.required_rubygems_version = ">= 1.3.6"
   gem.required_ruby_version = Gem::Requirement.new(">= 1.9")
-  gem.add_runtime_dependency "iron_core", ">= 0.4.2"
+  gem.add_runtime_dependency "iron_core", ">= 0.4.4"
 
   gem.add_development_dependency "test-unit"
   gem.add_development_dependency "minitest"

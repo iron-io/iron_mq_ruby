@@ -1,4 +1,5 @@
 require 'cgi'
+require_relative 'subscribers'
 
 module IronMQ
   class Queues
@@ -9,12 +10,18 @@ module IronMQ
       @client = client
     end
 
-    def path(options={})
-      path = "projects/#{@client.project_id}/queues"
-      if options[:name]
-        path << "/#{CGI::escape(options[:name])}"
+    def self.path(options)
+      path = "projects/#{options[:project_id]}/queues"
+      name = options[:name] || options[:queue_name] || options['queue_name']
+      if name
+        path << "/#{CGI::escape(name)}"
       end
       path
+    end
+
+    def path(options={})
+      options[:project_id] = @client.project_id
+      Queues.path(options)
     end
 
     def list(options={})
@@ -48,26 +55,30 @@ module IronMQ
     #  :name => can specify an alternative queue name
     def get(options={})
       options[:name] ||= @client.queue_name
-      res = @client.parse_response(@client.get("#{path(options)}"))
+      r = @client.get("#{path(options)}")
+      puts "HEADERS"
+      p r.headers
+      res = @client.parse_response(r)
       return Queue.new(@client, res)
     end
 
     # Update a queue
     # options:
     #  :name => if not specified, will use global queue name
-    #  :subscriptions => url's to subscribe to
+    #  :subscribers => url's to subscribe to
     def post(options={})
       options[:name] ||= @client.queue_name
       res = @client.parse_response(@client.post(path(options), options))
-      res
       p res
-
+      res
     end
 
 
   end
 
   class Queue
+
+    attr_reader :client
 
     def initialize(client, res)
       @client = client
@@ -91,14 +102,20 @@ module IronMQ
     end
 
     def reload
-      load_queue
+      load_queue(:force => true)
+    end
+
+    def messages
+      raw["messages"]
     end
 
     # Used if lazy loading
-    def load_queue
+    def load_queue(options={})
+      return if @loaded && !options[:force]
       q = @client.queues.get(:name => name)
       @client.logger.debug "GOT Q: " + q.inspect
       @data = q.raw
+      @loaded = true
       q
     end
 
@@ -107,23 +124,43 @@ module IronMQ
     end
 
     def delete_queue()
-      @client.queues.delete(:name=>name)
+      @client.queues.delete(:name => name)
+    end
+
+    # updates the Queue object itself
+    def update_queue(options)
+      @client.queues.post(options.merge(:name => name))
     end
 
     def size
-      return raw["size"] if raw["size"]
-      return @size if @size
-      q = load_queue()
-      @size = q.size
-      @size
+      load_queue()
+      return raw["size"]
     end
 
     def total_messages
-      return raw["total_messages"] if raw["total_messages"]
-      return @total_messages if @total_messages
-      q = load_queue()
-      @total_messages = q.total_messages
-      @total_messages
+      load_queue()
+      return raw["total_messages"]
+    end
+
+    def subscribers
+      load_queue()
+      return raw["subscribers"]
+    end
+
+    def add_subscriber(subscriber_hash, options={})
+      puts 'add_subscriber'
+      res = @client.post("#{@client.queues.path(name: name)}/subscribers", subscribers: [subscriber_hash])
+      res = @client.parse_response(res)
+      p res
+      res
+    end
+
+    def remove_subscriber(subscriber_hash)
+      puts 'remove_subscriber'
+      res = @client.delete("#{@client.queues.path(name: name)}/subscribers", {subscribers: [subscriber_hash]}, {"Content-Type"=>@client.content_type})
+      res = @client.parse_response(res)
+      p res
+      res
     end
 
     def post(body, options={})
@@ -133,6 +170,11 @@ module IronMQ
     def get(options={})
       @client.messages.get(options.merge(:queue_name => name))
     end
+
+    def delete(id, options={})
+      @client.messages.delete(id, options.merge(:queue_name => name))
+    end
+
 
     # This will continuously poll for a message and pass it to the block. For example:
     #
@@ -159,8 +201,8 @@ module IronMQ
       end
     end
 
-    def delete(id, options={})
-      @client.messages.delete(id, options.merge(:queue_name => name))
+    def messages
+      Messages.new(client, self)
     end
 
   end
