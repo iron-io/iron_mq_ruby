@@ -195,7 +195,7 @@ class TestPushQueues < TestBase
       subscribers.each do |s|
         p s
         assert_equal 202, s["status_code"]
-        assert_equal "retrying", s["status"]
+        assert_equal "reserved", s["status"]
         # now let's delete it to say we're done with it
         puts "Acking subscriber"
         p s.delete
