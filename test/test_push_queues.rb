@@ -131,7 +131,7 @@ class TestPushQueues < TestBase
     subscribers = queue.messages.get(m.id).subscribers
     p subscribers
     assert_equal 2, subscribers.size
-    subscribers.each_with_index do |s|
+    subscribers.each_with_index do |s, i|
       p s
       assert_equal 200, s["status_code"]
       if i == 0
