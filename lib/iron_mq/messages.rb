@@ -93,6 +93,7 @@ module IronMQ
   end
 
   class Message < ResponseBase
+    attr_reader :messages
 
     def initialize(messages, res, options={})
       super(res)
@@ -124,5 +125,4 @@ module IronMQ
       ret
     end
   end
-
 end
