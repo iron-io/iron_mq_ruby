@@ -131,14 +131,15 @@ class TestPushQueues < TestBase
     subscribers = queue.messages.get(m.id).subscribers
     p subscribers
     assert_equal 2, subscribers.size
-    subscribers.each_with_index do |s|
+    subscribers.each do |s|
       p s
-      assert_equal 200, s["status_code"]
-      if i == 0
-        assert_equal "deleted", s["status"]
-      else
-        # this one should error out
+
+      if s["url"] == "http://rest-test.iron.io/code/503"
+        assert_equal 503, s["status_code"]
         assert_equal "error", s["status"]
+      else
+        assert_equal 200, s["status_code"]
+        assert_equal "deleted", s["status"]
       end
     end
 
@@ -195,7 +196,7 @@ class TestPushQueues < TestBase
       subscribers.each do |s|
         p s
         assert_equal 202, s["status_code"]
-        assert_equal "retrying", s["status"]
+        assert_equal "reserved", s["status"]
         # now let's delete it to say we're done with it
         puts "Acking subscriber"
         p s.delete
