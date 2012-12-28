@@ -15,7 +15,7 @@ class IronMQTests < TestBase
   end
 
   def test_performance_post_100_messages
-    @client.queue_name = 'test_basics_6'
+    @client.queue_name = 'test_perf_100'
     # slower to rackspace since this is running on aws
     timeout = @client.host.include?('rackspace') ? 40 : 12
     assert_performance timeout do
@@ -27,7 +27,7 @@ class IronMQTests < TestBase
 
 
   def test_basics
-    queue_name = 'test_basics_6'
+    queue_name = 'test_basics_7'
     @client.queue_name = queue_name
     clear_queue
 
@@ -181,12 +181,6 @@ class IronMQTests < TestBase
     end
     assert_equal 0, res.size
 
-
-    queue = @client.queue("test_basics_6")
-    assert queue.name
-    assert queue.size
-
-
   end
 
   def test_delay
@@ -291,7 +285,7 @@ class IronMQTests < TestBase
 
   def test_clear
 
-    q = @client.queue("clearer_6")
+    q = @client.queue("test_clear_7")
 
     clear_queue(q.name)
 
@@ -350,6 +344,26 @@ class IronMQTests < TestBase
   #  queue.get("").body == "hi2"
   #
   #end
+
+  def test_webhooks
+    qname ="webhook_queue"
+    path = "#{IronMQ::Messages.path(project_id: @client.project_id, queue_name: qname)}/webhook"
+    url = "#{@client.base_url}#{path}"
+    url << "?oauth=#{@client.token}"
+    p url
+
+    v = "hello webhook"
+
+    @rest = Rest::Client.new
+    p @rest.post(url, body: v)
+
+    queue = @client.queue(qname)
+    msg = queue.get
+    p msg
+    assert_equal v, msg.body
+
+
+  end
 
 
 end

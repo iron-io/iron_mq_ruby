@@ -26,11 +26,12 @@ class TestBase < Test::Unit::TestCase
   def clear_queue(queue_name=nil)
     queue_name ||= @client.queue_name
     puts "clearing queue #{queue_name}"
-    while res = @client.messages.get(:queue_name=>queue_name)
-      p res
-      puts res.body.to_s
-      res.delete
-    end
+    @client.queue(queue_name).clear
+    #while res = @client.messages.get(:queue_name=>queue_name)
+    #  p res
+    #  puts res.body.to_s
+    #  res.delete
+    #end
     puts 'cleared.'
   end
 
