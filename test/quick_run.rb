@@ -1,6 +1,6 @@
 require_relative 'test_base'
 
-TIMES = 100
+TIMES = 1
 
 class QuickRun < TestBase
 
@@ -13,7 +13,7 @@ class QuickRun < TestBase
   def test_basics
 
     TIMES.times do |i|
-      puts "Loop #{i}"
+      puts "==== LOOP #{i} =================================="
 
       res = @client.messages.post("hello world!")
       p res
