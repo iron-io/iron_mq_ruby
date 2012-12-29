@@ -124,7 +124,7 @@ class TestPushQueues < TestBase
     subscribers.each do |s|
       p s
       assert_equal 503, s["status_code"]
-      assert_equal "retrying", s["status"]
+      assert ["reserved", "retrying"].include? s["status"]
     end
     puts 'sleeping 20'
     sleep 20
