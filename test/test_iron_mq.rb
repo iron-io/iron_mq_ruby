@@ -108,6 +108,25 @@ class IronMQTests < TestBase
 
   end
 
+
+  def test_queues_list
+    queue_name = 'test_queues_list'
+    @client.queue_name = queue_name
+    clear_queue
+
+    res = @client.messages.post("hello world!")
+    p res 
+
+    res = @client.queues.list
+    res.each do |q|
+      puts "#{q.name} and #{queue_name}";
+      if q.name == queue_name
+        assert_equal q.size, 1 
+      end
+    end
+  end
+
+
   # TODO: pass :timeout in post/get messages and test those
   def test_timeout
     @client.queue_name = "test_timeout_6"
