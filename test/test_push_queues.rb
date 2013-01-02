@@ -79,8 +79,7 @@ class TestPushQueues < TestBase
               LOG.debug ex.code
               assert_equal 404, ex.code
             end
-          end
-          
+          end          
           assert_not_equal tries, 0
         end
       elsif t == "unicast"
@@ -107,7 +106,6 @@ class TestPushQueues < TestBase
         end        
         assert_not_equal tries, 0
       end
-
 
       tries = MAX_TRIES
       while tries > 0
@@ -183,7 +181,6 @@ class TestPushQueues < TestBase
     end
     assert_not_equal tries, 0
 
-
     tries = MAX_TRIES
     while tries > 0
       tries -= 1
@@ -203,6 +200,7 @@ class TestPushQueues < TestBase
       end
       break
     end
+    assert_not_equal tries, 0
   end
 
 
@@ -275,7 +273,6 @@ class TestPushQueues < TestBase
         end
         break
       end
-
       assert_not_equal 0, tries
 
       tries = MAX_TRIES
@@ -292,9 +289,9 @@ class TestPushQueues < TestBase
         break
       end
       assert_not_equal 0, tries
-
     end
   end
+
 
   def test_202_failure
 
