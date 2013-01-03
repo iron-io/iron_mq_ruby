@@ -106,7 +106,11 @@ class TestPushQueues < TestBase
       tries = MAX_TRIES
       while tries > 0
         tries -= 1
-        subscribers = queue.messages.get(m.id).subscribers
+        msg = queue.messages.get(m.id)
+        LOG.info "checking for message: #{msg}"
+        next if msg.nil?
+        subscribers = msg.subscribers
+
         LOG.debug subscribers
         if t == "unicast"
           assert_equal 1, found
