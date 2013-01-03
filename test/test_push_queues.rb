@@ -107,6 +107,7 @@ class TestPushQueues < TestBase
       while tries > 0
         tries -= 1
         msg = queue.messages.get(m.id)
+        LOG.info "checking for message: #{msg}"
         next if msg.nil?
         subscribers = msg.subscribers
 
