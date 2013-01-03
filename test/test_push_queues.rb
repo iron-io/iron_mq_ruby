@@ -2,10 +2,6 @@
 require_relative 'test_base'
 require 'logger'
 
-LOG = Logger.new(STDOUT)
-LOG.level == Logger::INFO
-MAX_TRIES = 100
-
 class TestPushQueues < TestBase
 
   def setup
