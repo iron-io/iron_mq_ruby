@@ -350,8 +350,11 @@ class IronMQTests < TestBase
 
 
   def test_poll
-    queue = @client.queue("test_poll_6")
-    queue.clear
+    queue_name = "test_poll_6"
+    @client.queue_name = queue_name
+    clear_queue
+
+    queue = @client.queue(queue_name)
 
     v = "hello world"
     5.times do
