@@ -9,8 +9,11 @@ rescue Exception => ex
   raise ex
 end
 
+LOG = Logger.new(STDOUT)
+MAX_TRIES = 100
 
 class TestBase < Test::Unit::TestCase
+
   def setup
     puts 'setup'
     # check multiple config locations
