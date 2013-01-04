@@ -144,6 +144,7 @@ class IronMQTests < TestBase
 
     tries = MAX_TRIES
     while tries > 0
+      sleep 0.5
       tries -= 1
       sleep 1
       new_msg = @client.messages.get()
@@ -167,6 +168,7 @@ class IronMQTests < TestBase
 
     tries = MAX_TRIES
     while tries > 0
+      sleep 0.5
       tries -= 1
       sleep 1
       new_msg = @client.messages.get()
@@ -217,6 +219,7 @@ class IronMQTests < TestBase
 
     tries = MAX_TRIES
     while tries > 0
+      sleep 0.5
       tries -= 1
       sleep 1
       msg = @client.messages.get
@@ -296,6 +299,7 @@ class IronMQTests < TestBase
 
     tries = MAX_TRIES
     while tries > 0
+      sleep 0.5
       tries -= 1
       sleep 1
       msg = @client.messages.get
@@ -313,6 +317,7 @@ class IronMQTests < TestBase
 
     tries = MAX_TRIES
     while tries > 0
+      sleep 0.5
       tries -= 1
       sleep 1
       msg = @client.messages.get
