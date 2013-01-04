@@ -6,18 +6,17 @@ require_relative 'test_base'
 class IronMQTests < TestBase
   def setup
     super
-
+    @skip = @host.include? 'rackspace'
+    LOG.info "@host: #{@host}"
     queues = @client.queues.list
     p queues
-
     clear_queue()
-
   end
 
   def test_performance_post_100_messages
     @client.queue_name = 'test_perf_100'
     # slower to rackspace since this is running on aws
-    timeout = @client.host.include?('rackspace') ? 40 : 12
+    timeout = @host.include?('rackspace') ? 40 : 12
     assert_performance timeout do
       100.times do
         @client.messages.post("hello world!")
@@ -392,6 +391,8 @@ class IronMQTests < TestBase
   #end
 
   def test_webhooks
+    omit_if @skip
+    puts "skip webhooks: #{@skip}"
     qname ="webhook_queue"
     path = "#{IronMQ::Messages.path(project_id: @client.project_id, queue_name: qname)}/webhook"
     url = "#{@client.base_url}#{path}"

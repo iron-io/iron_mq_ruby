@@ -9,11 +9,11 @@ class BeanstalkTests < TestBase
     super
 
     config = @config['iron']
-    @host = "#{config['host'] || "mq-aws-us-east-1.iron.io"}:#{config['beanstalkd_port'] || 11300}"
-    puts "beanstalkd url: #{@host}"
+    beanstalkd_host = "#{@host}:#{config['beanstalkd_port'] || 11300}"
+    puts "beanstalkd url: #{beanstalkd_host}"
     @skip = @host.include? 'rackspace'
     return if @skip # bypass these tests if rackspace
-    @beanstalk = Beanstalk::Connection.new(@host)
+    @beanstalk = Beanstalk::Connection.new(beanstalkd_host)
     @beanstalk.put("oauth #{config['token']} #{config['project_id']}")
 
     clear_tube('default')

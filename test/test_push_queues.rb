@@ -6,6 +6,8 @@ class TestPushQueues < TestBase
 
   def setup
     super
+    @skip = @host.include? 'rackspace'
+    return if @skip # bypass these tests if rackspace
   end
 
   def make_key(i, t, random=0)
@@ -14,7 +16,7 @@ class TestPushQueues < TestBase
 
 
   def test_queue_subscriptions
-
+    omit_if @skip
     types = ["multicast", "unicast"]
     types.each do |t|
 
@@ -131,6 +133,7 @@ class TestPushQueues < TestBase
 
 
   def test_failure
+    omit_if @skip
     @rest = Rest::Client.new
     qname = "failure-queue"
 
@@ -201,6 +204,7 @@ class TestPushQueues < TestBase
 
 
   def test_202
+    omit_if @skip
     types = ["multicast"]
     types.each do |t|
 
@@ -290,7 +294,7 @@ class TestPushQueues < TestBase
 
 
   def test_202_failure
-
+    omit_if @skip
   end
 
 end

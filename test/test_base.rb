@@ -19,6 +19,9 @@ class TestBase < Test::Unit::TestCase
     # check multiple config locations
     @config = UberConfig.load
     puts "config=" + @config.inspect
+
+    config = @config['iron']
+    @host = "#{config['host'] || "mq-aws-us-east-1.iron.io"}"
     @client = IronMQ::Client.new(@config['iron'])
     IronCore::Logger.logger.level = Logger::DEBUG
     @client.queue_name = 'ironmq-ruby-tests'
