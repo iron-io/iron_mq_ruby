@@ -6,6 +6,8 @@ class TestPushQueues < TestBase
 
   def setup
     super
+    @skip = @host.include? 'rackspace'
+    return if @skip # bypass these tests if rackspace
   end
 
   def make_key(i, t, random=0)
@@ -14,7 +16,7 @@ class TestPushQueues < TestBase
 
 
   def test_queue_subscriptions
-
+    omit_if @skip
     types = ["multicast", "unicast"]
     types.each do |t|
 
@@ -105,6 +107,7 @@ class TestPushQueues < TestBase
 
       tries = MAX_TRIES
       while tries > 0
+        sleep 0.5
         tries -= 1
         msg = queue.messages.get(m.id)
         LOG.info "checking for message: #{msg}"
@@ -119,14 +122,16 @@ class TestPushQueues < TestBase
           assert_equal num_subscribers, found
           assert_equal num_subscribers, subscribers.size
         end
-        
+
+        do_retry = false
         subscribers.each do |s|
           LOG.debug s
           LOG.info "status_code=#{s['status_code']}"
           LOG.info "status=#{s['status']}"
-          next unless 200 == s["status_code"]
-          next unless "deleted" == s["status"]
+          do_retry = true unless 200 == s["status_code"]
+          do_retry = true unless "deleted" == s["status"]
         end
+        next if do_retry
         break
       end
       assert_not_equal tries, 0
@@ -135,6 +140,7 @@ class TestPushQueues < TestBase
 
 
   def test_failure
+    omit_if @skip
     @rest = Rest::Client.new
     qname = "failure-queue"
 
@@ -163,6 +169,7 @@ class TestPushQueues < TestBase
     
     tries = MAX_TRIES
     while tries > 0
+      sleep 0.5
       tries -= 1
       LOG.info 'getting status'
       subscribers = queue.messages.get(m.id).subscribers
@@ -170,34 +177,38 @@ class TestPushQueues < TestBase
       LOG.info "num_subscribers=#{num_subscribers} subscribers.size=#{subscribers.size}"
 
       assert_equal num_subscribers, subscribers.size
+      do_retry = false
       subscribers.each do |s|
         LOG.debug s
         LOG.info "status_code=#{s['status_code']}"
         LOG.info "status=#{s['status']}"
-        next unless 503 == s["status_code"]
-        next unless ["reserved", "retrying"].include? s["status"]
+        do_retry = true unless 503 == s["status_code"]
+        do_retry = true unless ["reserved", "retrying"].include? s["status"]
       end
+      next if do_retry
       break
     end
     assert_not_equal tries, 0
 
     tries = MAX_TRIES
     while tries > 0
+      sleep 0.5
       tries -= 1
       subscribers = queue.messages.get(m.id).subscribers
       LOG.debug subscribers
       assert_equal num_subscribers, subscribers.size
+      do_retry = false
       subscribers.each do |s|
         LOG.debug s
-        
         if s["url"] == "http://rest-test.iron.io/code/503"
-          next unless 503 == s["status_code"]
-          next unless "error" == s["status"]
+          do_retry = true unless 503 == s["status_code"]
+          do_retry = true unless "error" == s["status"]
         else
-          next unless 200 == s["status_code"]
-          next unless "deleted" == s["status"]
+          do_retry = true unless 200 == s["status_code"]
+          do_retry = true unless "deleted" == s["status"]
         end
       end
+      next if do_retry
       break
     end
     assert_not_equal tries, 0
@@ -205,6 +216,7 @@ class TestPushQueues < TestBase
 
 
   def test_202
+    omit_if @skip
     types = ["multicast"]
     types.each do |t|
 
@@ -236,15 +248,18 @@ class TestPushQueues < TestBase
 
       tries = MAX_TRIES
       while tries > 0
+        sleep 0.5
         tries -= 1
         subscribers = queue.messages.get(m.id).subscribers
         LOG.debug subscribers
         assert_equal num_subscribers, subscribers.size
+        do_retry = false
         subscribers.each do |s|
           LOG.debug s
-          next unless 202 == s["status_code"]
-          next unless "reserved" == s["status"]
+          do_retry = true unless 202 == s["status_code"]
+          do_retry = true unless "reserved" == s["status"]
         end
+        next if do_retry
         break
       end
       assert_not_equal tries, 0
@@ -254,38 +269,45 @@ class TestPushQueues < TestBase
 
       tries = MAX_TRIES
       while tries > 0
+        sleep 0.5
         subscribers = queue.messages.get(m.id).subscribers
         LOG.debug subscribers
         assert_equal num_subscribers, subscribers.size
 
+        do_retry = false
         subscribers.each do |s|
           LOG.debug s
           LOG.info "status_code=#{s['status_code']}"
           LOG.info "status=#{s['status']}"
 
-          next unless 202 == s["status_code"]
-          next unless "reserved" == s["status"]
+          do_retry = true unless 202 == s["status_code"]
+          do_retry = true unless "reserved" == s["status"]
 
           # now let's delete it to say we're done with it
           LOG.info "Acking subscriber"
           res = s.delete
           LOG.debug res
         end
+        next if do_retry
         break
       end
       assert_not_equal 0, tries
 
       tries = MAX_TRIES
       while tries > 0
+        sleep 0.5
         tries -= 1
         subscribers = queue.messages.get(m.id).subscribers
         LOG.debug subscribers
-        assert_equal num_subscribers, subscribers.size
+        next unless num_subscribers == subscribers.size
+        
+        do_retry = false
         subscribers.each do |s|
           LOG.debug s
           LOG.info "status=#{s['status']}"
-          next unless "deleted" == s["status"]
+          do_retry = true unless "deleted" == s["status"]
         end
+        next if do_retry
         break
       end
       assert_not_equal 0, tries
@@ -294,7 +316,7 @@ class TestPushQueues < TestBase
 
 
   def test_202_failure
-
+    omit_if @skip
   end
 
 end
