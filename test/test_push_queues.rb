@@ -282,13 +282,18 @@ class TestPushQueues < TestBase
 
           do_retry = true unless 202 == s["status_code"]
           do_retry = true unless "reserved" == s["status"]
+        end
+        next if do_retry
 
-          # now let's delete it to say we're done with it
+        # now let's delete it to say we're done with it
+        subscribers.each do |s|
+          LOG.debug s
+          LOG.info "status_code=#{s['status_code']}"
+          LOG.info "status=#{s['status']}"
           LOG.info "Acking subscriber"
           res = s.delete
           LOG.debug res
         end
-        next if do_retry
         break
       end
       assert_not_equal 0, tries
