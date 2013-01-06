@@ -107,7 +107,11 @@ class TestPushQueues < TestBase
 
       tries = MAX_TRIES
       while tries > 0
-        sleep 0.5
+
+        # Need to wait > 60s here, because in case of retries on pusherd
+        # side (due lost connection for example) there will be no response earlier 
+        # (default retries_delay is 60s).
+        sleep 1
         tries -= 1
         msg = queue.messages.get(m.id)
         LOG.info "checking for message: #{msg}"
