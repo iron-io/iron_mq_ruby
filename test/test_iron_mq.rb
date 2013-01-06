@@ -372,7 +372,14 @@ class IronMQTests < TestBase
 
     assert_equal 5, i
 
-    assert_equal 0, queue.reload.size
+    tries = MAX_TRIES
+    while tries > 0
+      tries -= 1
+      break if 0 == queue.reload.size
+      sleep 0.5
+    end
+    assert_not_equal tries, 0
+    
 
   end
   #

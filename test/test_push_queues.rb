@@ -64,6 +64,7 @@ class TestPushQueues < TestBase
           tries = MAX_TRIES
           while tries > 0
             tries -= 1
+            sleep 0.5
             begin
               url = "http://rest-test.iron.io/stored/#{key}"
               LOG.info "checking url #{url}"
@@ -84,6 +85,7 @@ class TestPushQueues < TestBase
         tries = MAX_TRIES
         while tries > 0
           tries -= 1
+          sleep 0.5
           num_subscribers.times do |i|
             key = make_key(i, t, x)
             begin
@@ -107,7 +109,11 @@ class TestPushQueues < TestBase
 
       tries = MAX_TRIES
       while tries > 0
-        sleep 0.5
+
+        # Need to wait > 60s here, because in case of retries on pusherd
+        # side (due lost connection for example) there will be no response earlier 
+        # (default retries_delay is 60s).
+        sleep 1
         tries -= 1
         msg = queue.messages.get(m.id)
         LOG.info "checking for message: #{msg}"
@@ -282,13 +288,18 @@ class TestPushQueues < TestBase
 
           do_retry = true unless 202 == s["status_code"]
           do_retry = true unless "reserved" == s["status"]
+        end
+        next if do_retry
 
-          # now let's delete it to say we're done with it
+        # now let's delete it to say we're done with it
+        subscribers.each do |s|
+          LOG.debug s
+          LOG.info "status_code=#{s['status_code']}"
+          LOG.info "status=#{s['status']}"
           LOG.info "Acking subscriber"
           res = s.delete
           LOG.debug res
         end
-        next if do_retry
         break
       end
       assert_not_equal 0, tries
