@@ -64,6 +64,7 @@ class TestPushQueues < TestBase
           tries = MAX_TRIES
           while tries > 0
             tries -= 1
+            sleep 0.5
             begin
               url = "http://rest-test.iron.io/stored/#{key}"
               LOG.info "checking url #{url}"
@@ -84,6 +85,7 @@ class TestPushQueues < TestBase
         tries = MAX_TRIES
         while tries > 0
           tries -= 1
+          sleep 0.5
           num_subscribers.times do |i|
             key = make_key(i, t, x)
             begin
