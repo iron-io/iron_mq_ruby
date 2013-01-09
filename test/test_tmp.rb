@@ -8,5 +8,10 @@ class IronMQTests < TestBase
     super
   end
 
+  def test_x()
+    list = @client.queues
+    p list
+  end
+
 
 end

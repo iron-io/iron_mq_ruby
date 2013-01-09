@@ -17,6 +17,7 @@ class TestBase < Test::Unit::TestCase
     @config = UberConfig.load
     puts "config=" + @config.inspect
     @client = IronMQ::Client.new(@config['iron'])
+    Rest.logger.level = Logger::DEBUG # this doesn't work for some reason?
     IronCore::Logger.logger.level = Logger::DEBUG
     @client.queue_name = 'ironmq-ruby-tests'
 
