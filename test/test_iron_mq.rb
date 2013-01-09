@@ -6,18 +6,17 @@ require_relative 'test_base'
 class IronMQTests < TestBase
   def setup
     super
-
+    @skip = @host.include? 'rackspace'
+    LOG.info "@host: #{@host}"
     queues = @client.queues.list
     p queues
-
     clear_queue()
-
   end
 
   def test_performance_post_100_messages
     @client.queue_name = 'test_perf_100'
     # slower to rackspace since this is running on aws
-    timeout = @client.host.include?('rackspace') ? 40 : 12
+    timeout = @host.include?('rackspace') ? 40 : 12
     assert_performance timeout do
       100.times do
         @client.messages.post("hello world!")
@@ -108,6 +107,25 @@ class IronMQTests < TestBase
 
   end
 
+
+  def test_queues_list
+    queue_name = 'test_queues_list'
+    @client.queue_name = queue_name
+    clear_queue
+
+    res = @client.messages.post("hello world!")
+    p res 
+
+    res = @client.queues.list
+    res.each do |q|
+      puts "#{q.name} and #{queue_name}";
+      if q.name == queue_name
+        assert_equal q.size, 1 
+      end
+    end
+  end
+
+
   # TODO: pass :timeout in post/get messages and test those
   def test_timeout
     @client.queue_name = "test_timeout_6"
@@ -120,40 +138,45 @@ class IronMQTests < TestBase
     p msg
     assert msg
 
-    msg4 = @client.messages.get()
-    p msg4
-    assert_nil msg4
+    msg_nil = @client.messages.get()
+    p msg_nil
+    assert_nil msg_nil
 
-    puts 'sleeping 45 seconds...'
-    sleep 45
-
-    msg3 = @client.messages.get()
-    p msg3
-    assert_nil msg3
-
-    puts 'sleeping another 45 seconds...'
-    sleep 45
-
-    msg2 = @client.messages.get()
-    assert msg2
-    assert_equal msg2.id, msg.id
-
-    msg2.delete
+    tries = MAX_TRIES
+    while tries > 0
+      sleep 0.5
+      tries -= 1
+      sleep 1
+      new_msg = @client.messages.get()
+      p new_msg
+      next if new_msg.nil?
+      assert_equal new_msg.id, msg.id
+      new_msg.delete
+      break
+    end
+    assert_not_equal tries, 0
 
     # now try explicit timeout
-    res = @client.messages.post("hello world timeout2!", :timeout => 10)
+    res = @client.messages.post("hello world timeout2!", :timeout => 5)
     p res
     msg = @client.messages.get()
     p msg
     assert msg
-    msg4 = @client.messages.get()
-    p msg4
-    assert_nil msg4
-    puts 'sleeping 15 seconds...'
-    sleep 15
-    msg2 = @client.messages.get()
-    assert msg2
-    assert_equal msg2.id, msg.id
+    msg_nil = @client.messages.get()
+    p msg_nil
+    assert_nil msg_nil
+
+    tries = MAX_TRIES
+    while tries > 0
+      sleep 0.5
+      tries -= 1
+      sleep 1
+      new_msg = @client.messages.get()
+      next if new_msg.nil?
+      assert_equal new_msg.id, msg.id
+      break
+    end
+    assert_not_equal tries, 0
 
   end
 
@@ -189,14 +212,24 @@ class IronMQTests < TestBase
     clear_queue
     msgTxt = "testMessage-"+Time.now.to_s
     puts msgTxt
-    @client.messages.post(msgTxt, {:delay => 10})
+    @client.messages.post(msgTxt, {:delay => 5})
     msg = @client.messages.get
     p msg
     assert_nil msg
-    sleep 10
-    msg = @client.messages.get
-    p msg
-    assert msg
+
+    tries = MAX_TRIES
+    while tries > 0
+      sleep 0.5
+      tries -= 1
+      sleep 1
+      msg = @client.messages.get
+      p msg
+      next if msg.nil?
+      assert_equal msg.body, msgTxt
+      break
+    end
+    assert_not_equal tries, 0
+    
   end
 
   def test_batch
@@ -264,24 +297,38 @@ class IronMQTests < TestBase
     p msg
     assert_nil msg
 
-    sleep 11
-
-    msg = @client.messages.get
-    p msg
-    assert msg
+    tries = MAX_TRIES
+    while tries > 0
+      sleep 0.5
+      tries -= 1
+      sleep 1
+      msg = @client.messages.get
+      next if msg.nil?
+      p msg
+      assert_equal msg.id, msg_id
+      break
+    end
+    assert_not_equal tries, 0
 
     msg.release(:delay => 5)
     msg = @client.messages.get
     p msg
     assert_nil msg
 
-    sleep 6
-
-    msg = @client.messages.get
-    p msg
-    assert msg
-
+    tries = MAX_TRIES
+    while tries > 0
+      sleep 0.5
+      tries -= 1
+      sleep 1
+      msg = @client.messages.get
+      next if msg.nil?
+      p msg
+      assert_equal msg.id, msg_id
+      break
+    end
+    assert_not_equal tries, 0
   end
+
 
   def test_clear
 
@@ -306,8 +353,11 @@ class IronMQTests < TestBase
 
 
   def test_poll
-    queue = @client.queue("test_poll_6")
-    queue.clear
+    queue_name = "test_poll_6"
+    @client.queue_name = queue_name
+    clear_queue
+
+    queue = @client.queue(queue_name)
 
     v = "hello world"
     5.times do
@@ -322,7 +372,14 @@ class IronMQTests < TestBase
 
     assert_equal 5, i
 
-    assert_equal 0, queue.reload.size
+    tries = MAX_TRIES
+    while tries > 0
+      tries -= 1
+      break if 0 == queue.reload.size
+      sleep 0.5
+    end
+    assert_not_equal tries, 0
+    
 
   end
   #
@@ -346,6 +403,8 @@ class IronMQTests < TestBase
   #end
 
   def test_webhooks
+    omit_if @skip
+    puts "skip webhooks: #{@skip}"
     qname ="webhook_queue"
     path = "#{IronMQ::Messages.path(project_id: @client.project_id, queue_name: qname)}/webhook"
     url = "#{@client.base_url}#{path}"

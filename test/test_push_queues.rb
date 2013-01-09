@@ -1,10 +1,13 @@
 # Put config.yml file in ~/Dropbox/configs/ironmq_gem/test/config.yml
 require_relative 'test_base'
+require 'logger'
 
 class TestPushQueues < TestBase
 
   def setup
     super
+    @skip = @host.include? 'rackspace'
+    return if @skip # bypass these tests if rackspace
   end
 
   def make_key(i, t, random=0)
@@ -13,11 +16,11 @@ class TestPushQueues < TestBase
 
 
   def test_queue_subscriptions
-
+    omit_if @skip
     types = ["multicast", "unicast"]
     types.each do |t|
 
-      puts "Trying type #{t}"
+      LOG.info "Trying type #{t}"
 
       qname = "subscription-queue-#{t}"
 
@@ -34,62 +37,116 @@ class TestPushQueues < TestBase
       res = queue.update_queue(:subscribers => subscribers,
                                :push_type => t)
       queue = @client.queue(qname)
-      p queue
-      p queue.subscribers
-      assert_equal 10, queue.subscribers.size
+      LOG.debug queue
+      LOG.debug queue.subscribers
+      assert_equal num_subscribers, queue.subscribers.size
 
       # add the last one
       queue.reload # temporary, can remove
       queue.add_subscriber({url: "http://nowhere.com"})
       queue.reload
-      assert_equal 11, queue.subscribers.size
+      assert_equal num_subscribers + 1, queue.subscribers.size
       queue.remove_subscriber({url: "http://nowhere.com"})
       queue.reload
-      assert_equal 10, queue.subscribers.size
+      assert_equal num_subscribers, queue.subscribers.size
 
       # todo: assert subscriptions match
 
       msg = "hello #{x}"
       m = queue.post(msg)
 
-      puts "sleeping..."
-      sleep 10
-      puts "Checking results..."
+      LOG.info "Checking results..."
       @rest = Rest::Client.new
       found = 0
-      num_subscribers.times do |i|
-        key = make_key(i, t, x)
-        begin
-          response = @rest.get("http://rest-test.iron.io/stored/#{key}")
-          parsed = JSON.parse(response.body)
-          p parsed['body']
-          assert_equal msg, parsed['body']
-          found += 1
-        rescue Rest::HttpError => ex
-          p ex.code
-          assert_equal 404, ex.code
+      if t == "multicast"
+        num_subscribers.times do |i|
+          key = make_key(i, t, x)
+          tries = MAX_TRIES
+          while tries > 0
+            tries -= 1
+            sleep 0.5
+            begin
+              url = "http://rest-test.iron.io/stored/#{key}"
+              LOG.info "checking url #{url}"
+              response = @rest.get(url)
+              parsed = JSON.parse(response.body)
+              LOG.debug parsed['body']
+              assert_equal msg, parsed['body']
+              found += 1
+              break
+            rescue Rest::HttpError => ex
+              LOG.debug ex.code
+              assert_equal 404, ex.code
+            end
+          end          
+          assert_not_equal tries, 0
         end
-      end
-      subscribers = queue.messages.get(m.id).subscribers
-      p subscribers
-      if t == "unicast"
-        assert_equal 1, found
-        assert_equal 1, subscribers.size
-      else # pubsub
-        assert_equal num_subscribers, found
-        assert_equal num_subscribers, subscribers.size
+      elsif t == "unicast"
+        tries = MAX_TRIES
+        while tries > 0
+          tries -= 1
+          sleep 0.5
+          num_subscribers.times do |i|
+            key = make_key(i, t, x)
+            begin
+              url = "http://rest-test.iron.io/stored/#{key}"
+              LOG.info "checking url #{url}"
+              response = @rest.get(url)
+              parsed = JSON.parse(response.body)
+              LOG.debug parsed['body']
+              assert_equal msg, parsed['body']
+              found += 1
+              break
+            rescue Rest::HttpError => ex
+              LOG.debug ex.code
+              assert_equal 404, ex.code
+            end
+          end
+          break if found == 1
+        end        
+        assert_not_equal tries, 0
       end
 
-      subscribers.each do |s|
-        p s
-        assert_equal 200, s["status_code"]
-        assert_equal "deleted", s["status"]
+      tries = MAX_TRIES
+      while tries > 0
+
+        # Need to wait > 60s here, because in case of retries on pusherd
+        # side (due lost connection for example) there will be no response earlier 
+        # (default retries_delay is 60s).
+        sleep 1
+        tries -= 1
+        msg = queue.messages.get(m.id)
+        LOG.info "checking for message: #{msg}"
+        next if msg.nil?
+        subscribers = msg.subscribers
+
+        LOG.debug subscribers
+        if t == "unicast"
+          assert_equal 1, found
+          assert_equal 1, subscribers.size
+        else # pubsub
+          assert_equal num_subscribers, found
+          assert_equal num_subscribers, subscribers.size
+        end
+
+        do_retry = false
+        subscribers.each do |s|
+          LOG.debug s
+          LOG.info "status_code=#{s['status_code']}"
+          LOG.info "status=#{s['status']}"
+          do_retry = true unless 200 == s["status_code"]
+          do_retry = true unless "deleted" == s["status"]
+        end
+        next if do_retry
+        break
       end
+      assert_not_equal tries, 0
     end
-
   end
 
+
   def test_failure
+    omit_if @skip
     @rest = Rest::Client.new
     qname = "failure-queue"
 
@@ -99,6 +156,8 @@ class TestPushQueues < TestBase
     subscribers << {url: "http://rest-test.iron.io/code/503?switch_after=2&switch_to=200&namespace=push-test-failures-#{x}"}
     subscribers << {url: "http://rest-test.iron.io/code/503"}
 
+    num_subscribers = 2
+
     queue = @client.queue(qname)
     res = queue.update_queue(:subscribers => subscribers,
                              :push_type => "multicast",
@@ -106,51 +165,68 @@ class TestPushQueues < TestBase
                              :retries_delay => 3
     )
     queue = @client.queue(qname)
-    p queue
-    p queue.subscribers
-    assert_equal 2, queue.subscribers.size
+    LOG.debug queue
+    LOG.debug queue.subscribers
+    assert_equal num_subscribers, queue.subscribers.size
 
     msg = "hello #{x}"
     m = queue.post(msg)
-    p m
+    LOG.debug m
+    
+    tries = MAX_TRIES
+    while tries > 0
+      sleep 0.5
+      tries -= 1
+      LOG.info 'getting status'
+      subscribers = queue.messages.get(m.id).subscribers
+      LOG.debug subscribers
+      LOG.info "num_subscribers=#{num_subscribers} subscribers.size=#{subscribers.size}"
 
-    puts 'sleeping 5'
-    sleep 5
-
-    puts 'getting status'
-    subscribers = queue.messages.get(m.id).subscribers
-    p subscribers
-    assert_equal 2, subscribers.size
-    subscribers.each do |s|
-      p s
-      assert_equal 503, s["status_code"]
-      assert_equal "retrying", s["status"]
-    end
-    puts 'sleeping 20'
-    sleep 20
-    subscribers = queue.messages.get(m.id).subscribers
-    p subscribers
-    assert_equal 2, subscribers.size
-    subscribers.each do |s|
-      p s
-
-      if s["url"] == "http://rest-test.iron.io/code/503"
-        assert_equal 503, s["status_code"]
-        assert_equal "error", s["status"]
-      else
-        assert_equal 200, s["status_code"]
-        assert_equal "deleted", s["status"]
+      assert_equal num_subscribers, subscribers.size
+      do_retry = false
+      subscribers.each do |s|
+        LOG.debug s
+        LOG.info "status_code=#{s['status_code']}"
+        LOG.info "status=#{s['status']}"
+        do_retry = true unless 503 == s["status_code"]
+        do_retry = true unless ["reserved", "retrying"].include? s["status"]
       end
+      next if do_retry
+      break
     end
+    assert_not_equal tries, 0
 
+    tries = MAX_TRIES
+    while tries > 0
+      sleep 0.5
+      tries -= 1
+      subscribers = queue.messages.get(m.id).subscribers
+      LOG.debug subscribers
+      assert_equal num_subscribers, subscribers.size
+      do_retry = false
+      subscribers.each do |s|
+        LOG.debug s
+        if s["url"] == "http://rest-test.iron.io/code/503"
+          do_retry = true unless 503 == s["status_code"]
+          do_retry = true unless "error" == s["status"]
+        else
+          do_retry = true unless 200 == s["status_code"]
+          do_retry = true unless "deleted" == s["status"]
+        end
+      end
+      next if do_retry
+      break
+    end
+    assert_not_equal tries, 0
   end
 
 
   def test_202
+    omit_if @skip
     types = ["multicast"]
     types.each do |t|
 
-      puts "Trying type #{t}"
+      LOG.info "Trying type #{t}"
 
       qname = "subscription-queue-#{t}-202"
 
@@ -167,56 +243,91 @@ class TestPushQueues < TestBase
       res = queue.update_queue(:subscribers => subscribers,
                                :push_type => t)
       queue = @client.queue(qname)
-      p queue
-      p queue.subscribers
-      assert_equal 2, queue.subscribers.size
+      LOG.debug queue
+      LOG.debug queue.subscribers
+      assert_equal num_subscribers, queue.subscribers.size
       # todo: assert subscriptions match
 
       msg = "hello #{x}"
-      m = queue.post(msg)
+      m = queue.post(msg, 
+                     {:timeout => 2})
 
-      puts "sleeping..."
-      sleep 10
-
-      subscribers = queue.messages.get(m.id).subscribers
-      p subscribers
-      assert_equal 2, subscribers.size
-      subscribers.each do |s|
-        p s
-        assert_equal 202, s["status_code"]
-        assert_equal "reserved", s["status"]
+      tries = MAX_TRIES
+      while tries > 0
+        sleep 0.5
+        tries -= 1
+        subscribers = queue.messages.get(m.id).subscribers
+        LOG.debug subscribers
+        assert_equal num_subscribers, subscribers.size
+        do_retry = false
+        subscribers.each do |s|
+          LOG.debug s
+          do_retry = true unless 202 == s["status_code"]
+          do_retry = true unless "reserved" == s["status"]
+        end
+        next if do_retry
+        break
       end
+      assert_not_equal tries, 0
 
-      puts 'sleeping 60'
-      sleep 60
+      LOG.info 'sleeping 2'
+      sleep 2
 
-      subscribers = queue.messages.get(m.id).subscribers
-      p subscribers
-      assert_equal 2, subscribers.size
-      subscribers.each do |s|
-        p s
-        assert_equal 202, s["status_code"]
-        assert_equal "reserved", s["status"]
+      tries = MAX_TRIES
+      while tries > 0
+        sleep 0.5
+        subscribers = queue.messages.get(m.id).subscribers
+        LOG.debug subscribers
+        assert_equal num_subscribers, subscribers.size
+
+        do_retry = false
+        subscribers.each do |s|
+          LOG.debug s
+          LOG.info "status_code=#{s['status_code']}"
+          LOG.info "status=#{s['status']}"
+
+          do_retry = true unless 202 == s["status_code"]
+          do_retry = true unless "reserved" == s["status"]
+        end
+        next if do_retry
+
         # now let's delete it to say we're done with it
-        puts "Acking subscriber"
-        p s.delete
+        subscribers.each do |s|
+          LOG.debug s
+          LOG.info "status_code=#{s['status_code']}"
+          LOG.info "status=#{s['status']}"
+          LOG.info "Acking subscriber"
+          res = s.delete
+          LOG.debug res
+        end
+        break
       end
+      assert_not_equal 0, tries
 
-      subscribers = queue.messages.get(m.id).subscribers
-      p subscribers
-      assert_equal 2, subscribers.size
-      subscribers.each do |s|
-        p s
-        p s["status_code"]
-        assert_equal "deleted", s["status"]
+      tries = MAX_TRIES
+      while tries > 0
+        sleep 0.5
+        tries -= 1
+        subscribers = queue.messages.get(m.id).subscribers
+        LOG.debug subscribers
+        next unless num_subscribers == subscribers.size
+        
+        do_retry = false
+        subscribers.each do |s|
+          LOG.debug s
+          LOG.info "status=#{s['status']}"
+          do_retry = true unless "deleted" == s["status"]
+        end
+        next if do_retry
+        break
       end
-
+      assert_not_equal 0, tries
     end
-
   end
 
-  def test_202_failure
 
+  def test_202_failure
+    omit_if @skip
   end
 
 end

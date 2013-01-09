@@ -9,13 +9,19 @@ rescue Exception => ex
   raise ex
 end
 
+LOG = Logger.new(STDOUT)
+MAX_TRIES = 100
 
 class TestBase < Test::Unit::TestCase
+
   def setup
     puts 'setup'
     # check multiple config locations
     @config = UberConfig.load
     puts "config=" + @config.inspect
+
+    config = @config['iron']
+    @host = "#{config['host'] || "mq-aws-us-east-1.iron.io"}"
     @client = IronMQ::Client.new(@config['iron'])
     Rest.logger.level = Logger::DEBUG # this doesn't work for some reason?
     IronCore::Logger.logger.level = Logger::DEBUG
@@ -27,12 +33,8 @@ class TestBase < Test::Unit::TestCase
   def clear_queue(queue_name=nil)
     queue_name ||= @client.queue_name
     puts "clearing queue #{queue_name}"
+    @client.queue(queue_name).post("test")
     @client.queue(queue_name).clear
-    #while res = @client.messages.get(:queue_name=>queue_name)
-    #  p res
-    #  puts res.body.to_s
-    #  res.delete
-    #end
     puts 'cleared.'
   end
 
