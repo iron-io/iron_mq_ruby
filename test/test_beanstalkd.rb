@@ -111,7 +111,7 @@ class BeanstalkTests < TestBase
     puts 'test_timeout'
     msg = "timeout message #{Time.now}"
     # timeout of 10 seconds
-    res = @beanstalk.put(msg, 65536, 0, 10)
+    res = @beanstalk.put(msg, 65536, 0, 30)
     puts 'result: ' + res.inspect
     job = reserve(0)
     puts 'first timeout job: ' + job.inspect
@@ -121,7 +121,7 @@ class BeanstalkTests < TestBase
     assert niljob.nil?, "job is not nil! #{niljob.inspect}"
 
     # let it time out
-    sleep 10
+    sleep 30
     job = reserve(0)
     puts 'second delayed job: ' + job.inspect
     assert_not_nil job, "job is nil"
