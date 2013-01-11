@@ -56,8 +56,8 @@ module IronMQ
     def get(options={})
       options[:name] ||= @client.queue_name
       r = @client.get("#{path(options)}")
-      puts "HEADERS"
-      p r.headers
+      #puts "HEADERS"
+      #p r.headers
       res = @client.parse_response(r)
       return Queue.new(@client, res)
     end
@@ -66,10 +66,11 @@ module IronMQ
     # options:
     #  :name => if not specified, will use global queue name
     #  :subscribers => url's to subscribe to
+    #  :push_type => multicast (default) or unicast.
     def post(options={})
       options[:name] ||= @client.queue_name
       res = @client.parse_response(@client.post(path(options), options))
-      p res
+      #p res
       res
     end
 
@@ -127,7 +128,9 @@ module IronMQ
       @client.queues.delete(:name => name)
     end
 
-    # updates the Queue object itself
+    # Updates the queue object
+    #  :subscribers => url's to subscribe to
+    #  :push_type => multicast (default) or unicast.
     def update_queue(options)
       @client.queues.post(options.merge(:name => name))
     end
@@ -148,18 +151,16 @@ module IronMQ
     end
 
     def add_subscriber(subscriber_hash, options={})
-      puts 'add_subscriber'
       res = @client.post("#{@client.queues.path(name: name)}/subscribers", subscribers: [subscriber_hash])
       res = @client.parse_response(res)
-      p res
+      #p res
       res
     end
 
     def remove_subscriber(subscriber_hash)
-      puts 'remove_subscriber'
       res = @client.delete("#{@client.queues.path(name: name)}/subscribers", {subscribers: [subscriber_hash]}, {"Content-Type"=>@client.content_type})
       res = @client.parse_response(res)
-      p res
+      #p res
       res
     end
 
