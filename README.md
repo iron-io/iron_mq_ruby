@@ -19,6 +19,10 @@ Getting Started
 
     @ironmq = IronMQ::Client.new()
 
+Or pass in credentials:
+
+    @ironmq = IronMQ::Client.new(token: MY_TOKEN, project_id: MY_PROJECT_ID)
+
 
 The Basics
 =========
