@@ -3,10 +3,11 @@ module IronMQ
 
   class ResponseBase
 
-    attr_reader :raw
+    attr_reader :raw, :code
 
-    def initialize(raw)
+    def initialize(raw, code=200)
       @raw = raw
+      @code = code
     end
 
     def [](key)
