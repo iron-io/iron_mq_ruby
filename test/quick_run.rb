@@ -1,4 +1,4 @@
-require 'test_base'
+require File.expand_path('test_base.rb', File.dirname(__FILE__))
 
 TIMES = 1
 
