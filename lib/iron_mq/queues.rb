@@ -1,5 +1,5 @@
 require 'cgi'
-require_relative 'subscribers'
+require 'iron_mq/subscribers'
 
 module IronMQ
   class Queues
@@ -151,14 +151,14 @@ module IronMQ
     end
 
     def add_subscriber(subscriber_hash, options={})
-      res = @client.post("#{@client.queues.path(name: name)}/subscribers", subscribers: [subscriber_hash])
+      res = @client.post("#{@client.queues.path(:name => name)}/subscribers", :subscribers => [subscriber_hash])
       res = @client.parse_response(res)
       #p res
       res
     end
 
     def remove_subscriber(subscriber_hash)
-      res = @client.delete("#{@client.queues.path(name: name)}/subscribers", {subscribers: [subscriber_hash]}, {"Content-Type"=>@client.content_type})
+      res = @client.delete("#{@client.queues.path(:name => name)}/subscribers", {:subscribers => [subscriber_hash]}, {"Content-Type"=>@client.content_type})
       res = @client.parse_response(res)
       #p res
       res

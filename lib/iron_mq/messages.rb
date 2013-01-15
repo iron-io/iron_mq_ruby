@@ -116,7 +116,7 @@ module IronMQ
     end
 
     def subscribers(options={})
-      res = @messages.client.get(@messages.path(options.merge(msg_id: id)) + "/subscribers", options)
+      res = @messages.client.get(@messages.path(options.merge(:msg_id => id)) + "/subscribers", options)
       res = @messages.client.parse_response(res)
       ret = []
       res['subscribers'].each do |m|

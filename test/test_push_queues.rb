@@ -1,5 +1,5 @@
 # Put config.yml file in ~/Dropbox/configs/ironmq_gem/test/config.yml
-require_relative 'test_base'
+require 'test_base'
 require 'logger'
 
 class TestPushQueues < TestBase
@@ -30,7 +30,7 @@ class TestPushQueues < TestBase
       x = rand(1000)
       num_subscribers.times do |i|
         key = make_key(i, t, x)
-        subscribers << {url: "http://rest-test.iron.io/code/200?store=#{key}"}
+        subscribers << {:url => "http://rest-test.iron.io/code/200?store=#{key}"}
       end
 
       queue = @client.queue(qname)
@@ -43,10 +43,10 @@ class TestPushQueues < TestBase
 
       # add the last one
       queue.reload # temporary, can remove
-      queue.add_subscriber({url: "http://nowhere.com"})
+      queue.add_subscriber({:url => "http://nowhere.com"})
       queue.reload
       assert_equal num_subscribers + 1, queue.subscribers.size
-      queue.remove_subscriber({url: "http://nowhere.com"})
+      queue.remove_subscriber({:url => "http://nowhere.com"})
       queue.reload
       assert_equal num_subscribers, queue.subscribers.size
 
@@ -153,8 +153,8 @@ class TestPushQueues < TestBase
     x = rand(1000)
 
     subscribers = []
-    subscribers << {url: "http://rest-test.iron.io/code/503?switch_after=2&switch_to=200&namespace=push-test-failures-#{x}"}
-    subscribers << {url: "http://rest-test.iron.io/code/503"}
+    subscribers << {:url => "http://rest-test.iron.io/code/503?switch_after=2&switch_to=200&namespace=push-test-failures-#{x}"}
+    subscribers << {:url => "http://rest-test.iron.io/code/503"}
 
     num_subscribers = 2
 
@@ -236,7 +236,7 @@ class TestPushQueues < TestBase
       x = rand(1000)
       num_subscribers.times do |i|
         key = make_key(i, t, x)
-        subscribers << {url: "http://rest-test.iron.io/code/202?store=#{key}"}
+        subscribers << {:url => "http://rest-test.iron.io/code/202?store=#{key}"}
       end
 
       queue = @client.queue(qname)

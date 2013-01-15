@@ -1,4 +1,4 @@
-require_relative 'test_base'
+require 'test_base'
 
 class TestBulk < TestBase
 

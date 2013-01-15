@@ -1,32 +1,32 @@
 PATH
   remote: .
   specs:
-    iron_mq (3.0.2)
-      iron_core (>= 0.4.4)
+    iron_mq (3.1.0)
+      iron_core (>= 0.5.1)
 
 GEM
   remote: https://rubygems.org/
   specs:
     beanstalk-client (1.1.1)
     concur (1.0.2)
-    ethon (0.5.3)
-      ffi (~> 1.0.11)
+    ethon (0.5.7)
+      ffi (~> 1.2.0)
       mime-types (~> 1.18)
-    ffi (1.0.11)
-    iron_core (0.4.4)
-      rest (>= 2.1.1)
+    ffi (1.2.1)
+    iron_core (0.5.1)
+      rest (>= 2.2.0)
     mime-types (1.19)
-    minitest (4.2.0)
+    minitest (4.4.0)
     net-http-persistent (2.8)
-    rake (10.0.0)
-    rest (2.1.1)
+    rake (10.0.3)
+    rest (2.2.0)
       net-http-persistent
       rest-client (>= 0.3.0)
     rest-client (1.6.7)
       mime-types (>= 1.16)
-    test-unit (2.5.2)
-    typhoeus (0.5.1)
-      ethon (= 0.5.3)
+    test-unit (2.5.3)
+    typhoeus (0.5.4)
+      ethon (~> 0.5.7)
     uber_config (1.0.5)
 
 PLATFORMS
@@ -40,5 +40,5 @@ DEPENDENCIES
   net-http-persistent
   rake
   test-unit
-  typhoeus
+  typhoeus (>= 0.5.4)
   uber_config

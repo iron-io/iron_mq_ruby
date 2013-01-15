@@ -1,6 +1,6 @@
 require 'abt'
 require 'time'
-require_relative 'test_base'
+require 'test_base'
 
 # Config for abt tests to run on IronWorker
 @abt_config = YAML::load_file(File.expand_path(File.join("~", "Dropbox", "configs", "abt", "test", "config.yml")))

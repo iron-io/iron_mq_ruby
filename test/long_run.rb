@@ -1,6 +1,14 @@
 require 'yaml'
 require 'concur'
 require 'uber_config'
+
+unless Hash.instance_methods.include?(:default_proc=)
+  class Hash
+    def default_proc=(proc)
+    end
+  end
+end
+
 begin
   require File.join(File.dirname(__FILE__), '..', 'lib', 'iron_mq')
 rescue Exception => ex

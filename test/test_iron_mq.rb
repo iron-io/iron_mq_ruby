@@ -1,7 +1,6 @@
-gem 'test-unit'
 require 'test/unit'
 require 'yaml'
-require_relative 'test_base'
+require 'test_base'
 
 class IronMQTests < TestBase
   def setup
@@ -406,7 +405,7 @@ class IronMQTests < TestBase
     omit_if @skip
     puts "skip webhooks: #{@skip}"
     qname ="webhook_queue"
-    path = "#{IronMQ::Messages.path(project_id: @client.project_id, queue_name: qname)}/webhook"
+    path = "#{IronMQ::Messages.path(:project_id => @client.project_id, :queue_name => qname)}/webhook"
     url = "#{@client.base_url}#{path}"
     url << "?oauth=#{@client.token}"
     p url
@@ -414,7 +413,7 @@ class IronMQTests < TestBase
     v = "hello webhook"
 
     @rest = Rest::Client.new
-    p @rest.post(url, body: v)
+    p @rest.post(url, :body => v)
 
     queue = @client.queue(qname)
     msg = queue.get

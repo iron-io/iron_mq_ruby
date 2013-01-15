@@ -1,8 +1,7 @@
-gem 'test-unit'
 require 'test/unit'
 require 'beanstalk-client'
 require 'yaml'
-require_relative 'test_base'
+require 'test_base'
 
 class BeanstalkTests < TestBase
   def setup
