@@ -1,7 +1,7 @@
 require 'test/unit'
 require 'beanstalk-client'
 require 'yaml'
-require 'test_base'
+require File.expand_path('test_base.rb', File.dirname(__FILE__))
 
 class BeanstalkTests < TestBase
   def setup
