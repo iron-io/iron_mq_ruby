@@ -5,3 +5,4 @@ doc
 log
 test/config.yml
 *.sublime*
+/*.gem
