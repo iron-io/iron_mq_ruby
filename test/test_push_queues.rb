@@ -1,5 +1,5 @@
 # Put config.yml file in ~/Dropbox/configs/ironmq_gem/test/config.yml
-require 'test_base'
+require File.expand_path('test_base.rb', File.dirname(__FILE__))
 require 'logger'
 
 class TestPushQueues < TestBase
