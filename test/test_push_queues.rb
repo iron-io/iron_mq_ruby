@@ -188,6 +188,8 @@ class TestPushQueues < TestBase
         LOG.debug s
         LOG.info "status_code=#{s['status_code']}"
         LOG.info "status=#{s['status']}"
+        assert_not_empty s["url"]
+        assert_not_empty s["id"]
         do_retry = true unless 503 == s["status_code"]
         do_retry = true unless ["reserved", "retrying"].include? s["status"]
       end
@@ -206,6 +208,8 @@ class TestPushQueues < TestBase
       do_retry = false
       subscribers.each do |s|
         LOG.debug s
+        assert_not_empty s["url"]
+        assert_not_empty s["id"]
         if s["url"] == "http://rest-test.iron.io/code/503"
           do_retry = true unless 503 == s["status_code"]
           do_retry = true unless "error" == s["status"]
@@ -262,6 +266,8 @@ class TestPushQueues < TestBase
         do_retry = false
         subscribers.each do |s|
           LOG.debug s
+          assert_not_empty s["url"]
+          assert_not_empty s["id"]
           do_retry = true unless 202 == s["status_code"]
           do_retry = true unless "reserved" == s["status"]
         end
@@ -285,7 +291,8 @@ class TestPushQueues < TestBase
           LOG.debug s
           LOG.info "status_code=#{s['status_code']}"
           LOG.info "status=#{s['status']}"
-
+          assert_not_empty s["url"]
+          assert_not_empty s["id"]
           do_retry = true unless 202 == s["status_code"]
           do_retry = true unless "reserved" == s["status"]
         end
