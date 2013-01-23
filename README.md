@@ -13,7 +13,7 @@ Getting Started
 
     gem install iron_mq
 
-2\. Setup your Iron.io credentials: http://dev.iron.io/articles/configuration/
+2\. Setup your Iron.io credentials: http://dev.iron.io/mq/reference/configuration/
 
 3\. Create an IronMQ client object:
 
