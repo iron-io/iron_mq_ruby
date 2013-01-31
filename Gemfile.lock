@@ -18,6 +18,7 @@ GEM
     mime-types (1.19)
     minitest (4.4.0)
     net-http-persistent (2.8)
+    quicky (0.4.0)
     rake (10.0.3)
     rest (2.2.0)
       net-http-persistent
@@ -38,6 +39,7 @@ DEPENDENCIES
   iron_mq!
   minitest
   net-http-persistent
+  quicky
   rake
   test-unit
   typhoeus (>= 0.5.4)
