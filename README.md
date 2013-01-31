@@ -13,7 +13,7 @@ Getting Started
 
     gem install iron_mq
 
-2\. Setup your Iron.io credentials: http://dev.iron.io/articles/configuration/
+2\. Setup your Iron.io credentials: http://dev.iron.io/mq/reference/configuration/
 
 3\. Create an IronMQ client object:
 
@@ -79,9 +79,8 @@ Queue Information
 Push Queues
 ===========
 
-IronMQ push queues allow you to setup a queue that will push to an endpoint, rather than having to poll the endpoint.
-
-LINK TO BLOG POST
+IronMQ push queues allow you to setup a queue that will push to an endpoint, rather than having to poll the endpoint. 
+[Here's the announcement for an overview](http://blog.iron.io/2013/01/ironmq-push-queues-reliable-message.html). 
 
 ### Set subscribers on a queue:
 
