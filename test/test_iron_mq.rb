@@ -156,11 +156,12 @@ class IronMQTests < TestBase
     assert_not_equal tries, 0
 
     # now try explicit timeout
-    res = @client.messages.post("hello world timeout2!", :timeout => 5)
+    res = @client.messages.post("hello world timeout2!", :timeout => 30)
     p res
     msg = @client.messages.get()
     p msg
     assert msg
+    assert_equal msg.raw['timeout'], 30
     msg_nil = @client.messages.get()
     p msg_nil
     assert_nil msg_nil
@@ -173,6 +174,29 @@ class IronMQTests < TestBase
       new_msg = @client.messages.get()
       next if new_msg.nil?
       assert_equal new_msg.id, msg.id
+      new_msg.delete
+      break
+    end
+    assert_not_equal tries, 0
+
+    # timeout on get
+    res = @client.messages.post("hello world timeout3!")
+    msg = @client.messages.get(:timeout => 30)
+    assert msg
+    assert_equal msg.raw['timeout'], 30
+    msg_nil = @client.messages.get()
+    p msg_nil
+    assert_nil msg_nil
+
+    tries = MAX_TRIES
+    while tries > 0
+      sleep 0.5
+      tries -= 1
+      sleep 1
+      new_msg = @client.messages.get()
+      next if new_msg.nil?
+      assert_equal new_msg.id, msg.id
+      new_msg.delete
       break
     end
     assert_not_equal tries, 0
