@@ -14,7 +14,7 @@ module IronMQ
       path = "projects/#{options[:project_id]}/queues"
       name = options[:name] || options[:queue_name] || options['queue_name']
       if name
-        path << "/#{CGI::escape(name)}"
+        path << "/#{CGI::escape(name).gsub('+','%20')}"
       end
       path
     end
@@ -59,7 +59,7 @@ module IronMQ
       #puts "HEADERS"
       #p r.headers
       res = @client.parse_response(r)
-      return Queue.new(@client, res)
+      Queue.new(@client, res)
     end
 
     # Update a queue
@@ -106,10 +106,6 @@ module IronMQ
       load_queue(:force => true)
     end
 
-    def messages
-      raw["messages"]
-    end
-
     # Used if lazy loading
     def load_queue(options={})
       return if @loaded && !options[:force]
@@ -137,17 +133,17 @@ module IronMQ
 
     def size
       load_queue()
-      return raw["size"]
+      raw["size"]
     end
 
     def total_messages
       load_queue()
-      return raw["total_messages"]
+      raw["total_messages"]
     end
 
     def subscribers
       load_queue()
-      return raw["subscribers"]
+      raw["subscribers"]
     end
 
     def add_subscriber(subscriber_hash, options={})
