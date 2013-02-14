@@ -39,15 +39,15 @@ module IronMQ
     end
 
     def queue(name)
-      return Queue.new(self, {"name" => name})
+      Queue.new(self, {"name" => name})
     end
 
     def messages
-      return Messages.new(self)
+      Messages.new(self)
     end
 
     def queues
-      return Queues.new(self)
+      Queues.new(self)
     end
   end
 end

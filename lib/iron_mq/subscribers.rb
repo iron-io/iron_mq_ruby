@@ -28,7 +28,7 @@ module IronMQ
       path = Subscribers.path(options)
       raw = client.delete(path)
       res = client.parse_response(raw)
-      return ResponseBase.new(res)
+      ResponseBase.new(res)
     end
   end
 end

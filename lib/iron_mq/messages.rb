@@ -42,13 +42,14 @@ module IronMQ
       res["messages"].each do |m|
         ret << Message.new(self, m, options)
       end
+
       if options[:n] || options['n']
-        return ret
+        ret
       else
         if ret.size > 0
-          return ret[0]
+          ret[0]
         else
-          return nil
+          nil
         end
       end
     end
@@ -72,22 +73,22 @@ module IronMQ
       to_send[:messages] = msgs
       res = @client.parse_response(@client.post(path(options), to_send))
       if batch
-        return res
+        res
       else
-        return ResponseBase.new({"id"=>res["ids"][0], "msg"=>res["msg"]})
+        ResponseBase.new({"id" => res["ids"][0], "msg" => res["msg"]})
       end
     end
 
     def delete(message_id, options={})
       path2 = "#{self.path(options)}/#{message_id}"
       res = @client.parse_response(@client.delete(path2))
-      return ResponseBase.new(res)
+      ResponseBase.new(res)
     end
 
     def release(message_id, options={})
       path2 = "#{self.path(options)}/#{message_id}/release"
       res = @client.parse_response(@client.post(path2, options))
-      return ResponseBase.new(res)
+      ResponseBase.new(res)
     end
 
   end
