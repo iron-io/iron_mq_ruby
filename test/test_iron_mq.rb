@@ -37,7 +37,7 @@ class IronMQTests < TestBase
 
     queue = @client.queues.get(:name => @client.queue_name)
     p queue
-    assert_equal 1, queue.reload.size
+    assert_equal 1, queue.size
     res = @client.messages.get()
     p res
     assert res["id"]
@@ -370,7 +370,7 @@ class IronMQTests < TestBase
     msg = q.get
     assert_nil msg
 
-    assert_equal 0, q.reload.size
+    assert_equal 0, q.size
   end
 
 
@@ -398,7 +398,7 @@ class IronMQTests < TestBase
     tries = MAX_TRIES
     while tries > 0
       tries -= 1
-      break if 0 == queue.reload.size
+      break if 0 == queue.size
       sleep 0.5
     end
     assert_not_equal tries, 0

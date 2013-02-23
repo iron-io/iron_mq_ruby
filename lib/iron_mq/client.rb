@@ -35,19 +35,19 @@ module IronMQ
     end
 
     def base_url
-      super + @api_version.to_s + '/'
+      "#{super}#{@api_version}/"
     end
 
     def queue(name)
-      return Queue.new(self, {"name" => name})
+      queues.get({:name => name})
     end
 
     def messages
-      return Messages.new(self)
+      @messages ||= Messages.new(self)
     end
 
     def queues
-      return Queues.new(self)
+      @queues ||= Queues.new(self)
     end
   end
 end
