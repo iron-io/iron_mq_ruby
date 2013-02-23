@@ -101,8 +101,6 @@ queues = ironmq.queues.all(:page => 1, :per_page => 10)
 ### Get queue by name
 
 ```ruby
-queue = ironmq.queues.get(:name => "my_queue") # => #<IronMQ::Queue:...>
-# or shortcut
 queue = ironmq.queue "my_queue" # => #<IronMQ::Queue:...>
 ```
 
@@ -140,8 +138,6 @@ Note: some info parameters has no shortcuts.
 
 ```ruby
 queue.delete_queue # => #<IronMQ::ResponseBase:...>
-# or
-ironmq.queues.delete(:name => "my_queue") # => #<IronMQ::ResponseBase:...>
 ```
 
 ### Put messages on queue
@@ -242,8 +238,6 @@ Polling will automatically delete the message at the end of the block.
 
 ```ruby
 queue.clear # => #<IronMQ::ResponseBase:...>
-# or
-ironmq.queues.clear(:name => "my_queue") # => #<IronMQ::ResponseBase:...>
 ```
 
 #Push Queues
@@ -291,8 +285,6 @@ Returns an array of subscribers with status.
 
 ```ruby
 queue_info = queue.update(options) # => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
-# or
-queue_info = ironmq.queues.update(:name => "my_queue", :push_type => "multicast")
 ```
 
 **The following parameters are all related to Push Queues:**
