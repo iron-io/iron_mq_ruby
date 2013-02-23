@@ -4,7 +4,7 @@ require 'iron_mq/subscribers'
 module IronMQ
   class Queues
 
-    attr_accessor :client
+    attr_accessor :client # is attr_reader better?
 
     def initialize(client)
       @client = client
@@ -12,54 +12,70 @@ module IronMQ
 
     def self.path(options)
       path = "projects/#{options[:project_id]}/queues"
-      name = options[:name] || options[:queue_name] || options['queue_name']
-      if name
-        path << "/#{CGI::escape(name)}"
-      end
+      name = options[:name] || options[:queue_name]
+      path += "/#{CGI::escape(name)}" if name
       path
     end
 
-    def path(options={})
+    def path(options = {})
       options[:project_id] = @client.project_id
       Queues.path(options)
     end
 
-    def list(options={})
-      ret = []
-      r1 = @client.get("#{path(options)}", options)
-      #p r1
-      res = @client.parse_response(r1)
-      res.each do |q|
-        #p q
-        q = Queue.new(@client, q)
-        ret << q
-      end
-      ret
+    def list(options = {})
+      options = remove_queue_name_option(options)
+
+      res = @client.parse_response(@client.get("#{path(options)}", options))
+      # returns list of evaluated queues
+      res.each_with_object([]) { |q, ret| ret << Queue.new(@client, q) }
     end
 
-    def clear(options={})
+    alias_method :all, :list
+
+    # FIXME: To make better IronMQ API reflection
+    #        methods `clear`, `delete`, `get` must check that `options[:name]` is specified.
+    #        Becase IronMQ API has only one request (list of queues)
+    #          GET /projects/{Project ID}/queues
+    #        where queue name is not used
+    #
+    #        Maybe not bad idea is to re-define the methods like:
+    #          def clear(queue_name, options = {})
+
+    def clear(options = {})
+      # TODO: make common logging system, gem-wide, like
+      #   with_logging(level) do |log|
+      #     log "Something"
+      #     do "Anything"
+      #     log "Again"
+      #   end
       @client.logger.debug "Clearing queue #{options[:name]}"
-      r1 = @client.post("#{path(options)}/clear", options)
+      r1 = @client.parse_response(@client.post("#{path(options)}/clear", options))
       @client.logger.debug "Clear result: #{r1}"
       r1
     end
 
-    def delete(options={})
+
+    def delete(options = {})
       @client.logger.debug "Deleting queue #{options[:name]}"
-      r1 = @client.delete("#{path(options)}", options)
+      r1 = @client.parse_response(@client.delete("#{path(options)}", options))
       @client.logger.debug "Delete result: #{r1}"
       r1
     end
 
+    # GET /projects/{Project ID}/queues/{Queue Name}
+    def info(queue_name, options = {})
+      opts = options.merge({:queue_name => queue_name})
+      @client.parse_response(@client.get("#{path(opts)}"))
+    end
+
     # options:
     #  :name => can specify an alternative queue name
-    def get(options={})
-      options[:name] ||= @client.queue_name
-      r = @client.get("#{path(options)}")
-      #puts "HEADERS"
-      #p r.headers
-      res = @client.parse_response(r)
-      return Queue.new(@client, res)
+    def get(options = {})
+      # What global queue is? Does it reflect any API feature?
+      qname = options[:name] || @client.queue_name
+      resp = info(qname, options)
+
+      Queue.new(@client, resp)
     end
 
     # Update a queue
@@ -67,13 +83,18 @@ module IronMQ
     #  :name => if not specified, will use global queue name
     #  :subscribers => url's to subscribe to
     #  :push_type => multicast (default) or unicast.
-    def post(options={})
+    def post(options = {})
       options[:name] ||= @client.queue_name
-      res = @client.parse_response(@client.post(path(options), options))
-      #p res
-      res
+      @client.parse_response(@client.post(path(options), options))
     end
 
+    private
+
+    # Make sure it is no parameter which `path` method could evaluate as queue name
+    def remove_queue_name_option(options)
+      [:name, 'name', :queue_name, 'queue_name'].each { |key| options.delete(key) }
+      options
+    end
 
   end
 
@@ -81,101 +102,117 @@ module IronMQ
 
     attr_reader :client
 
-    def initialize(client, res)
+    def initialize(client, queue_info)
       @client = client
-      @data = res
+      @info = queue_info
+      # @info = Queues.post(:name => @info["name"]) unless @info["id"] # creates queue on backend
     end
 
-    def raw
-      @data
+    def info
+      begin
+        # It does not require queue evaluation, get info Hash response from IronMQ API
+        @info = @client.queues.info(name)
+      rescue Rest::HttpError
+        @info
+      end
+    end
+
+    alias_method :raw, :info # backward compatibility
+
+    def reload # backward compatibility
+      info
     end
 
     def [](key)
-      raw[key]
+      info[key.to_s]
     end
 
     def id
-      raw["id"]
+      info["id"]
     end
 
     def name
-      raw["name"]
+      # queue name does not require reloading, exists in new queue, ever constant
+      @info["name"]
     end
 
-    def reload
-      load_queue(:force => true)
+    def size
+      info["size"]
     end
 
-    def messages
-      raw["messages"]
+    def total_messages
+      info["total_messages"]
     end
 
-    # Used if lazy loading
-    def load_queue(options={})
-      return if @loaded && !options[:force]
-      q = @client.queues.get(:name => name)
-      @client.logger.debug "GOT Q: " + q.inspect
-      @data = q.raw
-      @loaded = true
-      q
+    def subscribers
+      info["subscribers"]
     end
 
-    def clear()
+    def push_type
+      info["push_type"]
+    end
+
+    def new?
+      id.nil?
+    end
+
+    def push_queue?
+      !info["push_type"].nil?
+    end
+
+    def clear
       @client.queues.clear(:name => name)
     end
 
-    def delete_queue()
+    # FIXME: This method must be named `delete`. 
+    #        Name is kept for backward compatibility with previous version of gem.
+    def delete_queue
       @client.queues.delete(:name => name)
     end
 
     # Updates the queue object
     #  :subscribers => url's to subscribe to
     #  :push_type => multicast (default) or unicast.
-    def update_queue(options)
+    def update(options)
       @client.queues.post(options.merge(:name => name))
     end
 
-    def size
-      load_queue()
-      return raw["size"]
-    end
+    alias_method :update_queue, :update
 
-    def total_messages
-      load_queue()
-      return raw["total_messages"]
-    end
+    def add_subscriber(subscriber_hash, options = {})
+      res = @client.post("#{@client.queues.path(:name => name)}/subscribers",
+                         :subscribers => [subscriber_hash])
 
-    def subscribers
-      load_queue()
-      return raw["subscribers"]
-    end
-
-    def add_subscriber(subscriber_hash, options={})
-      res = @client.post("#{@client.queues.path(:name => name)}/subscribers", :subscribers => [subscriber_hash])
-      res = @client.parse_response(res)
-      #p res
-      res
+      @client.parse_response(res)
     end
 
     def remove_subscriber(subscriber_hash)
-      res = @client.delete("#{@client.queues.path(:name => name)}/subscribers", {:subscribers => [subscriber_hash]}, {"Content-Type"=>@client.content_type})
-      res = @client.parse_response(res)
-      #p res
-      res
+      res = @client.delete("#{@client.queues.path(:name => name)}/subscribers",
+                           {:subscribers => [subscriber_hash]},
+                           {"Content-Type" => @client.content_type})
+
+      @client.parse_response(res)
     end
 
-    def post(body, options={})
-      @client.messages.post(body, options.merge(:queue_name => name))
+    def post(body, options = {})
+      @client.messages.post(body, options.merge(:name => name))
     end
 
-    def get(options={})
-      @client.messages.get(options.merge(:queue_name => name))
+    alias_method :post_message, :post
+
+    def get(options = {})
+      @client.messages.get(options.merge(:name => name))
     end
 
-    def delete(id, options={})
-      @client.messages.delete(id, options.merge(:queue_name => name))
+    alias_method :get_message, :get
+
+    # FIXME: This method name must be named `delete_message`.
+    #        Name is kept for backward compatibility with previous version of gem
+    def delete(id, options = {})
+      @client.messages.delete(id, options.merge(:name => name))
     end
 
+    alias_method :delete_message, :delete
 
     # This will continuously poll for a message and pass it to the block. For example:
     #
@@ -184,17 +221,13 @@ module IronMQ
     # options:
     # - :sleep_duration=>seconds => time between polls if msg is nil. default 1.
     # - :break_if_nil=>true/false => if true, will break if msg is nil (ie: queue is empty)
-    def poll(options={}, &blk)
+    def poll(options = {}, &blk)
       sleep_duration = options[:sleep_duration] || 1
+      
       while true
-        #p options
         msg = get(options)
         if msg.nil?
-          if options[:break_if_nil]
-            break
-          else
-            sleep sleep_duration
-          end
+          options[:break_if_nil] ? break : sleep(sleep_duration)
         else
           yield msg
           msg.delete
