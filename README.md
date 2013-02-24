@@ -30,7 +30,7 @@ ironmq = IronMQ::Client.new(:token => "MY_TOKEN", :project_id => "MY_PROJECT_ID"
 
 #The Basics
 
-**Get a Queue object**
+###Get a Queue Object
 
 You can have as many queues as you want, each with their own unique set of messages.
 
@@ -38,25 +38,36 @@ You can have as many queues as you want, each with their own unique set of messa
 queue = ironmq.queue("my_queue")
 ```
 
-Now you can use it:
+Now you can use it.
 
-### Post a message on the queue
+### Post a Message on a Queue
+
+Messages are placed on the queue in a FIFO arrangement.
+If a queue does not exist, it will be created upon the first posting of a message.
 
 ```ruby
 queue.post("hello world!")
 ```
 
-### Get a message off the queue
+### Retrieve Queue Information
+
+```ruby
+queue.info # => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
+queue.id   # => "5127bf043264140e863e2283"
+```
+
+### Get a Message off a Queue
 
 ```ruby
 msg = queue.get
 msg.body # => "hello world!"
 ```
 
-When you pop/get a message from the queue, it will NOT be deleted. It will eventually go back onto the queue after
-a `timeout` if you don't delete it (default `timeout` is 60 seconds).
+When you pop/get a message from the queue, it is no longer on the queue but it still exists within the system.
+You have to explicitly delete the message or else it will go back onto the queue after the `timeout`.
+The default `timeout` is 60 seconds.
 
-### Delete a message from the queue
+### Delete a Message from a Queue
 
 ```ruby
 msg.delete
@@ -66,12 +77,6 @@ queue.delete(msg.id)
 
 Be sure to delete a message from the queue when you're done with it.
 
-### Retrieve queue information:
-
-```ruby
-queue.info # => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
-queue.id   # => "5127bf043264140e863e2283"
-```
 
 #Client
 
@@ -81,7 +86,7 @@ queue.id   # => "5127bf043264140e863e2283"
 ironmq = IronMQ::Client.new(:token => "MY_TOKEN", :project_id => "MY_PROJECT_ID")
 ```
 
-### List queues
+### List Queues
 
 ```ruby
 all_queues = ironmq.queues.list # => [#<IronMQ::Queue:...>, ...]
@@ -89,7 +94,7 @@ all_queues = ironmq.queues.list # => [#<IronMQ::Queue:...>, ...]
 all_queues = ironmq.queues.all  # => [#<IronMQ::Queue:...>, ...]
 ```
 
-Optional parameters:
+**Optional parameters:**
 
 * `page`: The 0-based page to view. The default is 0.
 * `per_page`: The number of queues to return per page. The default is 30, the maximum is 100.
@@ -98,18 +103,18 @@ Optional parameters:
 queues = ironmq.queues.all(:page => 1, :per_page => 10)
 ```
 
-### Get queue by name
+### Get Queue by Name
 
 ```ruby
 queue = ironmq.queue "my_queue" # => #<IronMQ::Queue:...>
 ```
 
-Note: if queue with desired name does not exist it returns fake queue.
+**Note:** if queue with desired name does not exist it returns fake queue.
 Queue will be created automatically on post of first message or queue configuration update.
 
 #Queues
 
-### Retrieve information about queue
+### Retrieve Queue Information
 
 ```ruby
 info = queue.info # => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
@@ -132,15 +137,19 @@ push_type = queue.push_type # => "multicast"
 is_push_queue = queue.push_queue? # => true
 ```
 
-Note: some info parameters has no shortcuts.
+**Note:** some info parameters have no shortcuts.
+
+**Warning:** to be sure configuration information is up-to-date
+client library call IronMQ API each time you request for any parameter except `queue.name`.
+In this case you may prefer to use `queue.info` to have `Hash` with all available info parameters.
 
 ### Delete a Message Queue
 
 ```ruby
-queue.delete_queue # => #<IronMQ::ResponseBase:...>
+response = queue.delete_queue # => #<IronMQ::ResponseBase:...>
 ```
 
-### Put messages on queue
+### Put Messages on Queue
 
 **Single message:**
 
@@ -154,7 +163,7 @@ status_message = response.msg # => "Messages put on queue."
 http_code = response.code # => 200
 ```
 
-**Bunch of messages:**
+**Multiple messages:**
 ```ruby
 # [{:body => VALUE}, ...] format is required for now
 messages = [{:body => "first"}, {:body => "second"}]
@@ -178,7 +187,7 @@ Default is 0 seconds. Maximum is 604,800 seconds (7 days).
 Default is 604,800 seconds (7 days). Maximum is 2,592,000 seconds (30 days).
 
 
-### Get messages from queue
+### Get Messages from a Queue
 
 ```ruby
 message = queue.get # => #<IronMQ::Message:...>
@@ -201,7 +210,7 @@ If not set, value from POST is used. Default is 60 seconds, maximum is 86,400 se
 When `n` parameter is specified and greater than 1 method returns `Array` of `Queue`s.
 Otherwise, `Queue` object would be returned.
 
-### Release message
+### Release Message
 
 ```ruby
 message = queue.get => #<IronMQ::Message:...>
@@ -216,7 +225,7 @@ response = message.release(:delay => 42) # => #<IronMQ::ResponseBase:...>
 * `delay`: The item will not be available on the queue until this many seconds have passed.
 Default is 0 seconds. Maximum is 604,800 seconds (7 days).
 
-### Delete a message from a queue
+### Delete a Message from a Queue
 
 ```ruby
 message = queue.get # => #<IronMQ::Queue:...>
@@ -226,7 +235,7 @@ message.delete # => #<IronMQ::ResponseBase:...>
 queue.delete_message(message.id) # => #<IronMQ::ResponseBase:...>
 ```
 
-### Poll for messages
+### Poll for Messages
 
 ```ruby
 queue.poll { |msg| puts msg.body }
@@ -234,7 +243,7 @@ queue.poll { |msg| puts msg.body }
 
 Polling will automatically delete the message at the end of the block.
 
-### Clear a queue
+### Clear a Queue
 
 ```ruby
 queue.clear # => #<IronMQ::ResponseBase:...>
@@ -245,7 +254,23 @@ queue.clear # => #<IronMQ::ResponseBase:...>
 IronMQ push queues allow you to setup a queue that will push to an endpoint, rather than having to poll the endpoint. 
 [Here's the announcement for an overview](http://blog.iron.io/2013/01/ironmq-push-queues-reliable-message.html). 
 
-### Set subscribers on a queue:
+### Update a Message Queue
+
+```ruby
+queue_info = queue.update(options) # => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
+```
+
+**The following parameters are all related to Push Queues:**
+
+* `subscribers`: An array of subscriber hashes containing a “url” field.
+This set of subscribers will replace the existing subscribers.
+To add or remove subscribers, see the add subscribers endpoint or the remove subscribers endpoint.
+See below for example json.
+* `push_type`: Either `multicast` to push to all subscribers or `unicast` to push to one and only one subscriber. Default is `multicast`.
+* `retries`: How many times to retry on failure. Default is 3.
+* `retries_delay`: Delay between each retry in seconds. Default is 60.
+
+### Set Subscribers on a Queue
 
 Subscribers can be any HTTP endpoint. `push_type` is one of:
 
@@ -262,7 +287,7 @@ subscribers = [
 queue.update(:subscribers => subscribers, :push_type => ptype)
 ```
 
-### Add/remove subscribers on a queue
+### Add/Remove Subscribers on a Queue
 
 ```ruby
 queue.add_subscriber({url: "http://nowhere.com"})
@@ -270,7 +295,7 @@ queue.add_subscriber({url: "http://nowhere.com"})
 queue.remove_subscriber({url: "http://nowhere.com"})
 ```
 
-### Get message push status
+### Get Message Push Status
 
 After pushing a message:
 
@@ -280,22 +305,3 @@ subscr_statuses.each { |ss| puts "#{ss.id}: #{(ss.code == 200) ? 'Success' : 'Fa
 ```
 
 Returns an array of subscribers with status.
-
-### Update a message queue
-
-```ruby
-queue_info = queue.update(options) # => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
-```
-
-**The following parameters are all related to Push Queues:**
-
-* `subscribers`: An array of subscriber hashes containing a “url” field.
-This set of subscribers will replace the existing subscribers.
-To add or remove subscribers, see the add subscribers endpoint or the remove subscribers endpoint.
-See below for example json.
-
-* `push_type`: Either multicast to push to all subscribers or unicast to push to one and only one subscriber. Default is “multicast”.
-
-* `retries`: How many times to retry on failure. Default is 3.
-
-* `retries_delay`: Delay between each retry in seconds. Default is 60.
