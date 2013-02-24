@@ -31,25 +31,23 @@ module IronMQ
     def get(options={})
       if options.is_a?(String)
         # assume it's an id
-        puts 'get_by_id'
-        return Message.new(self, {'id'=>options}, options)
-        #r = @client.get(path(:msg_id=>options))
-        #p r
-        #return r
+        return Message.new(self, {'id' => options}, options)
       end
-      res = @client.parse_response(@client.get(path(options), options))
-      ret = []
-      res["messages"].each do |m|
-        ret << Message.new(self, m, options)
-      end
-      if options[:n] || options['n']
-        return ret
+
+      resp = @client.parse_response(@client.get(path(options), options))
+      ret = if resp["messages"].is_a?(Array)
+              resp["messages"].each_with_object([]) do |m, msgs|
+                msgs << Message.new(self, m, options)
+              end
+            else
+              []
+            end
+
+      num_messages = options[:n] || options['n']
+      if num_messages && num_messages.to_i > 1
+        ret
       else
-        if ret.size > 0
-          return ret[0]
-        else
-          return nil
-        end
+        (ret.size > 0) ? ret[0] : nil
       end
     end
 
@@ -60,34 +58,47 @@ module IronMQ
     #  :expires_in => After this time, message will be automatically removed from the queue.
     def post(payload, options={})
       batch = false
+
       if payload.is_a?(Array)
         batch = true
-        msgs = payload
+        # FIXME: This maybe better to process Array of Objects the same way as for single message.
+        #
+        #          payload.each_with_object([]) do |msg, res|
+        #            res << options.merge(:body => msg)
+        #          end
+        #
+        #        For now user must pass objects like `[{:body => msg1}, {:body => msg2}]`
+        msgs = payload.each_with_object([]) do |msg, res|
+          res << msg.merge(options)
+        end
       else
-        options[:body] = payload
-        msgs = []
-        msgs << options
+        msgs = [ options.merge(:body => payload) ]
       end
-      to_send = {}
-      to_send[:messages] = msgs
-      res = @client.parse_response(@client.post(path(options), to_send))
+
+      res = @client.parse_response(@client.post(path(options), {:messages => msgs}))
+
       if batch
-        return res
+        # FIXME: Return Array of ResponsBase instead, it seems more clear than raw response
+        #
+        #          res["ids"].each_with_object([]) do |id, responses|
+        #            responses << ResponseBase.new({"id" => id, "msg" => res["msg"]})
+        #          end
+        res
       else
-        return ResponseBase.new({"id"=>res["ids"][0], "msg"=>res["msg"]})
+        ResponseBase.new({"id" => res["ids"][0], "msg" => res["msg"]})
       end
     end
 
     def delete(message_id, options={})
       path2 = "#{self.path(options)}/#{message_id}"
       res = @client.parse_response(@client.delete(path2))
-      return ResponseBase.new(res)
+      ResponseBase.new(res)
     end
 
     def release(message_id, options={})
       path2 = "#{self.path(options)}/#{message_id}/release"
       res = @client.parse_response(@client.post(path2, options))
-      return ResponseBase.new(res)
+      ResponseBase.new(res)
     end
 
   end
@@ -110,9 +121,8 @@ module IronMQ
     end
 
     def release(options={})
-      options2 = options || {}
-      options2 = options.merge(@options) if @options
-      @messages.release(self.id, options2)
+      options.merge!(@options) if @options
+      @messages.release(self.id, options)
     end
 
     def subscribers(options={})
