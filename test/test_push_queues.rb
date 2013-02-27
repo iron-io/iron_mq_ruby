@@ -36,8 +36,7 @@ class TestPushQueues < TestBase
       queue = @client.queue(qname)
       res = queue.update_queue(:subscribers => subscribers,
                                :push_type => t)
-      queue = @client.queue(qname)
-      LOG.debug queue
+
       LOG.debug queue.subscribers
       assert_equal num_subscribers, queue.subscribers.size
 
