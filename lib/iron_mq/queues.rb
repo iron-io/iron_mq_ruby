@@ -2,154 +2,33 @@ require 'cgi'
 require 'iron_mq/subscribers'
 
 module IronMQ
-  class Queues
 
-    attr_accessor :client # is attr_reader better?
+  class Queue < ResponseBase
+    attr_reader :name
 
-    def initialize(client)
+    def initialize(client, queue_name)
       @client = client
-    end
-
-    def self.path(options)
-      path = "projects/#{options[:project_id]}/queues"
-      name = options[:name] || options[:queue_name]
-      path += "/#{CGI::escape(name)}" if name
-      path
-    end
-
-    def path(options = {})
-      options[:project_id] = @client.project_id
-      Queues.path(options)
-    end
-
-    def list(options = {})
-      options = remove_queue_name_option(options)
-
-      res = @client.parse_response(@client.get("#{path(options)}", options))
-      # returns list of evaluated queues
-      res.each_with_object([]) { |q, ret| ret << Queue.new(@client, q) }
-    end
-
-    alias_method :all, :list
-
-    # FIXME: To make better IronMQ API reflection
-    #        methods `clear`, `delete`, `get` must check that `options[:name]` is specified.
-    #        Becase IronMQ API has only one request (list of queues)
-    #          GET /projects/{Project ID}/queues
-    #        where queue name is not used
-    #
-    #        Maybe not bad idea is to re-define the methods like:
-    #          def clear(queue_name, options = {})
-
-    def clear(options = {})
-      # TODO: make common logging system, gem-wide, like
-      #   with_logging(level) do |log|
-      #     log "Something"
-      #     do "Anything"
-      #     log "Again"
-      #   end
-      @client.logger.debug "Clearing queue #{options[:name]}"
-      r1 = @client.parse_response(@client.post("#{path(options)}/clear", options))
-      @client.logger.debug "Clear result: #{r1}"
-      r1
-    end
-
-
-    def delete(options = {})
-      @client.logger.debug "Deleting queue #{options[:name]}"
-      r1 = @client.parse_response(@client.delete("#{path(options)}", options))
-      @client.logger.debug "Delete result: #{r1}"
-      r1
-    end
-
-    # GET /projects/{Project ID}/queues/{Queue Name}
-    def info(queue_name, options = {})
-      opts = options.merge({:queue_name => queue_name})
-      @client.parse_response(@client.get("#{path(opts)}"))
-    end
-
-    # options:
-    #  :name => can specify an alternative queue name
-    def get(options = {})
-      # What global queue is? Does it reflect any API feature?
-      qname = options[:name] || @client.queue_name
-      resp = info(qname, options)
-
-      Queue.new(@client, resp)
-    end
-
-    # Update a queue
-    # options:
-    #  :name => if not specified, will use global queue name
-    #  :subscribers => url's to subscribe to
-    #  :push_type => multicast (default) or unicast.
-    def post(options = {})
-      options[:name] ||= @client.queue_name
-      @client.parse_response(@client.post(path(options), options))
-    end
-
-    private
-
-    # Make sure it is no parameter which `path` method could evaluate as queue name
-    def remove_queue_name_option(options)
-      [:name, 'name', :queue_name, 'queue_name'].each { |key| options.delete(key) }
-      options
-    end
-
-  end
-
-  class Queue
-
-    attr_reader :client
-
-    def initialize(client, queue_info)
-      @client = client
-      @info = queue_info
-      # @info = Queues.post(:name => @info["name"]) unless @info["id"] # creates queue on backend
+      @name = queue_name
+      super({"name" => queue_name})
     end
 
     def info
+      info  = raw
       begin
-        # It does not require queue evaluation, get info Hash response from IronMQ API
-        @info = @client.queues.info(name)
+        # Do not instantiate response
+        info = call_api_and_parse_response(:get, '', {}, false)
       rescue Rest::HttpError
-        @info
       end
-    end
 
-    alias_method :raw, :info # backward compatibility
-
-    def reload # backward compatibility
-      info
-    end
-
-    def [](key)
-      info[key.to_s]
-    end
-
-    def id
-      info["id"]
-    end
-
-    def name
-      # queue name does not require reloading, exists in new queue, ever constant
-      @info["name"]
+      ResponseBase.new(info)
     end
 
     def size
-      info["size"]
+      info.size.to_i
     end
 
     def total_messages
-      info["total_messages"]
-    end
-
-    def subscribers
-      info["subscribers"]
-    end
-
-    def push_type
-      info["push_type"]
+      info.total_messages.to_i
     end
 
     def new?
@@ -157,88 +36,184 @@ module IronMQ
     end
 
     def push_queue?
-      !info["push_type"].nil?
+      # FIXME: `push_type` parameter in not guaranted it's push queue.
+      #        When the parameter absent it is not guaranted that queue is not push queue.
+      ptype = push_type
+      ptype.nil? || ptype.empty?
     end
 
-    def clear
-      @client.queues.clear(:name => name)
-    end
-
-    # FIXME: This method must be named `delete`. 
-    #        Name is kept for backward compatibility with previous version of gem.
-    def delete_queue
-      @client.queues.delete(:name => name)
-    end
-
-    # Updates the queue object
-    #  :subscribers => url's to subscribe to
-    #  :push_type => multicast (default) or unicast.
     def update(options)
-      @client.queues.post(options.merge(:name => name))
+      call_api_and_parse_response(:post, "", options)
     end
 
     alias_method :update_queue, :update
 
-    def add_subscriber(subscriber_hash, options = {})
-      res = @client.post("#{@client.queues.path(:name => name)}/subscribers",
-                         :subscribers => [subscriber_hash])
-
-      @client.parse_response(res)
+    def clear
+      call_api_and_parse_response(:post, "/clear")
     end
 
-    def remove_subscriber(subscriber_hash)
-      res = @client.delete("#{@client.queues.path(:name => name)}/subscribers",
-                           {:subscribers => [subscriber_hash]},
-                           {"Content-Type" => @client.content_type})
+    alias_method :clear_queue, :clear
 
-      @client.parse_response(res)
+    # Backward compatibility, better name is `delete`
+    def delete_queue
+      call_api_and_parse_response(:delete)
     end
 
-    def post(body, options = {})
-      @client.messages.post(body, options.merge(:name => name))
+    # Backward compatibility
+    def delete(message_id, options = {})
+      # API does not accept any options
+      Message.new(self, {"id" => message_id}).delete
     end
 
-    alias_method :post_message, :post
-
-    def get(options = {})
-      @client.messages.get(options.merge(:name => name))
+    def add_subscribers(subscribers)
+      call_api_and_parse_response(:post, "/subscribers", :subscribers => subscribers)
     end
 
-    alias_method :get_message, :get
-
-    # FIXME: This method name must be named `delete_message`.
-    #        Name is kept for backward compatibility with previous version of gem
-    def delete(id, options = {})
-      @client.messages.delete(id, options.merge(:name => name))
+    # `options` for backward compatibility
+    def add_subscriber(subscriber, options = {})
+      add_subscribers([subscriber])
     end
 
-    alias_method :delete_message, :delete
+    def remove_subscribers(subscribers)
+      call_api_and_parse_response(:delete,
+                                  "/subscribers",
+                                  {
+                                    :subscribers => subscribers,
+                                    :headers => {"Content-Type" => @client.content_type}
+                                  })
+    end
 
-    # This will continuously poll for a message and pass it to the block. For example:
-    #
-    #     queue.poll { |msg| puts msg.body }
-    #
-    # options:
-    # - :sleep_duration=>seconds => time between polls if msg is nil. default 1.
-    # - :break_if_nil=>true/false => if true, will break if msg is nil (ie: queue is empty)
-    def poll(options = {}, &blk)
+    def remove_subscriber(subscriber)
+      remove_subscribers([subscriber])
+    end
+
+    def post_messages(payload, options = {})
+      batch = false
+
+      msgs = if payload.is_a?(Array)
+               batch = true
+               # FIXME: This maybe better to process Array of Objects the same way as for single message.
+               #
+               #          payload.each_with_object([]) do |msg, res|
+               #            res << options.merge(:body => msg)
+               #          end
+               #
+               #        For now user must pass objects like `[{:body => msg1}, {:body => msg2}]`
+               payload.each_with_object([]) do |msg, res|
+                 res << msg.merge(options)
+               end
+             else
+               [ options.merge(:body => payload) ]
+             end
+
+      # Do not instantiate response
+      res = call_api_and_parse_response(:post, "/messages", {:messages => msgs}, false)
+
+      if batch
+        # FIXME: Return Array of ResponsBase instead, it seems more clear than raw response
+        #
+        #          res["ids"].each_with_object([]) do |id, responses|
+        #            responses << ResponseBase.new({"id" => id, "msg" => res["msg"]})
+        #          end
+        ResponseBase.new(res) # Backward capable
+      else
+        ResponseBase.new({"id" => res["ids"][0], "msg" => res["msg"]})
+      end
+    end
+
+    alias_method :post, :post_messages
+
+    def get_messages(options = {})
+      if options.is_a?(String)
+        # assume it's an id
+        return Message.new(self, {"id" => options})
+      end
+
+      resp = call_api_and_parse_response(:get, "/messages", options)
+
+      process_messages(resp["messages"], options)
+    end
+
+    alias_method :get, :get_messages
+
+    # Backward compatibility
+    def messages ; self; end
+
+    def peek_messages(options = {})
+      resp = call_api_and_parse_response(:get, "/messages/peek", options)
+
+      process_messages(resp["messages"], options)
+    end
+
+    alias_method :peek, :peek_messages
+
+    def poll_messages(options = {}, &block)
       sleep_duration = options[:sleep_duration] || 1
       
       while true
-        msg = get(options)
+        msg = get_messages(options.merge(:n => 1))
         if msg.nil?
           options[:break_if_nil] ? break : sleep(sleep_duration)
         else
           yield msg
+          # Delete message after processing
           msg.delete
         end
       end
     end
 
-    def messages
-      Messages.new(client, self)
+    alias_method :poll, :poll_messages
+
+    def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true)
+      response = if meth.to_s == "delete"
+                   headers = options[:headers] || options["headers"] || {}
+                   options.delete(:headers)
+                   options.delete("headers")
+                   @client.parse_response(@client.send(meth, "#{path(ext_path)}", options, headers))
+                 else
+                   @client.parse_response(@client.send(meth, "#{path(ext_path)}", options))
+                 end
+      instantiate ? ResponseBase.new(response) : response
     end
 
+    def method_missing(meth, *args)
+      # This is for reload queue info data when calling:
+      #   queue.id
+      #   queue.size
+      # etc.
+      if args.length == 0
+        res = info.send(meth)
+        res ? res : super
+      else
+        super
+      end
+    end
+
+    private
+
+    def path(ext_path)
+      "/#{@name}#{ext_path}"
+    end
+
+    def process_messages(messages, options)
+      multiple = wait_for_multiple?(options)
+
+      if messages.is_a?(Array) && messages.size > 0
+        if multiple
+          messages.each_with_object([]) do |m, msgs|
+            msgs << Message.new(self, m)
+          end
+        else
+          Message.new(self, messages[0])
+        end
+      else
+        multiple ? [] : nil
+      end
+    end
+
+    def wait_for_multiple?(options)
+      options.is_a?(Hash) && ((options[:n] || options['n']).to_i > 1)
+    end
   end
 
 end

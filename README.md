@@ -149,7 +149,7 @@ In this case you may prefer to use `queue.info` to have `Hash` with all availabl
 response = queue.delete_queue # => #<IronMQ::ResponseBase:...>
 ```
 
-### Put Messages on Queue
+### Post Messages to a Queue
 
 **Single message:**
 
@@ -173,7 +173,6 @@ response = queue.post(messages) # => {"ids" => ["5847899158098068288", ...], "ms
 response = queue.post(messages, :timeout => 300) # => {"ids" => ["5847899158098068288", ...], "msg" => "Messages put on queue."}
 ```
 
-
 **Optional parameters:**
 
 * `timeout`: After timeout (in seconds), item will be placed back onto queue.
@@ -186,17 +185,16 @@ Default is 0 seconds. Maximum is 604,800 seconds (7 days).
 * `expires_in`: How long in seconds to keep the item on the queue before it is deleted.
 Default is 604,800 seconds (7 days). Maximum is 2,592,000 seconds (30 days).
 
-
 ### Get Messages from a Queue
 
 ```ruby
 message = queue.get # => #<IronMQ::Message:...>
 
 # or N messages
-messages = queue.get(:n => 7) # => [#<IronMQ::Queue:...>, ...]
+messages = queue.get(:n => 7) # => [#<IronMQ::Message:...>, ...]
 
 # or message by ID
-message = queue.get "5127bf043264140e863e2283" # => #<IronMQ::Queue:...>
+message = queue.get "5127bf043264140e863e2283" # => #<IronMQ::Message:...>
 ```
 
 **Optional parameters:**
@@ -209,6 +207,16 @@ If not set, value from POST is used. Default is 60 seconds, maximum is 86,400 se
 
 When `n` parameter is specified and greater than 1 method returns `Array` of `Queue`s.
 Otherwise, `Queue` object would be returned.
+
+### Touch a Message on a Queue
+
+Touching a reserved message extends its timeout by the duration specified when the message was created, which is 60 seconds by default.
+
+```ruby
+message = queue.get # => #<IronMQ::Message:...>
+
+message.touch # => #<IronMQ::ResponseBase:...>
+```
 
 ### Release Message
 
@@ -234,6 +242,20 @@ message.delete # => #<IronMQ::ResponseBase:...>
 # or
 queue.delete_message(message.id) # => #<IronMQ::ResponseBase:...>
 ```
+
+### Peek Messages from a Queue
+
+Peeking at a queue returns the next messages on the queue, but it does not reserve them.
+
+```ruby
+message = queue.peek # => #<IronMQ::Message:...>
+# or multiple messages
+messages = queue.peek(:n => 13) # => [#<IronMQ::Message:...>, ...]
+```
+
+**Optional parameters:**
+
+* `n`: The maximum number of messages to peek. Default is 1. Maximum is 100.
 
 ### Poll for Messages
 
@@ -300,8 +322,19 @@ queue.remove_subscriber({url: "http://nowhere.com"})
 After pushing a message:
 
 ```ruby
-subscr_statuses = queue.messages.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
-subscr_statuses.each { |ss| puts "#{ss.id}: #{(ss.code == 200) ? 'Success' : 'Fail'}" }
+subscribers = queue.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
+# old syntax, still supported
+subscribers = queue.messages.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
+
+subscribers.each { |ss| puts "#{ss.id}: #{(ss.code == 200) ? 'Success' : 'Fail'}" }
 ```
 
 Returns an array of subscribers with status.
+
+### Delete Message Push Status
+
+```ruby
+subscribers = queue.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
+
+subscribers.each { |ss| ss.delete }
+```
