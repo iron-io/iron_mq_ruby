@@ -65,7 +65,7 @@ msg.body # => "hello world!"
 
 When you pop/get a message from the queue, it is no longer on the queue but it still exists within the system.
 You have to explicitly delete the message or else it will go back onto the queue after the `timeout`.
-The default `timeout` is 60 seconds.
+The default `timeout` is 60 seconds. Minimal `timeout` is 30 seconds.
 
 ### Delete a Message from a Queue
 
@@ -165,7 +165,7 @@ http_code = response.code # => 200
 
 **Multiple messages:**
 ```ruby
-# [{:body => VALUE}, ...] format is required for now
+# [{:body => VALUE}, ...] format is required
 messages = [{:body => "first"}, {:body => "second"}]
 
 response = queue.post(messages) # => {"ids" => ["5847899158098068288", ...], "msg" => "Messages put on queue."}
@@ -177,7 +177,7 @@ response = queue.post(messages, :timeout => 300) # => {"ids" => ["58478991580980
 
 * `timeout`: After timeout (in seconds), item will be placed back onto queue.
 You must delete the message from the queue to ensure it does not go back onto the queue.
- Default is 60 seconds. Maximum is 86,400 seconds (24 hours).
+ Default is 60 seconds. Minimum is 30 seconds. Maximum is 86,400 seconds (24 hours).
 
 * `delay`: The item will not be available on the queue until this many seconds have passed.
 Default is 0 seconds. Maximum is 604,800 seconds (7 days).
@@ -203,7 +203,8 @@ message = queue.get "5127bf043264140e863e2283" # => #<IronMQ::Message:...>
 
 * `timeout`: timeout: After timeout (in seconds), item will be placed back onto queue.
 You must delete the message from the queue to ensure it does not go back onto the queue.
-If not set, value from POST is used. Default is 60 seconds, maximum is 86,400 seconds (24 hours).
+If not set, value from POST is used. Default is 60 seconds. Minimum is 30 seconds.
+Maximum is 86,400 seconds (24 hours).
 
 When `n` parameter is specified and greater than 1 method returns `Array` of `Queue`s.
 Otherwise, `Queue` object would be returned.
@@ -338,3 +339,7 @@ subscribers = queue.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...
 
 subscribers.each { |ss| ss.delete }
 ```
+
+
+-------------
+© 2011 - 2013 Iron.io Inc. All Rights Reserved.
