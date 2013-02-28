@@ -137,8 +137,6 @@ push_type = queue.push_type # => "multicast"
 is_push_queue = queue.push_queue? # => true
 ```
 
-**Note:** some info parameters have no shortcuts.
-
 **Warning:** to be sure configuration information is up-to-date
 client library call IronMQ API each time you request for any parameter except `queue.name`.
 In this case you may prefer to use `queue.info` to have `Hash` with all available info parameters.
