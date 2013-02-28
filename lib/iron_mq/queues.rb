@@ -192,7 +192,7 @@ module IronMQ
     private
 
     def path(ext_path)
-      "/#{@name}#{ext_path}"
+      "/#{CGI::escape(@name).gsub('+', '%20')}#{ext_path}"
     end
 
     def process_messages(messages, options)
