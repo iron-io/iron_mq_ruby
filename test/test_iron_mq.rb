@@ -21,11 +21,11 @@ class IronMQTests < TestBase
       100.times do
         queue.post("hello world!")
       end
-    end
 
-    # delete queue on test complete
-    resp = queue.delete_queue
-    assert_equal resp.code, 200, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
+      # delete queue on test complete
+      resp = queue.delete_queue
+      assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
+    end
   end
 
 
@@ -112,7 +112,7 @@ class IronMQTests < TestBase
 
     # delete queue on test complete
     resp = queue.delete_queue
-    assert_equal resp.code, 200, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
 
@@ -131,6 +131,10 @@ class IronMQTests < TestBase
         assert_equal q.size, 1 
       end
     end
+
+    # delete queue on test complete
+    resp = queue.delete_queue
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
 
@@ -225,7 +229,7 @@ class IronMQTests < TestBase
 
     # delete queue on test complete
     resp = queue.delete_queue
-    assert_equal resp.code, 200, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
   def test_queues
@@ -290,7 +294,7 @@ class IronMQTests < TestBase
 
     # delete queue on test complete
     resp = queue.delete_queue
-    assert_equal resp.code, 200, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
   def test_batch
@@ -323,12 +327,12 @@ class IronMQTests < TestBase
 
     msgs.each do |m|
       resp = m.delete
-      assert_equal resp.code, 200, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
+      assert_equal 200, resp.code, "API must delete message and response with HTTP 200 status, but returned HTTP #{resp.code}"
     end
 
     # delete queue on test complete
     resp = queue.delete_queue
-    assert_equal resp.code, 200, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
   def test_peek
@@ -553,7 +557,6 @@ class IronMQTests < TestBase
     resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
-
 
 
   def test_poll
