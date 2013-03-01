@@ -106,6 +106,18 @@ class IronMQTests < TestBase
 
   end
 
+  def test_queue_create
+    q = @client.queue('normal_pull_queue')
+    q.update_queue() # creates if it doesn't exist
+    q.reload
+    assert_not_nil q.id
+    assert_nil q.push_type
+    assert_nil q.subscribers
+
+    q.delete_queue
+
+  end
+
 
   def test_queues_list
     queue_name = 'test_queues_list'

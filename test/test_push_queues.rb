@@ -39,6 +39,7 @@ class TestPushQueues < TestBase
       queue = @client.queue(qname)
       LOG.debug queue
       LOG.debug queue.subscribers
+      assert_equal t, queue.push_type
       assert_equal num_subscribers, queue.subscribers.size
 
       # add the last one
@@ -329,5 +330,6 @@ class TestPushQueues < TestBase
   def test_202_failure
     omit_if @skip
   end
+
 
 end

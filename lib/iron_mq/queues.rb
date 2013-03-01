@@ -145,6 +145,11 @@ module IronMQ
       return raw["total_messages"]
     end
 
+    def push_type
+      load_queue()
+      return raw["push_type"]
+    end
+
     def subscribers
       load_queue()
       return raw["subscribers"]
