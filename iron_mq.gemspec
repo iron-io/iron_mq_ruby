@@ -1,8 +1,8 @@
 require File.expand_path('../lib/iron_mq/version', __FILE__)
 
 Gem::Specification.new do |gem|
-  gem.authors       = ["Travis Reeder"]
-  gem.email         = ["travis@iron.io"]
+  gem.authors       = ["Yury Yantsevich", "Travis Reeder"]
+  gem.email         = ["yury@iron.io", "travis@iron.io"]
   gem.description   = "Ruby client for IronMQ by www.iron.io"
   gem.summary       = "Ruby client for IronMQ by www.iron.io"
   gem.homepage      = "https://github.com/iron-io/iron_mq_ruby"

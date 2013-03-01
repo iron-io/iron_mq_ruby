@@ -103,6 +103,10 @@ class BeanstalkTests < TestBase
     job = reserve(1)
     assert_equal msg, job.body, "#{job.body} does not equal #{msg}"
     job.delete
+
+    # delete queue on test complete
+    resp = @client.queue('default').delete_queue
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
   def test_timeout
@@ -126,6 +130,10 @@ class BeanstalkTests < TestBase
     assert_not_nil job, "job is nil"
     assert_equal msg, job.body, "body not the same as message."
     job.delete
+
+    # delete queue on test complete
+    resp = @client.queue('default').delete_queue
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
   def test_delay
@@ -145,6 +153,10 @@ class BeanstalkTests < TestBase
     assert_not_nil job, "job is nil"
     assert_equal msg, job.body, "body not the same as message."
     job.delete
+
+    # delete queues on test complete
+    resp = @client.queue('default').delete_queue
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
   def tube_message(tube)
@@ -156,11 +168,11 @@ class BeanstalkTests < TestBase
     omit_if @skip # bypass this test if rackspace
     begin
       job = @beanstalk.reserve(timeout)
-      puts 'got job: ' + job.inspect
-      return job
+      LOG.info 'got job: ' + job.inspect
+      job
     rescue Beanstalk::TimedOut => ex
       puts "Timed out: #{ex.message}"
-      return nil
+      nil
     end
   end
 
@@ -215,6 +227,16 @@ class BeanstalkTests < TestBase
     job = reserve(1)
     assert_equal msg1, job.body, "body #{job.body.to_s} does not equal #{msg1}"
     job.delete
+
+    # delete queues on test complete
+    resp = @client.queue('youtube').delete_queue
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
+
+    resp = @client.queue('beanstalk_test').delete_queue
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
+
+    resp = @client.queue('default').delete_queue
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
 
