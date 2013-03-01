@@ -166,9 +166,8 @@ module IronMQ
 
     def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true)
       response = if meth.to_s == "delete"
-                   headers = options[:headers] || options["headers"] || {}
-                   options.delete(:headers)
-                   options.delete("headers")
+                   headers = options.delete(:headers) || options.delete("headers") || {}
+
                    @client.parse_response(@client.send(meth, "#{path(ext_path)}", options, headers))
                  else
                    @client.parse_response(@client.send(meth, "#{path(ext_path)}", options))
