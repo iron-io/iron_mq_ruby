@@ -606,6 +606,10 @@ class IronMQTests < TestBase
 
     msg = queue.get
     assert_equal "hi2", msg.body, "message body must be 'hi2', but got '#{msg.body}'"
+
+    # delete queue on test complete
+    resp = queue.delete_queue
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
   def test_webhooks
