@@ -406,7 +406,7 @@ class IronMQTests < TestBase
 
   end
 
-  def test_delete
+  def test_queue_delete
     queue = @client.queue("test_delete")
     queue.post("hi")
     queue.reload
