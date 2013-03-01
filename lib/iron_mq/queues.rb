@@ -39,7 +39,7 @@ module IronMQ
       # FIXME: `push_type` parameter in not guaranted it's push queue.
       #        When the parameter absent it is not guaranted that queue is not push queue.
       ptype = push_type
-      ptype.nil? || ptype.empty?
+      not (ptype.nil? || ptype.empty?)
     end
 
     def update(options)
