@@ -18,11 +18,14 @@ class TestPushQueues < TestBase
   def test_queue_subscriptions
     omit_if @skip
     types = ["multicast", "unicast"]
+    # to delete queues later (clear project)
+    queue_names = []
     types.each do |t|
 
       LOG.info "Trying type #{t}"
 
       qname = "subscription-queue-#{t}"
+      queue_names << qname
 
       num_subscribers = 10
       subscribers = []
@@ -36,8 +39,7 @@ class TestPushQueues < TestBase
       queue = @client.queue(qname)
       res = queue.update_queue(:subscribers => subscribers,
                                :push_type => t)
-      queue = @client.queue(qname)
-      LOG.debug queue
+
       LOG.debug queue.subscribers
       assert_equal num_subscribers, queue.subscribers.size
 
@@ -115,6 +117,7 @@ class TestPushQueues < TestBase
         # (default retries_delay is 60s).
         sleep 1
         tries -= 1
+        # old style of message getting
         msg = queue.messages.get(m.id)
         LOG.info "checking for message: #{msg}"
         next if msg.nil?
@@ -141,6 +144,10 @@ class TestPushQueues < TestBase
         break
       end
       assert_not_equal tries, 0
+
+      # delete queue after all tests on it were completed
+      resp = queue.delete_queue
+      assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
     end
   end
 
@@ -218,6 +225,10 @@ class TestPushQueues < TestBase
       break
     end
     assert_not_equal tries, 0
+
+    # delete queue on test complete
+    resp = queue.delete_queue
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
 
@@ -242,15 +253,14 @@ class TestPushQueues < TestBase
       queue = @client.queue(qname)
       res = queue.update_queue(:subscribers => subscribers,
                                :push_type => t)
-      queue = @client.queue(qname)
+
       LOG.debug queue
-      LOG.debug queue.subscribers
+
       assert_equal num_subscribers, queue.subscribers.size
       # todo: assert subscriptions match
 
       msg = "hello #{x}"
-      m = queue.post(msg, 
-                     {:timeout => 2})
+      m = queue.post(msg, {:timeout => 2})
 
       tries = MAX_TRIES
       while tries > 0
@@ -322,6 +332,10 @@ class TestPushQueues < TestBase
         break
       end
       assert_not_equal 0, tries
+
+      # delete queue on test complete
+      resp = queue.delete_queue
+      assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
     end
   end
 

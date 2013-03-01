@@ -1,34 +1,25 @@
 module IronMQ
-  class Subscribers
-    def self.path(options)
-      path = "#{Messages.path(options)}/subscribers"
-      if options[:subscriber_id]
-        path << "/#{options[:subscriber_id]}"
-      end
-      path
-    end
-  end
 
   class Subscriber < ResponseBase
+    # `options` was kept for backward compatibility
     attr_accessor :options
 
-    def initialize(raw, message, options={})
-      super(raw)
+    def initialize(data, message, options = {})
+      super(data, 200)
       @message = message
       @options = options
     end
 
-    def delete(options={})
-      client = @message.messages.client
+    # `options` was kept for backward compatibility
+    def delete(options = {})
+      @message.call_api_and_parse_response(:delete, path)
+    end
 
-      options[:subscriber_id] ||= @raw["id"]
-      options[:msg_id] ||= @message.id
-      options[:project_id] ||= client.project_id
-      options[:queue_name] ||= client.queue_name
-      path = Subscribers.path(options)
-      raw = client.delete(path)
-      res = client.parse_response(raw)
-      return ResponseBase.new(res)
+    private
+
+    def path
+      "/subscribers/#{id}"
     end
   end
+
 end

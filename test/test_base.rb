@@ -30,26 +30,34 @@ class TestBase < Test::Unit::TestCase
 
     config = @config['iron']
     @host = "#{config['host'] || "mq-aws-us-east-1.iron.io"}"
+
     @client = IronMQ::Client.new(@config['iron'])
+
     Rest.logger.level = Logger::DEBUG # this doesn't work for some reason?
     IronCore::Logger.logger.level = Logger::DEBUG
-    @client.queue_name = 'ironmq-ruby-tests'
 
+    @queue_name = 'ironmq-ruby-tests' # default queue for tests
   end
 
 
   def clear_queue(queue_name=nil)
-    queue_name ||= @client.queue_name
+    queue_name ||= @queue_name
+
+    queue = @client.queue(queue_name)
+    queue.post("test")
+
     puts "clearing queue #{queue_name}"
-    @client.queue(queue_name).post("test")
-    @client.queue(queue_name).clear
+    queue.clear
     puts 'cleared.'
   end
 
   def assert_performance(time)
     start_time = Time.now
+
     yield
-    execution_time =  Time.now - start_time
+
+    execution_time = Time.now - start_time
+
     assert execution_time < time, "Execution time too big #{execution_time.round(2)}, should be #{time}"
   end
 

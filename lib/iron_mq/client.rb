@@ -16,11 +16,10 @@ module IronMQ
           :host => IronMQ::Client::AWS_US_EAST_HOST,
           :port => 443,
           :api_version => 1,
-          :user_agent => 'iron_mq_ruby-' + IronMQ::VERSION + ' (iron_core_ruby-' + IronCore.version + ')',
-          :queue_name => 'default'
+          :user_agent => 'iron_mq_ruby-' + 'very_new' + ' (iron_core_ruby-' + IronCore.version + ')'
       }
 
-      super('iron', 'mq', options, default_options, [:project_id, :token, :api_version, :queue_name])
+      super('iron', 'mq', options, default_options, [:project_id, :token, :api_version])
 
       IronCore::Logger.error 'IronMQ', "Token is not set", IronCore::Error if @token.nil?
 
@@ -35,19 +34,43 @@ module IronMQ
     end
 
     def base_url
-      super + @api_version.to_s + '/'
+      @base_url = "#{super}#{@api_version}/projects/#{@project_id}/queues"
     end
 
-    def queue(name)
-      return Queue.new(self, {"name" => name})
+    def queues_list(options = {})
+      response = parse_response(get('', options)) # GET base_url
+      # returns list of evaluated queues
+      response.each_with_object([]) { |q_info, ret| ret << Queue.new(self, q_info["name"]) }
     end
 
-    def messages
-      return Messages.new(self)
+    alias_method :list, :queues_list
+    alias_method :all, :queues_list
+
+    def queues_get(name)
+      Queue.new(self, name)
     end
 
+    alias_method :queue, :queues_get
+
+    # Backward compatibility for
+    #   client.queues.get(:name => "my_queue")
+    #   client.queues.get("name" => "my_queue")
+    def get(*args)
+      if args.size == 1 && args[0].is_a?(Hash)
+        queue_name = (args[0][:name] || args[0]["name"]).to_s
+        queue_name.empty? ? super : queues_get(queue_name)
+      else
+        super
+      end
+    end
+
+    # Backward compatibility, adds possibility to call
+    #   client.queues.all
+    #   client.queues.list
+    #   client.queues.queue(name)
     def queues
-      return Queues.new(self)
+      self
     end
   end
+
 end
