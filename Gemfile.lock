@@ -8,15 +8,15 @@ GEM
   remote: https://rubygems.org/
   specs:
     beanstalk-client (1.1.1)
-    concur (1.0.2)
-    ethon (0.5.7)
+    concur (2.0.0)
+    ethon (0.5.9)
       ffi (~> 1.2.0)
       mime-types (~> 1.18)
     ffi (1.2.1)
     iron_core (0.5.1)
       rest (>= 2.2.0)
-    mime-types (1.19)
-    minitest (4.4.0)
+    mime-types (1.21)
+    minitest (4.6.2)
     net-http-persistent (2.8)
     quicky (0.4.0)
     rake (10.0.3)
@@ -25,9 +25,9 @@ GEM
       rest-client (>= 0.3.0)
     rest-client (1.6.7)
       mime-types (>= 1.16)
-    test-unit (2.5.3)
-    typhoeus (0.5.4)
-      ethon (~> 0.5.7)
+    test-unit (2.5.4)
+    typhoeus (0.6.1)
+      ethon (~> 0.5.9)
     uber_config (1.0.5)
 
 PLATFORMS

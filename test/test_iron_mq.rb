@@ -405,25 +405,25 @@ class IronMQTests < TestBase
     
 
   end
-  #
-  #def test_delete
-  #  queue = @client.queue("test_delete")
-  #  queue.post("hi")
-  #  queue.reload
-  #  old_id = queue.id
-  #  queue.delete_queue
-  #
-  #  puts "sleeping for a bit to let queue delete..."
-  #  sleep 60
-  #
-  #  queue.post("hi2")
-  #  p queue
-  #  queue.reload
-  #  assert queue.id != old_id, "old_id: #{old_id} is equal to new id: #{queue.id}"
-  #  assert queue.size == 1
-  #  queue.get("").body == "hi2"
-  #
-  #end
+
+  def test_delete
+    queue = @client.queue("test_delete")
+    queue.post("hi")
+    queue.reload
+    old_id = queue.id
+    queue.delete_queue
+
+    puts "sleeping for a bit to let queue delete..."
+    sleep 60
+
+    queue.post("hi2")
+    p queue
+    queue.reload
+    assert queue.id != old_id, "old_id: #{old_id} is equal to new id: #{queue.id}"
+    assert queue.size == 1
+    queue.get.body == "hi2"
+
+  end
 
   def test_webhooks
     omit_if @skip
