@@ -6,7 +6,7 @@ much as possible so if you see an option in the API docs, you can use it in the 
 
 http://dev.iron.io/mq/reference/api/
 
-#Getting Started
+# Getting Started
 
 1\. Install the gem:
 
@@ -28,9 +28,15 @@ Or pass in credentials:
 ironmq = IronMQ::Client.new(:token => "MY_TOKEN", :project_id => "MY_PROJECT_ID")
 ```
 
-#The Basics
+# The Basics
 
-###Get a Queue Object
+### Get Queues List
+
+```ruby
+list_queues = ironmq.queues # => [#<IronMQ::Queue:...>, ...]
+```
+
+### Get a Queue Object
 
 You can have as many queues as you want, each with their own unique set of messages.
 
@@ -78,9 +84,9 @@ queue.delete(msg.id)
 Be sure to delete a message from the queue when you're done with it.
 
 
-#Client
+# Client
 
-`IronMQ::Client` is based on `IronCore::Client` and provides easy access to the queues and messages.
+`IronMQ::Client` is based on `IronCore::Client` and provides easy access to the queues.
 
 ```ruby
 ironmq = IronMQ::Client.new(:token => "MY_TOKEN", :project_id => "MY_PROJECT_ID")
@@ -112,7 +118,7 @@ queue = ironmq.queue "my_queue" # => #<IronMQ::Queue:...>
 **Note:** if queue with desired name does not exist it returns fake queue.
 Queue will be created automatically on post of first message or queue configuration update.
 
-#Queues
+# Queues
 
 ### Retrieve Queue Information
 
@@ -220,7 +226,7 @@ message.touch # => #<IronMQ::ResponseBase:...>
 ### Release Message
 
 ```ruby
-message = queue.get => #<IronMQ::Message:...>
+message = queue.get # => #<IronMQ::Message:...>
 
 response = message.release # => #<IronMQ::ResponseBase:...>
 # or
@@ -238,8 +244,6 @@ Default is 0 seconds. Maximum is 604,800 seconds (7 days).
 message = queue.get # => #<IronMQ::Queue:...>
 
 message.delete # => #<IronMQ::ResponseBase:...>
-# or
-queue.delete_message(message.id) # => #<IronMQ::ResponseBase:...>
 ```
 
 ### Peek Messages from a Queue
@@ -270,7 +274,7 @@ Polling will automatically delete the message at the end of the block.
 queue.clear # => #<IronMQ::ResponseBase:...>
 ```
 
-#Push Queues
+# Push Queues
 
 IronMQ push queues allow you to setup a queue that will push to an endpoint, rather than having to poll the endpoint. 
 [Here's the announcement for an overview](http://blog.iron.io/2013/01/ironmq-push-queues-reliable-message.html). 
@@ -301,8 +305,8 @@ Subscribers can be any HTTP endpoint. `push_type` is one of:
 ```ruby
 ptype = :multicast
 subscribers = [
-  {url: "http://rest-test.iron.io/code/200?store=key1"}
-  {url: "http://rest-test.iron.io/code/200?store=key2"}
+  {:url => "http://rest-test.iron.io/code/200?store=key1"}
+  {:url => "http://rest-test.iron.io/code/200?store=key2"}
 ]
 
 queue.update(:subscribers => subscribers, :push_type => ptype)
@@ -311,9 +315,20 @@ queue.update(:subscribers => subscribers, :push_type => ptype)
 ### Add/Remove Subscribers on a Queue
 
 ```ruby
-queue.add_subscriber({url: "http://nowhere.com"})
+queue.add_subscriber({:url => "http://nowhere.com"})
+
+queue.add_subscribers([
+  {:url => 'http://first.endpoint.xx/process'},
+  {:url => 'http://second.endpoint.xx/process'}
+])
+
 
 queue.remove_subscriber({url: "http://nowhere.com"})
+
+queue.remove_subscribers([
+  {:url => 'http://first.endpoint.xx/process'},
+  {:url => 'http://second.endpoint.xx/process'}
+])
 ```
 
 ### Get Message Push Status
@@ -322,13 +337,14 @@ After pushing a message:
 
 ```ruby
 subscribers = queue.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
-# old syntax, still supported
-subscribers = queue.messages.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
 
 subscribers.each { |ss| puts "#{ss.id}: #{(ss.code == 200) ? 'Success' : 'Fail'}" }
 ```
 
 Returns an array of subscribers with status.
+
+**Note:** getting a message by ID is only for usable for Push Queues.
+This creates fake `IronMQ::Message` instance on which you call for subscribers' push statuses.
 
 ### Delete Message Push Status
 
