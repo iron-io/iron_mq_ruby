@@ -4,7 +4,6 @@ IronMQ Ruby Client
 The [full API documentation is here](http://dev.iron.io/mq/reference/api/) and this client tries to stick to the API as
 much as possible so if you see an option in the API docs, you can use it in the methods below.
 
-http://dev.iron.io/mq/reference/api/
 
 # Getting Started
 
@@ -14,7 +13,7 @@ http://dev.iron.io/mq/reference/api/
 gem install iron_mq
 ```
 
-2\. Setup your Iron.io credentials: http://dev.iron.io/mq/reference/configuration/
+2\. [Setup your Iron.io credentials](http://dev.iron.io/mq/reference/configuration/)
 
 3\. Create an IronMQ client object:
 
@@ -354,6 +353,14 @@ subscribers = queue.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...
 subscribers.each { |ss| ss.delete }
 ```
 
+
+# Further Links
+
+* [IronMQ Overview](http://dev.iron.io/mq/)
+* [IronMQ REST/HTTP API](http://dev.iron.io/mq/reference/api/)
+* [Push Queues](http://dev.iron.io/mq/reference/push_queues/)
+* [Other Client Libraries](http://dev.iron.io/mq/libraries/)
+* [Live Chat, Support & Fun](http://get.iron.io/chat)
 
 -------------
 © 2011 - 2013 Iron.io Inc. All Rights Reserved.
