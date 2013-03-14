@@ -16,7 +16,7 @@ class TestPushQueues < TestBase
 
 
   def test_queue_subscriptions
-    omit_if @skip
+    return if @skip
     types = ["multicast", "unicast"]
     # to delete queues later (clear project)
     queue_names = []
@@ -153,7 +153,7 @@ class TestPushQueues < TestBase
 
 
   def test_failure
-    omit_if @skip
+    return if @skip
     @rest = Rest::Client.new
     qname = "failure-queue"
 
@@ -233,7 +233,7 @@ class TestPushQueues < TestBase
 
 
   def test_202
-    omit_if @skip
+    return if @skip
     types = ["multicast"]
     types.each do |t|
 
@@ -340,8 +340,39 @@ class TestPushQueues < TestBase
   end
 
 
-  def test_202_failure
-    omit_if @skip
+  def test_post_and_instantiate
+    return if @skip
+
+    queue = @client.queue('push_and_instantiate')
+
+    subscribers = [{:url => "http://rest-test.iron.io/code/200"},
+                   {:url => "http://rest-test.iron.io/code/200"}]
+
+    res = queue.update_queue(:subscribers => subscribers,
+                             :push_type => 'multicast')
+
+    expected_size = subscribers.size
+    got_size = queue.subscribers.size
+    assert_equal expected_size, got_size, "queue's subscribers list must contain #{expected_size} elements, but got #{got_size}"
+
+    msgs = queue.post([{:body => 'push'},
+                       {:body => 'me'},
+                       {:body => 'now'}], :instantiate => true)
+    msgs.each { |msg| assert_instance_of(IronMQ::Message, msg, "post(:instantiate => true) must instantiate messages") }
+
+    sleep 5
+
+    msgs.each do |msg|
+      subscr_arr = msg.subscribers
+      subscr_arr.each do |s|
+        assert_instance_of(IronMQ::Subscriber, s, "message must return `Subscriber`, but got `#{s.class}`")
+        rsp = s.delete
+        assert_equal 200, rsp.code, "API must response with HTTP 200 status, but returned HTTP #{rsp.code}"
+      end
+    end
+
+    resp = queue.delete_queue
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
 end

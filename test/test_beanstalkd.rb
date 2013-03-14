@@ -19,7 +19,7 @@ class BeanstalkTests < TestBase
   end
 
   def test_basics
-    omit_if @skip # bypass this test if rackspace
+    return if @skip # bypass this test if rackspace
     puts 'test_basics3'
 
     queue_name = "beanstalk_test"
@@ -60,7 +60,7 @@ class BeanstalkTests < TestBase
   end
 
   def clear_tube(tube)
-    omit_if @skip # bypass this test if rackspace
+    return if @skip # bypass this test if rackspace
     watched = @beanstalk.list_tubes_watched(true)
     puts 'watched: ' + watched.inspect
     @beanstalk.watch(tube)
@@ -75,7 +75,7 @@ class BeanstalkTests < TestBase
   end
 
   def test_basics2
-    omit_if @skip # bypass this test if rackspace
+    return if @skip # bypass this test if rackspace
     puts 'test_basics'
     msg = "hello #{Time.now}"
     @beanstalk.put(msg)
@@ -110,7 +110,7 @@ class BeanstalkTests < TestBase
   end
 
   def test_timeout
-    omit_if @skip # bypass this test if rackspace
+    return if @skip # bypass this test if rackspace
     puts 'test_timeout'
     msg = "timeout message #{Time.now}"
     # timeout of 10 seconds
@@ -137,7 +137,7 @@ class BeanstalkTests < TestBase
   end
 
   def test_delay
-    omit_if @skip # bypass this test if rackspace
+    return if @skip # bypass this test if rackspace
     puts 'test_delay'
     msg = "delayed message #{Time.now}"
     # delay of 2 seconds
@@ -160,12 +160,12 @@ class BeanstalkTests < TestBase
   end
 
   def tube_message(tube)
-    omit_if @skip # bypass this test if rackspace
+    return if @skip # bypass this test if rackspace
     "hello #{tube}! #{Time.now}"
   end
 
   def reserve(timeout=nil)
-    omit_if @skip # bypass this test if rackspace
+    return if @skip # bypass this test if rackspace
     begin
       job = @beanstalk.reserve(timeout)
       LOG.info 'got job: ' + job.inspect
@@ -177,7 +177,7 @@ class BeanstalkTests < TestBase
   end
 
   def test_tubes
-    omit_if @skip # bypass this test if rackspace
+    return if @skip # bypass this test if rackspace
     clear_tube('youtube')
     tube1 = 'default'
     msg1 = tube_message(tube1)
