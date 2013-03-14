@@ -27,6 +27,7 @@ Or pass in credentials:
 ironmq = IronMQ::Client.new(:token => "MY_TOKEN", :project_id => "MY_PROJECT_ID")
 ```
 
+
 # The Basics
 
 ### Get Queues List
@@ -116,6 +117,7 @@ queue = ironmq.queue "my_queue" # => #<IronMQ::Queue:...>
 
 **Note:** if queue with desired name does not exist it returns fake queue.
 Queue will be created automatically on post of first message or queue configuration update.
+
 
 # Queues
 
@@ -273,6 +275,7 @@ Polling will automatically delete the message at the end of the block.
 queue.clear # => #<IronMQ::ResponseBase:...>
 ```
 
+
 # Push Queues
 
 IronMQ push queues allow you to setup a queue that will push to an endpoint, rather than having to poll the endpoint. 
@@ -330,6 +333,21 @@ queue.remove_subscribers([
 ])
 ```
 
+### Post and instantiate
+
+Sometimes you may want to post message to the Push Queue and instantiate `Message`
+instead getting it by ID returned in API response. To do this just set `:instantiate`
+to `true`.
+
+```ruby
+message = queue.post('push me!', :instantiate => true) # => #<IronMQ::Message:...>
+
+msgs = queue([{:body => 'push'}, {:body => 'me'}], :instantiate => true) # => [#<IronMQ::Message:...>, ...]
+```
+
+This creates fake `Message` objects. They contain only IDs.
+
+
 ### Get Message Push Status
 
 After pushing a message:
@@ -345,12 +363,15 @@ Returns an array of subscribers with status.
 **Note:** getting a message by ID is only for usable for Push Queues.
 This creates fake `IronMQ::Message` instance on which you call for subscribers' push statuses.
 
-### Delete Message Push Status
+### Acknowledge / Delete Message Push Status
 
 ```ruby
 subscribers = queue.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
 
-subscribers.each { |ss| ss.delete }
+subscribers.each do |ss|
+  ss.delete
+  # ss.acknowledge # This is `delete` alias
+end
 ```
 
 

@@ -13,7 +13,7 @@ module IronMQ
     end
 
     def info
-      info  = raw
+      info = raw
       begin
         # Do not instantiate response
         info = call_api_and_parse_response(:get, '', {}, false)
@@ -90,6 +90,9 @@ module IronMQ
     def post_messages(payload, options = {})
       batch = false
 
+      instantiate = [options.delete(:instantiate),
+                     options.delete('instantiate')].compact.first
+
       msgs = if payload.is_a?(Array)
                batch = true
                # FIXME: This maybe better to process Array of Objects the same way as for single message.
@@ -109,15 +112,22 @@ module IronMQ
       # Do not instantiate response
       res = call_api_and_parse_response(:post, "/messages", {:messages => msgs}, false)
 
-      if batch
-        # FIXME: Return Array of ResponsBase instead, it seems more clear than raw response
-        #
-        #          res["ids"].each_with_object([]) do |id, responses|
-        #            responses << ResponseBase.new({"id" => id, "msg" => res["msg"]})
-        #          end
-        ResponseBase.new(res) # Backward capable
+      if instantiate
+        n = batch ? 2 : 1
+        msg_ids = res["ids"].map { |id| {'id' => id} }
+
+        process_messages(msg_ids, {:n => n})
       else
-        ResponseBase.new({"id" => res["ids"][0], "msg" => res["msg"]})
+        if batch
+          # FIXME: Return Array of ResponsBase instead, it seems more clear than raw response
+          #
+          #          res["ids"].each_with_object([]) do |id, responses|
+          #            responses << ResponseBase.new({"id" => id, "msg" => res["msg"]})
+          #          end
+          ResponseBase.new(res) # Backward capable
+        else
+          ResponseBase.new({"id" => res["ids"][0], "msg" => res["msg"]})
+        end
       end
     end
 
