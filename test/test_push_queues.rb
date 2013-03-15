@@ -214,11 +214,19 @@ class TestPushQueues < TestBase
       subscribers.each do |s|
         LOG.debug s
         if s["url"] == "http://rest-test.iron.io/code/503"
-          do_retry = true unless 503 == s["status_code"]
-          do_retry = true unless "error" == s["status"]
+          if "error" == s["status"]
+            assert_equal 0, s["retries_remaining"]
+          else
+            assert_equal 503, s["status_code"]
+            do_retry = true
+          end
         else
-          do_retry = true unless 200 == s["status_code"]
-          do_retry = true unless "deleted" == s["status"]
+          LOG.info "retries_remaining: #{s["retries_remaining"]}"
+          if ["deleted", "error"].include? s["status"] || 200 == s["status_code"]
+            assert_equal 0, s["retries_remaining"]
+          else
+            do_retry = true
+          end
         end
       end
       next if do_retry
