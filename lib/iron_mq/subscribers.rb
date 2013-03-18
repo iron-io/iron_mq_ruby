@@ -15,6 +15,8 @@ module IronMQ
       @message.call_api_and_parse_response(:delete, path)
     end
 
+    alias_method :acknowledge, :delete
+
     private
 
     def path
