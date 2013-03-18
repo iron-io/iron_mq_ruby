@@ -125,10 +125,12 @@ class IronMQTests < TestBase
     # p res
 
     res = @client.queues.list
+    assert res.size > 0, "project must contain at least one queue"
+
     res.each do |q|
-      puts "#{q.name} and #{queue_name}";
+      # puts "#{q.name} and #{queue_name}"
       if q.name == queue_name
-        assert_equal q.size, 1 
+        assert_equal q.size, 1
       end
     end
 
@@ -613,7 +615,7 @@ class IronMQTests < TestBase
   end
 
   def test_webhooks
-    omit_if @skip
+    return if @skip
     puts "skip webhooks: #{@skip}"
     qname ="webhook_queue"
     url = "#{@client.base_url}/#{qname}/messages/webhook?oauth=#{@client.token}"
