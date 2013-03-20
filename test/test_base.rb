@@ -11,7 +11,7 @@ unless Hash.instance_methods.include?(:default_proc=)
 end
 
 begin
-  require File.join(File.dirname(__FILE__), '../lib/iron_mq')
+  require File.expand_path('../lib/iron_mq', File.dirname(__FILE__))
 rescue Exception => ex
   puts "Could NOT load current iron_mq: " + ex.message
   raise ex

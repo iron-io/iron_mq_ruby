@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    iron_mq (4.0.0)
+    iron_mq (4.0.1)
       iron_core (>= 0.5.1)
 
 GEM
@@ -13,7 +13,7 @@ GEM
       ffi (~> 1.2.0)
       mime-types (~> 1.18)
     ffi (1.2.1)
-    iron_core (0.5.1)
+    iron_core (0.5.2)
       rest (>= 2.2.0)
     mime-types (1.21)
     minitest (4.6.2)

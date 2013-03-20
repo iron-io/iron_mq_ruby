@@ -616,10 +616,10 @@ class IronMQTests < TestBase
 
   def test_webhooks
     return if @skip
-    puts "skip webhooks: #{@skip}"
+
     qname ="webhook_queue"
     url = "#{@client.base_url}/#{qname}/messages/webhook?oauth=#{@client.token}"
-    # p url
+    p url
 
     v = "hello webhook"
 

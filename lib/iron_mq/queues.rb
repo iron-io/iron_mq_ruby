@@ -1,5 +1,4 @@
 require 'cgi'
-require 'iron_mq/subscribers'
 
 module IronMQ
 
