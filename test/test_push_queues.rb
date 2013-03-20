@@ -6,8 +6,6 @@ class TestPushQueues < TestBase
 
   def setup
     super
-    @skip = @host.include? 'rackspace'
-    return if @skip # bypass these tests if rackspace
   end
 
   def make_key(i, t, random=0)
@@ -16,7 +14,6 @@ class TestPushQueues < TestBase
 
 
   def test_queue_subscriptions
-    return if @skip
     types = ["multicast", "unicast"]
     # to delete queues later (clear project)
     queue_names = []
@@ -153,7 +150,6 @@ class TestPushQueues < TestBase
 
 
   def test_failure
-    return if @skip
     @rest = Rest::Client.new
     qname = "failure-queue"
 
@@ -241,7 +237,6 @@ class TestPushQueues < TestBase
 
 
   def test_202
-    return if @skip
     types = ["multicast"]
     types.each do |t|
 
@@ -349,8 +344,6 @@ class TestPushQueues < TestBase
 
 
   def test_post_and_instantiate
-    return if @skip
-
     queue = @client.queue('push_and_instantiate')
 
     subscribers = [{:url => "http://rest-test.iron.io/code/200"},

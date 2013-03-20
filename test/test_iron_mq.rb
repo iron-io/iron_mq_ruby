@@ -5,7 +5,6 @@ require File.expand_path('test_base.rb', File.dirname(__FILE__))
 class IronMQTests < TestBase
   def setup
     super
-    @skip = @host.include? 'rackspace'
     LOG.info "@host: #{@host}"
 
     queues = @client.queues.list
@@ -615,11 +614,9 @@ class IronMQTests < TestBase
   end
 
   def test_webhooks
-    return if @skip
-
     qname ="webhook_queue"
     url = "#{@client.base_url}/#{qname}/messages/webhook?oauth=#{@client.token}"
-    p url
+    # p url
 
     v = "hello webhook"
 
