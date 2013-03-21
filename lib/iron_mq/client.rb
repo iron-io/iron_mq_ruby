@@ -37,7 +37,8 @@ module IronMQ
     end
 
     def queues_list(options = {})
-      is_raw = options.delete :raw
+      is_raw = [options.delete(:raw),
+                options.delete('raw')].compact.first
       response = parse_response(get('', options)) # GET base_url
       # returns list of evaluated queues
       if is_raw
