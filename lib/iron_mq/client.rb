@@ -37,9 +37,10 @@ module IronMQ
     end
 
     def queues_list(options = {})
+      is_raw = options.delete :raw
       response = parse_response(get('', options)) # GET base_url
       # returns list of evaluated queues
-      if options[:raw]
+      if is_raw
         response.map{ |q_info| OpenStruct.new(q_info) }
       else
         response.map{ |q_info| Queue.new(self, q_info["name"]) }
