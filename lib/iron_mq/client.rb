@@ -37,9 +37,15 @@ module IronMQ
     end
 
     def queues_list(options = {})
+      is_raw = [options.delete(:raw),
+                options.delete('raw')].compact.first
       response = parse_response(get('', options)) # GET base_url
       # returns list of evaluated queues
-      response.each_with_object([]) { |q_info, ret| ret << Queue.new(self, q_info["name"]) }
+      if is_raw
+        response.map{ |q_info| ResponseBase.new(q_info) }
+      else
+        response.map{ |q_info| Queue.new(self, q_info["name"]) }
+      end
     end
 
     alias_method :list, :queues_list
