@@ -41,7 +41,7 @@ module IronMQ
       response = parse_response(get('', options)) # GET base_url
       # returns list of evaluated queues
       if is_raw
-        response.map{ |q_info| OpenStruct.new(q_info) }
+        response.map{ |q_info| ResponseBase.new(q_info) }
       else
         response.map{ |q_info| Queue.new(self, q_info["name"]) }
       end
