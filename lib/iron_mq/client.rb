@@ -39,7 +39,11 @@ module IronMQ
     def queues_list(options = {})
       response = parse_response(get('', options)) # GET base_url
       # returns list of evaluated queues
-      response.each_with_object([]) { |q_info, ret| ret << Queue.new(self, q_info["name"]) }
+      if options[:raw]
+        response.map{ |q_info| OpenStruct.new(q_info) }
+      else
+        response.map{ |q_info| Queue.new(self, q_info["name"]) }
+      end
     end
 
     alias_method :list, :queues_list
