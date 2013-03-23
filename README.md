@@ -116,6 +116,7 @@ all_queues = ironmq.queues.all  # => [#<IronMQ::Queue:...>, ...]
 
 * `page`: The 0-based page to view. The default is 0.
 * `per_page`: The number of queues to return per page. The default is 30, the maximum is 100.
+* `raw`: Set it to true to obtain data in raw format. The default is false.
 
 ```ruby
 queues = ironmq.queues.all(:page => 1, :per_page => 10)
