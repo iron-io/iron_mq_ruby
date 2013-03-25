@@ -32,9 +32,9 @@ class TestBase < Test::Unit::TestCase
     @host = "#{config['host'] || "mq-aws-us-east-1.iron.io"}"
 
     @client = IronMQ::Client.new(@config['iron'])
-
-    Rest.logger.level = Logger::DEBUG # this doesn't work for some reason?
-    IronCore::Logger.logger.level = Logger::DEBUG
+    puts "IronMQ::VERSION = #{IronMQ::VERSION}"
+    #Rest.logger.level = Logger::DEBUG # this doesn't work for some reason?
+    #IronCore::Logger.logger.level = Logger::DEBUG
 
     @queue_name = 'ironmq-ruby-tests' # default queue for tests
   end
