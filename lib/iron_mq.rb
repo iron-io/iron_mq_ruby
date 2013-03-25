@@ -1,4 +1,5 @@
 require File.expand_path('iron_mq/response', File.dirname(__FILE__))
+require File.expand_path('iron_mq/subscribers', File.dirname(__FILE__))
 require File.expand_path('iron_mq/queues', File.dirname(__FILE__))
 require File.expand_path('iron_mq/messages', File.dirname(__FILE__))
 require File.expand_path('iron_mq/client', File.dirname(__FILE__))

@@ -159,9 +159,8 @@ class IronMQTests < TestBase
 
     tries = MAX_TRIES
     while tries > 0
-      sleep 0.5
+      sleep 2
       tries -= 1
-      sleep 1
 
       new_msg = queue.get
       # p new_msg
@@ -180,7 +179,7 @@ class IronMQTests < TestBase
     msg = queue.get
     # p msg
     assert msg
-    assert_equal msg.raw['timeout'], 30
+    assert_equal 30, msg.timeout
 
     msg_nil = queue.get
     # p msg_nil
@@ -188,9 +187,8 @@ class IronMQTests < TestBase
 
     tries = MAX_TRIES
     while tries > 0
-      sleep 0.5
+      sleep 2
       tries -= 1
-      sleep 1
 
       new_msg = queue.get
       next if new_msg.nil?
@@ -205,8 +203,9 @@ class IronMQTests < TestBase
     # timeout on get
     res = queue.post("hello world timeout3!")
     msg = queue.get(:timeout => 30)
+    puts "MESSAGE IS #{msg.inspect}"
     assert msg
-    assert_equal msg.raw['timeout'], 30
+    assert_equal msg.timeout, 30
 
     msg_nil = queue.get
     # p msg_nil
@@ -214,14 +213,13 @@ class IronMQTests < TestBase
 
     tries = MAX_TRIES
     while tries > 0
-      sleep 0.5
+      sleep 2
       tries -= 1
-      sleep 1
 
       new_msg = queue.get
       next if new_msg.nil?
 
-      assert_equal new_msg.id, msg.id
+      assert_equal msg.id, new_msg.id
 
       new_msg.delete
       break
@@ -245,7 +243,11 @@ class IronMQTests < TestBase
     #  q = @client.queues.get(:name => "some_queue_that_does_not_exist")
     #end
     queue = @client.queues.get(:name => "some_queue_that_does_not_exist")
-    assert queue.new? == true
+    assert queue.new?
+
+    # create at least one queue
+    queue.post('create queue message')
+    assert_equal queue.new?, false, "queue must exist on the service after post message to"
 
     res = @client.queues.list
     # puts "res.size: #{res.size}"
@@ -261,6 +263,10 @@ class IronMQTests < TestBase
     # res.each do |q| { p q.name }
 
     assert_equal 0, res.size
+
+    # delete queue on test complete
+    resp = queue.delete_queue
+    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
   def test_delay
@@ -544,7 +550,7 @@ class IronMQTests < TestBase
     val = "hi mr clean"
     queue.post(val)
 
-    sleep 0.5 # make sure the counter has time to update
+    sleep 2 # make sure the counter has time to update
     assert_equal 1, queue.size
 
     queue.clear
@@ -581,7 +587,7 @@ class IronMQTests < TestBase
     while tries > 0
       tries -= 1
       break if 0 == queue.size
-      sleep 0.5
+      sleep 1
     end
     assert_not_equal tries, 0
 
