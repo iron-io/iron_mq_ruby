@@ -22,7 +22,9 @@ module IronMQ
     private
 
     def stringify_keys(hash)
-      hash.keys.each_with_object({}) { |k, res| res[k.to_s] = hash[k] }
+      hash.keys.each { |k| hash[k.to_s] = hash.delete(k) }
+
+      hash
     end
   end
 
