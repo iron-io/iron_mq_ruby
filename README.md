@@ -345,7 +345,7 @@ Subscribers can be any HTTP endpoint. `push_type` is one of:
 ```ruby
 ptype = :multicast
 subscribers = [
-  {:url => "http://rest-test.iron.io/code/200?store=key1"}
+  {:url => "http://rest-test.iron.io/code/200?store=key1"},
   {:url => "http://rest-test.iron.io/code/200?store=key2"}
 ]
 
