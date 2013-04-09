@@ -233,8 +233,8 @@ You must delete the message from the queue to ensure it does not go back onto th
 If not set, value from POST is used. Default is 60 seconds. Minimum is 30 seconds.
 Maximum is 86,400 seconds (24 hours).
 
-When `n` parameter is specified and greater than 1 method returns `Array` of `Queue`s.
-Otherwise, `Queue` object would be returned.
+When `n` parameter is specified and greater than 1 method returns `Array` of `Message`s.
+Otherwise, `Message` object would be returned.
 
 --
 
@@ -330,7 +330,7 @@ This set of subscribers will replace the existing subscribers.
 To add or remove subscribers, see the add subscribers endpoint or the remove subscribers endpoint.
 See below for example json.
 * `push_type`: Either `multicast` to push to all subscribers or `unicast` to push to one and only one subscriber. Default is `multicast`.
-* `retries`: How many times to retry on failure. Default is 3.
+* `retries`: How many times to retry on failure. Default is 3. Maximum is 100.
 * `retries_delay`: Delay between each retry in seconds. Default is 60.
 
 --
@@ -417,6 +417,16 @@ subscribers.each do |ss|
   ss.delete
   # ss.acknowledge # This is `delete` alias
 end
+```
+
+--
+
+### Revert Queue Back to Pull Queue
+
+If you want to revert you queue just update `push_type` to `'pull'`.
+
+```ruby
+queue.update(:push_type => 'pull');
 ```
 
 --
