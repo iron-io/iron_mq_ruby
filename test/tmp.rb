@@ -20,11 +20,11 @@ class IronMQTests < TestBase
 
     assert_equal "multicast", queue.push_type
 
-    queue.update_queue(:push_type => 'pull')
+    p queue.update_queue(:push_type => 'pull')
 
     queue.reload
 
-    p queue.type
+    p queue.push_type
 
     assert_equal "pull", queue.push_type
 
