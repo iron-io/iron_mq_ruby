@@ -640,5 +640,28 @@ class IronMQTests < TestBase
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
+
+  def test_queue_params
+
+    qname = "test_queue_params"
+
+    clear_queue(qname)
+    q = @client.queue(qname)
+    puts "q.size: #{q.size}"
+
+    q.post("message 1", :timeout=>200, :delay=>0, :expires_in=>2000)
+    q.post("message 1", :timeout=>300, :delay=>0, :expires_in=>3000)
+
+    msgs = q.get(:n=>2)
+
+    msgs.each do |m|
+      puts m.body
+      puts "timeout: #{m.timeout}"
+      puts "expires_in: #{m.expires_in}"
+      puts "delay: #{m.delay}"
+    end
+
+  end
+
 end
 
