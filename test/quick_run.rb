@@ -51,7 +51,7 @@ class QuickRun < TestBase
 
       msg = queue.get
       # p msg
-      assert_nil res
+      assert_nil msg
 
 
       q = @client.queue('test2')

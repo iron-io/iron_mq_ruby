@@ -1,5 +1,4 @@
 require 'cgi'
-require 'iron_mq/subscribers'
 
 module IronMQ
 
@@ -13,14 +12,15 @@ module IronMQ
     end
 
     def info
-      info  = raw
-      begin
-        # Do not instantiate response
-        info = call_api_and_parse_response(:get, '', {}, false)
-      rescue Rest::HttpError
+      call_api_and_parse_response(:get)
+    rescue Rest::HttpError => ex
+      if ex.code == 404
+        Rest.logger.info("GET Queue#info return 404, treat as new queue, safe to ignore.")
+        # return ResponseBase as normal
+        ResponseBase.new(raw)
+      else
+        raise ex
       end
-
-      ResponseBase.new(info)
     end
 
     def size
@@ -57,6 +57,14 @@ module IronMQ
     # Backward compatibility, better name is `delete`
     def delete_queue
       call_api_and_parse_response(:delete)
+    rescue Rest::HttpError => ex
+      if ex.code == 404
+        Rest.logger.info("Delete got 404, safe to ignore.")
+        # return ResponseBase as normal
+        ResponseBase.new({"msg" => "Deleted"})
+      else
+        raise ex
+      end
     end
 
     # Backward compatibility
@@ -90,18 +98,17 @@ module IronMQ
     def post_messages(payload, options = {})
       batch = false
 
+      instantiate = [options.delete(:instantiate),
+                     options.delete('instantiate')].compact.first
+
       msgs = if payload.is_a?(Array)
                batch = true
                # FIXME: This maybe better to process Array of Objects the same way as for single message.
                #
-               #          payload.each_with_object([]) do |msg, res|
-               #            res << options.merge(:body => msg)
-               #          end
+               #          payload.map { |msg| options.merge(:body => msg) }
                #
                #        For now user must pass objects like `[{:body => msg1}, {:body => msg2}]`
-               payload.each_with_object([]) do |msg, res|
-                 res << msg.merge(options)
-               end
+               payload.map { |msg| msg.merge(options) }
              else
                [ options.merge(:body => payload) ]
              end
@@ -109,15 +116,21 @@ module IronMQ
       # Do not instantiate response
       res = call_api_and_parse_response(:post, "/messages", {:messages => msgs}, false)
 
-      if batch
-        # FIXME: Return Array of ResponsBase instead, it seems more clear than raw response
-        #
-        #          res["ids"].each_with_object([]) do |id, responses|
-        #            responses << ResponseBase.new({"id" => id, "msg" => res["msg"]})
-        #          end
-        ResponseBase.new(res) # Backward capable
+      if instantiate
+        n = batch ? 2 : 1
+        msg_ids = res["ids"].map { |id| {"id" => id} }
+
+        process_messages(msg_ids, {:n => n})
       else
-        ResponseBase.new({"id" => res["ids"][0], "msg" => res["msg"]})
+        if batch
+          # FIXME: Return Array of ResponsBase instead, it seems more clear than raw response
+          #
+          #          res["ids"].map { |id| ResponseBase.new({"id" => id, "msg" => res["msg"]}) }
+          #
+          ResponseBase.new(res) # Backward capable
+        else
+          ResponseBase.new({"id" => res["ids"][0], "msg" => res["msg"]})
+        end
       end
     end
 
@@ -181,8 +194,7 @@ module IronMQ
       #   queue.size
       # etc.
       if args.length == 0
-        res = info.send(meth)
-        res ? res : super
+        self.info[meth.to_s]
       else
         super
       end
@@ -198,13 +210,9 @@ module IronMQ
       multiple = wait_for_multiple?(options)
 
       if messages.is_a?(Array) && messages.size > 0
-        if multiple
-          messages.each_with_object([]) do |m, msgs|
-            msgs << Message.new(self, m)
-          end
-        else
-          Message.new(self, messages[0])
-        end
+        msgs = messages.map { |m| Message.new(self, m) }
+
+        multiple ? msgs : msgs[0]
       else
         multiple ? [] : nil
       end

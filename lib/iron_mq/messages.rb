@@ -22,13 +22,19 @@ module IronMQ
     def subscribers(options = {})
       response = call_api_and_parse_response(:get, "/subscribers", {}, false)
 
-      response['subscribers'].each_with_object([]) do |subscriber, ret|
-        ret << Subscriber.new(subscriber, self, options)
-      end
+      response['subscribers'].map { |s| Subscriber.new(s, self, options) }
     end
 
     def delete
       call_api_and_parse_response(:delete)
+    rescue Rest::HttpError => ex
+      if ex.code == 404
+        Rest.logger.info("Delete got 404, safe to ignore.")
+        # return ResponseBase as normal
+        ResponseBase.new({"msg" => "Deleted"})
+      else
+        raise ex
+      end
     end
 
     def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true)
