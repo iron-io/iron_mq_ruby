@@ -1,7 +1,7 @@
 require 'quicky'
 require File.expand_path('test_base.rb', File.dirname(__FILE__))
 
-TIMES = 10
+TIMES = 1
 
 class QuickRun < TestBase
 

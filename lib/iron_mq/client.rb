@@ -52,7 +52,7 @@ module IronMQ
     alias_method :all, :queues_list
 
     def queues_get(name)
-      Queue.new(self, name)
+      IronMQ::Queue.new(self, name)
     end
 
     alias_method :queue, :queues_get

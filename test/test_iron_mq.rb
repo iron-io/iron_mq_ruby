@@ -238,12 +238,14 @@ class IronMQTests < TestBase
     # But creates Queue object instead
     # also added `#new?` method to check is queue exist
     #
-    #assert_raise Rest::HttpError do
-    #  # should raise a 404
-    #  q = @client.queues.get(:name => "some_queue_that_does_not_exist")
-    #end
-    queue = @client.queues.get(:name => "some_queue_that_does_not_exist")
-    assert queue.new?
+
+    queue = @client.queue("some_queue_that_does_not_exist")
+    p queue.delete_queue
+    assert_raise Rest::HttpError do
+      # should raise a 404
+      m = queue.info
+      puts "m: #{m}"
+    end
 
     # create at least one queue
     queue.post('create queue message')
@@ -607,9 +609,8 @@ class IronMQTests < TestBase
 
     queue.post("hi2")
     # p queue
-    q_info = queue.info
-    assert_not_equal old_id, q_info.id, "old queue ID (#{old_id}) must not be equal to new ID (#{q_info.id})"
-    assert_equal 1, q_info.size, "queue size must be 1, but got #{q_info.size}"
+    assert_not_equal old_id, queue.id, "old queue ID (#{old_id}) must not be equal to new ID (#{queue.id})"
+    assert_equal 1, queue.size, "queue size must be 1, but got #{queue.size}"
 
     msg = queue.get
     assert_equal "hi2", msg.body, "message body must be 'hi2', but got '#{msg.body}'"

@@ -20,6 +20,8 @@ class TestPushQueues < TestBase
     x = rand(1000)
     qname = "alert-queue-#{x}"
     queue = @client.queue(qname)
+    queue.clear
+    puts "queue: #{queue}"
     trigger_value = 10
     # todo: should :queue be called something else, like target_queue? or url and have to use ironmq:// url?
     target_queue_name = "alert-target-queue-#{x}"
@@ -27,6 +29,7 @@ class TestPushQueues < TestBase
     p r
 
     alerts = queue.alerts
+    p alerts
     assert_equal 1, alerts.size
     alert = alerts[0]
     assert_equal "size", alert.type
@@ -37,11 +40,12 @@ class TestPushQueues < TestBase
     assert_equal 0, target_queue.size
 
     (trigger_value - 1).times do |i|
+      puts "posting #{i}"
       queue.post("message #{i}")
     end
     sleep 0.5
     assert_equal 0, target_queue.reload.size
-    queue.post("message #{i}")
+    queue.post("message #{trigger_value}")
     sleep 0.5
     assert_equal trigger_value, queue.reload.size
     assert_equal 1, target_queue.reload.size
@@ -78,7 +82,7 @@ class TestPushQueues < TestBase
     x = rand(1000)
     qname = "alert-queue-#{x}"
     queue = @client.queue(qname)
-    trigger_value = 100
+    trigger_value = 10
     # todo: should :queue be called something else, like target_queue? or url and have to use ironmq:// url?
     target_queue_name = "alert-target-queue-#{x}"
     r = queue.add_alert({:type => "progressive", :trigger => trigger_value, :queue => target_queue_name})
@@ -87,7 +91,7 @@ class TestPushQueues < TestBase
     alerts = queue.alerts
     assert_equal 1, alerts.size
     alert = alerts[0]
-    assert_equal "size", alert.type
+    assert_equal "progressive", alert.type
     assert_equal trigger_value, alert.trigger
     assert_equal target_queue_name, alert.queue
 
@@ -119,7 +123,7 @@ class TestPushQueues < TestBase
 
     # once it's at half, it should reset so let's get it back up to trigger_value again
     post_messages(queue, trigger_value)
-    assert_equal trigger_value, queue.reload.size
+    assert_equal trigger_value*3, queue.reload.size
     assert_equal 4, target_queue.reload.size
 
     queue.delete_queue

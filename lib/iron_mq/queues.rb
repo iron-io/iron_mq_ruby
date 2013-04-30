@@ -3,32 +3,44 @@ require 'cgi'
 module IronMQ
 
   class Queue < ResponseBase
-    attr_reader :name
+    attr_reader :name, :raw
 
     def initialize(client, queue_name)
       @client = client
       @name = queue_name
-      super({"name" => queue_name})
+
     end
 
     def info
-      call_api_and_parse_response(:get)
-    rescue Rest::HttpError => ex
-      if ex.code == 404
-        Rest.logger.info("GET Queue#info return 404, treat as new queue, safe to ignore.")
-        # return ResponseBase as normal
-        ResponseBase.new(raw)
-      else
-        raise ex
+      load
+    end
+
+    # this is only run once if it hasn't been called before
+    def load
+      if @raw.nil?
+        reload
       end
+      @raw
+    end
+
+    def reload
+      @raw = call_api_and_parse_response(:get, "", {}, false, true)
+      self
+    end
+
+    def id
+      load
+      @raw['id']
     end
 
     def size
-      info.size.to_i
+      load
+      @raw['size'].to_i
     end
 
     def total_messages
-      info.total_messages.to_i
+      load
+      @raw['total_messages'].to_i
     end
 
     def new?
@@ -49,7 +61,7 @@ module IronMQ
     alias_method :update_queue, :update
 
     def clear
-      call_api_and_parse_response(:post, "/clear")
+      call_api_and_parse_response(:post, "/clear", {}, false, true)
     end
 
     alias_method :clear_queue, :clear
@@ -61,7 +73,7 @@ module IronMQ
       if ex.code == 404
         Rest.logger.info("Delete got 404, safe to ignore.")
         # return ResponseBase as normal
-        ResponseBase.new({"msg" => "Deleted"})
+        ResponseBase.new({"msg" => "Deleted"}, 404)
       else
         raise ex
       end
@@ -86,13 +98,27 @@ module IronMQ
       call_api_and_parse_response(:delete,
                                   "/subscribers",
                                   {
-                                    :subscribers => subscribers,
-                                    :headers => {"Content-Type" => @client.content_type}
+                                      :subscribers => subscribers,
+                                      :headers => {"Content-Type" => @client.content_type}
                                   })
     end
 
     def remove_subscriber(subscriber)
       remove_subscribers([subscriber])
+    end
+
+    def add_alert(alert = {})
+      add_alerts([alert])
+    end
+
+    def add_alerts(alerts)
+      call_api_and_parse_response(:post, "/alerts", :alerts => alerts)
+    end
+
+    def alerts
+      load
+      return nil unless @raw["alerts"]
+      to_alerts(@raw["alerts"])
     end
 
     def post_messages(payload, options = {})
@@ -110,7 +136,7 @@ module IronMQ
                #        For now user must pass objects like `[{:body => msg1}, {:body => msg2}]`
                payload.map { |msg| msg.merge(options) }
              else
-               [ options.merge(:body => payload) ]
+               [options.merge(:body => payload)]
              end
 
       # Do not instantiate response
@@ -123,7 +149,7 @@ module IronMQ
         process_messages(msg_ids, {:n => n})
       else
         if batch
-          # FIXME: Return Array of ResponsBase instead, it seems more clear than raw response
+          # FIXME: Return Array of ResponseBase instead, it seems more clear than raw response
           #
           #          res["ids"].map { |id| ResponseBase.new({"id" => id, "msg" => res["msg"]}) }
           #
@@ -142,7 +168,7 @@ module IronMQ
         return Message.new(self, {"id" => options})
       end
 
-      resp = call_api_and_parse_response(:get, "/messages", options)
+      resp = call_api_and_parse_response(:get, "/messages", options, false)
 
       process_messages(resp["messages"], options)
     end
@@ -150,7 +176,9 @@ module IronMQ
     alias_method :get, :get_messages
 
     # Backward compatibility
-    def messages ; self; end
+    def messages;
+      self;
+    end
 
     def peek_messages(options = {})
       resp = call_api_and_parse_response(:get, "/messages/peek", options)
@@ -162,7 +190,7 @@ module IronMQ
 
     def poll_messages(options = {}, &block)
       sleep_duration = options[:sleep_duration] || 1
-      
+
       while true
         msg = get_messages(options.merge(:n => 1))
         if msg.nil?
@@ -177,30 +205,38 @@ module IronMQ
 
     alias_method :poll, :poll_messages
 
-    def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true)
-      response = if meth.to_s == "delete"
-                   headers = options.delete(:headers) || options.delete("headers") || {}
+    def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true, ignore404 = false)
+      r = nil
+      begin
+        response = if meth.to_s == "delete"
+                     headers = options.delete(:headers) || options.delete("headers") || {}
 
-                   @client.parse_response(@client.send(meth, "#{path(ext_path)}", options, headers))
-                 else
-                   @client.parse_response(@client.send(meth, "#{path(ext_path)}", options))
-                 end
-      instantiate ? ResponseBase.new(response) : response
-    end
-
-    def method_missing(meth, *args)
-      # This is for reload queue info data when calling:
-      #   queue.id
-      #   queue.size
-      # etc.
-      if args.length == 0
-        self.info[meth.to_s]
-      else
-        super
+                     @client.parse_response(@client.send(meth, "#{path(ext_path)}", options, headers))
+                   else
+                     @client.parse_response(@client.send(meth, "#{path(ext_path)}", options))
+                   end
+        r = instantiate ? ResponseBase.new(response) : response
+      rescue Rest::HttpError => ex
+        if ex.code == 404
+          IronCore::Logger.debug('IronMQ', "Not found, safe to ignore.")
+          # return ResponseBase as normal
+          r = {}
+        else
+          raise ex
+        end
       end
+      r
     end
 
     private
+
+    def to_alerts(alert_array)
+      r = []
+      alert_array.each do |a|
+        r << Alert.new(self, a)
+      end
+      r
+    end
 
     def path(ext_path)
       "/#{CGI::escape(@name).gsub('+', '%20')}#{ext_path}"
