@@ -85,6 +85,11 @@ module IronMQ
       Message.new(self, {"id" => message_id}).delete
     end
 
+    # Accepts an array of message ids
+    def delete_messages(ids)
+      call_api_and_parse_response(:delete, "", :ids => ids)
+    end
+
     def add_subscribers(subscribers)
       call_api_and_parse_response(:post, "/subscribers", :subscribers => subscribers)
     end

@@ -114,6 +114,25 @@ class IronMQTests < TestBase
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
+  def test_multi_delete
+    queue_name = 'test_multi_delete'
+    clear_queue(queue_name)
+
+    queue = @client.queue(queue_name)
+    ids = []
+    10.times do |i|
+      msg = queue.post("hello #{i}")
+      ids << msg.id
+    end
+    sleep 0.5
+    assert_equal 10, queue.reload.size
+
+    queue.delete_messages(ids)
+    sleep 0.5
+    assert_equal 0, queue.reload.size
+    queue.delete_queue
+
+  end
 
   def test_queues_list
     queue_name = 'test_queues_list'
