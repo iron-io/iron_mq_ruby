@@ -15,6 +15,10 @@ GEM
     ffi (1.7.0)
     iron_core (0.6.0)
       rest (>= 2.2.0)
+    iron_worker_ng (0.16.4)
+      bundler (>= 1.2.0)
+      iron_core (>= 0.5.1)
+      rubyzip (>= 0.9.9)
     mime-types (1.22)
     minitest (4.7.1)
     net-http-persistent (2.8)
@@ -24,6 +28,7 @@ GEM
       rest-client (>= 0.3.0)
     rest-client (1.6.7)
       mime-types (>= 1.16)
+    rubyzip (0.9.9)
     test-unit (2.5.4)
     typhoeus (0.6.3)
       ethon (~> 0.5.11)
@@ -36,6 +41,7 @@ DEPENDENCIES
   beanstalk-client
   concur
   iron_mq!
+  iron_worker_ng
   minitest
   net-http-persistent
   quicky
