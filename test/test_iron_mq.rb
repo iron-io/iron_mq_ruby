@@ -463,12 +463,12 @@ class IronMQTests < TestBase
     queue_name = "test_release_6"
     clear_queue(queue_name)
 
-    msgTxt = "testMessage-"+Time.now.to_s
+    msg_txt = "testMessage-"+Time.now.to_s
     # puts msgTxt
 
     queue = @client.queue(queue_name)
 
-    msg_id = queue.post(msgTxt, {:timeout => 60*5}).id
+    msg_id = queue.post(msg_txt, {:timeout => 60*5}).id
     # puts "msg_id: #{msg_id}"
     message = queue.get
     # p msg
