@@ -3,13 +3,6 @@ require 'test/unit'
 require 'yaml'
 require 'uber_config'
 
-unless Hash.instance_methods.include?(:default_proc=)
-  class Hash
-    def default_proc=(proc)
-    end
-  end
-end
-
 begin
   require File.expand_path('../lib/iron_mq', File.dirname(__FILE__))
 rescue Exception => ex
@@ -33,8 +26,8 @@ class TestBase < Test::Unit::TestCase
 
     @client = IronMQ::Client.new(@config['iron'])
     puts "IronMQ::VERSION = #{IronMQ::VERSION}"
-    #Rest.logger.level = Logger::DEBUG # this doesn't work for some reason?
-    #IronCore::Logger.logger.level = Logger::DEBUG
+    Rest.logger.level = Logger::DEBUG # this doesn't work for some reason?
+    IronCore::Logger.logger.level = Logger::DEBUG
 
     @queue_name = 'ironmq-ruby-tests' # default queue for tests
   end

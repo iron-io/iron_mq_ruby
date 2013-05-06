@@ -10,6 +10,14 @@ module IronMQ
       super(data, 200)
     end
 
+    def body
+      @raw['body']
+    end
+
+    def timeout
+      @raw['timeout']
+    end
+
     def touch
       call_api_and_parse_response(:post, "/touch")
     end
@@ -31,7 +39,7 @@ module IronMQ
       if ex.code == 404
         Rest.logger.info("Delete got 404, safe to ignore.")
         # return ResponseBase as normal
-        ResponseBase.new({"msg" => "Deleted"})
+        ResponseBase.new({"msg" => "Deleted"}, 404)
       else
         raise ex
       end
