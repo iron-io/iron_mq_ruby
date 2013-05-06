@@ -41,7 +41,7 @@ class IronMQTests < TestBase
     assert res["id"]
     assert res.id
     assert res.msg
-
+    sleep 0.3
     assert_equal 1, queue.size
 
     message = queue.get
@@ -56,6 +56,7 @@ class IronMQTests < TestBase
     # p res
     assert_nil res
 
+    sleep 0.3
     assert_equal 0, queue.size
 
     res = queue.post("hello world 2!")
@@ -607,7 +608,7 @@ class IronMQTests < TestBase
     tries = MAX_TRIES
     while tries > 0
       tries -= 1
-      break if 0 == queue.size
+      break if 0 == queue.reload.size
       sleep 1
     end
     assert_not_equal tries, 0
