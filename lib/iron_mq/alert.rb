@@ -1,13 +1,31 @@
 module IronMQ
 
-  class Subscriber < ResponseBase
+  class Alert
     # `options` was kept for backward compatibility
     attr_accessor :options
 
-    def initialize(data, message, options = {})
-      super(data, 200)
-      @message = message
+    def initialize(queue, alert_hash, options = {})
+      @queue = queue
+      @raw = alert_hash
       @options = options
+    end
+
+    def id
+      @raw["id"]
+    end
+
+    # alert type
+    def type
+      @raw["type"]
+    end
+
+    # target queue
+    def queue
+      @raw["queue"]
+    end
+
+    def trigger
+      @raw["trigger"]
     end
 
     # `options` was kept for backward compatibility
@@ -15,7 +33,7 @@ module IronMQ
       @message.call_api_and_parse_response(:delete, path)
     rescue Rest::HttpError => ex
       if ex.code == 404
-        Rest.logger.info("Delete got 404, safe to ignore.")
+        IronCore::Logger.info("IronMQ", "Delete got 404, safe to ignore.")
         # return ResponseBase as normal
         ResponseBase.new({"msg" => "Deleted"}, 404)
       else
@@ -28,7 +46,7 @@ module IronMQ
     private
 
     def path
-      "/subscribers/#{id}"
+      "/alerts/#{id}"
     end
   end
 

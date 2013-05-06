@@ -41,7 +41,7 @@ class IronMQTests < TestBase
     assert res["id"]
     assert res.id
     assert res.msg
-
+    sleep 0.3
     assert_equal 1, queue.size
 
     message = queue.get
@@ -56,6 +56,7 @@ class IronMQTests < TestBase
     # p res
     assert_nil res
 
+    sleep 0.3
     assert_equal 0, queue.size
 
     res = queue.post("hello world 2!")
@@ -114,6 +115,25 @@ class IronMQTests < TestBase
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
+  def test_multi_delete
+    queue_name = 'test_multi_delete'
+    clear_queue(queue_name)
+
+    queue = @client.queue(queue_name)
+    ids = []
+    10.times do |i|
+      msg = queue.post("hello #{i}")
+      ids << msg.id
+    end
+    sleep 0.5
+    assert_equal 10, queue.reload.size
+
+    queue.delete_messages(ids)
+    sleep 0.5
+    assert_equal 0, queue.reload.size
+    queue.delete_queue
+
+  end
 
   def test_queues_list
     queue_name = 'test_queues_list'
@@ -238,12 +258,14 @@ class IronMQTests < TestBase
     # But creates Queue object instead
     # also added `#new?` method to check is queue exist
     #
-    #assert_raise Rest::HttpError do
-    #  # should raise a 404
-    #  q = @client.queues.get(:name => "some_queue_that_does_not_exist")
-    #end
-    queue = @client.queues.get(:name => "some_queue_that_does_not_exist")
-    assert queue.new?
+
+    queue = @client.queue("some_queue_that_does_not_exist")
+    p queue.delete_queue
+    assert_raise Rest::HttpError do
+      # should raise a 404
+      m = queue.info
+      puts "m: #{m}"
+    end
 
     # create at least one queue
     queue.post('create queue message')
@@ -586,7 +608,7 @@ class IronMQTests < TestBase
     tries = MAX_TRIES
     while tries > 0
       tries -= 1
-      break if 0 == queue.size
+      break if 0 == queue.reload.size
       sleep 1
     end
     assert_not_equal tries, 0
@@ -607,9 +629,8 @@ class IronMQTests < TestBase
 
     queue.post("hi2")
     # p queue
-    q_info = queue.info
-    assert_not_equal old_id, q_info.id, "old queue ID (#{old_id}) must not be equal to new ID (#{q_info.id})"
-    assert_equal 1, q_info.size, "queue size must be 1, but got #{q_info.size}"
+    assert_not_equal old_id, queue.id, "old queue ID (#{old_id}) must not be equal to new ID (#{queue.id})"
+    assert_equal 1, queue.size, "queue size must be 1, but got #{queue.size}"
 
     msg = queue.get
     assert_equal "hi2", msg.body, "message body must be 'hi2', but got '#{msg.body}'"
