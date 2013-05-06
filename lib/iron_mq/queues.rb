@@ -43,10 +43,6 @@ module IronMQ
       @raw['total_messages'].to_i
     end
 
-    def new?
-      id.nil?
-    end
-
     def push_queue?
       # FIXME: `push_type` parameter in not guaranted it's push queue.
       #        When the parameter absent it is not guaranted that queue is not push queue.

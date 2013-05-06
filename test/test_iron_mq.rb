@@ -149,7 +149,7 @@ class IronMQTests < TestBase
     res.each do |q|
       # puts "#{q.name} and #{queue_name}"
       if q.name == queue_name
-        assert_equal q.size, 1
+        assert_equal q.reload.size, 1
       end
     end
 
@@ -254,22 +254,16 @@ class IronMQTests < TestBase
   def test_queues
     puts 'test_queues'
 
-    # Now client library is not provide plain call to API
-    # But creates Queue object instead
-    # also added `#new?` method to check is queue exist
-    #
-
-    queue = @client.queue("some_queue_that_does_not_exist")
-    p queue.delete_queue
     assert_raise Rest::HttpError do
       # should raise a 404
-      m = queue.info
-      puts "m: #{m}"
+      q = @client.queues.get(:name => "some_queue_that_does_not_exist")
     end
 
     # create at least one queue
     queue.post('create queue message')
-    assert_equal queue.new?, false, "queue must exist on the service after post message to"
+    # queue should exist now
+    q = @client.queues.get(:name => "some_queue_that_does_not_exist")
+    assert_not_nil q
 
     res = @client.queues.list
     # puts "res.size: #{res.size}"
@@ -572,7 +566,7 @@ class IronMQTests < TestBase
     val = "hi mr clean"
     queue.post(val)
 
-    sleep 2 # make sure the counter has time to update
+    sleep 0.5 # make sure the counter has time to update
     assert_equal 1, queue.size
 
     queue.clear
@@ -604,14 +598,6 @@ class IronMQTests < TestBase
     end
 
     assert_equal 5, i
-
-    tries = MAX_TRIES
-    while tries > 0
-      tries -= 1
-      break if 0 == queue.reload.size
-      sleep 1
-    end
-    assert_not_equal tries, 0
 
     # delete queue on test complete
     resp = queue.delete_queue

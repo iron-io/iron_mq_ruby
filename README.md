@@ -147,8 +147,6 @@ Shortcuts for `queue.info[key]`:
 
 ```ruby
 id = queue.id # => "5127bf043264140e863e2283"
-# Does queue exists on server? Alias for `queue.id.nil?`
-is_new = queue.new? # => false
 
 size = queue.size # => 7
 name = queue.name # => "my_queue"

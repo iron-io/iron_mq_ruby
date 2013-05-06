@@ -37,7 +37,6 @@ class TestBase < Test::Unit::TestCase
     queue_name ||= @queue_name
 
     queue = @client.queue(queue_name)
-    queue.post("test")
 
     puts "clearing queue #{queue_name}"
     queue.clear

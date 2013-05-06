@@ -410,7 +410,7 @@ class TestPushQueues < TestBase
 
     p queue.push_type
 
-    assert_equal nil, queue.push_type
+    assert_nil queue.push_type
 
   end
 
