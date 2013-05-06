@@ -2,22 +2,39 @@ require 'ostruct'
 
 module IronMQ
 
-  class ResponseBase < OpenStruct
+
+  class ResponseBase
+    attr_reader :raw, :code
+
     def initialize(data, code = 200)
-      super(data.merge(:code => code.to_i))
+      @raw = data
+      @code = code
+      #super(data.merge(:code => code.to_i))
+    end
+
+    def id
+      @raw["id"]
     end
 
     def [](key)
-      send(key.to_s)
+      @raw[key]
     end
 
-    def raw
-      res = stringify_keys(marshal_dump)
-      # `code` is not part of response body
-      res.delete("code")
-
-      res
+    def msg
+      @raw["msg"]
     end
+    #
+    #def raw
+    #  if @raw.nil?
+    #    @raw = call_api_and_parse_response(:get, "", {}, false)
+    #  end
+    #  #res = stringify_keys(marshal_dump)
+    #  ## `code` is not part of response body
+    #  #res.delete("code")
+    #  #
+    #  #res
+    #  @raw
+    #end
 
     private
 
