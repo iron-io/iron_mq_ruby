@@ -39,8 +39,17 @@ class TestBase < Test::Unit::TestCase
     queue = @client.queue(queue_name)
 
     puts "clearing queue #{queue_name}"
+    begin
     queue.clear
     puts 'cleared.'
+    rescue Rest::HttpError => ex
+      if ex.code == 404
+        # this is fine
+      else
+        raise ex
+      end
+    end
+
   end
 
   def assert_performance(time)
