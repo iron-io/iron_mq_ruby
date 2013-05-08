@@ -261,7 +261,7 @@ class IronMQTests < TestBase
 
     assert_raise Rest::HttpError do
       # should raise a 404
-      m = queue.get
+      m = queue.size
     end
 
     # create at least one queue
