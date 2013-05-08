@@ -40,8 +40,8 @@ class TestBase < Test::Unit::TestCase
 
     puts "clearing queue #{queue_name}"
     begin
-    queue.clear
-    puts 'cleared.'
+      queue.clear
+      puts 'cleared.'
     rescue Rest::HttpError => ex
       if ex.code == 404
         # this is fine

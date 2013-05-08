@@ -3,7 +3,7 @@ require 'test/unit'
 require 'yaml'
 require_relative 'test_base'
 
-class IronMQTests < TestBase
+class TmpTests < TestBase
   def setup
     super
 

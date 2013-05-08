@@ -15,7 +15,7 @@ module IronMQ
           :host => IronMQ::Client::AWS_US_EAST_HOST,
           :port => 443,
           :api_version => 1,
-          :user_agent => 'iron_mq_ruby-' + 'very_new' + ' (iron_core_ruby-' + IronCore.version + ')'
+          :user_agent => 'iron_mq_ruby-' + IronMQ::VERSION + ' (iron_core_ruby-' + IronCore.version + ')'
       }
 
       super('iron', 'mq', options, default_options, [:project_id, :token, :api_version])

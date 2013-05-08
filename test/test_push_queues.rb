@@ -342,22 +342,6 @@ class TestPushQueues < TestBase
     end
   end
 
-  def test_converting_types
-    queue = @client.queue('converting_queue')
-    subscribers = [{:url => "http://rest-test.iron.io/code/200"},
-                   {:url => "http://rest-test.iron.io/code/200"}]
-
-    res = queue.update_queue(:subscribers => subscribers,
-                             :push_type => 'multicast')
-    queue.reload
-
-    assert_equal "multicast", queue.type
-
-
-
-  end
-
-
   def test_post_and_instantiate
     queue = @client.queue('push_and_instantiate')
 

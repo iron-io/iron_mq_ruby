@@ -58,7 +58,10 @@ class TestPushQueues < TestBase
     assert_equal body, m2.body
     m2.delete
 
-    iron_worker = IronWorkerNG::Client.new(@client.options)
+
+    wc = @config['iron']
+    wc[:host] = wc[:worker_host] if wc[:worker_host]
+    iron_worker = IronWorkerNG::Client.new(wc)
     tasks = iron_worker.tasks.list(:code_name=>code_name, :from_time=>Time.now - 30)
     assert_equal 1, tasks.size
 

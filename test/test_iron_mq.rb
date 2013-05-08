@@ -57,7 +57,7 @@ class IronMQTests < TestBase
     assert_nil res
 
     sleep 0.3
-    assert_equal 0, queue.size
+    assert_equal 0, queue.reload.size
 
     res = queue.post("hello world 2!")
     # p res
@@ -126,7 +126,7 @@ class IronMQTests < TestBase
       ids << msg.id
     end
     sleep 0.5
-    assert_equal 10, queue.reload.size
+    assert_equal 10, queue.size
 
     queue.delete_messages(ids)
     sleep 0.5
@@ -149,7 +149,7 @@ class IronMQTests < TestBase
     res.each do |q|
       # puts "#{q.name} and #{queue_name}"
       if q.name == queue_name
-        assert_equal q.reload.size, 1
+        assert_equal q.size, 1
       end
     end
 
@@ -254,16 +254,21 @@ class IronMQTests < TestBase
   def test_queues
     puts 'test_queues'
 
+    qname = "some_queue_that_does_not_exist"
+    queue = @client.queue(qname)
+    # delete it before the test
+    queue.delete_queue
+
     assert_raise Rest::HttpError do
       # should raise a 404
-      q = @client.queues.get(:name => "some_queue_that_does_not_exist")
+      m = queue.get
     end
 
     # create at least one queue
     queue.post('create queue message')
     # queue should exist now
-    q = @client.queues.get(:name => "some_queue_that_does_not_exist")
-    assert_not_nil q
+    m = queue.get
+    assert_not_nil m
 
     res = @client.queues.list
     # puts "res.size: #{res.size}"
@@ -567,14 +572,14 @@ class IronMQTests < TestBase
     queue.post(val)
 
     sleep 0.5 # make sure the counter has time to update
-    assert_equal 1, queue.size
+    assert_equal 1, queue.reload.size
 
     queue.clear
 
     msg = queue.get
     assert_nil msg
 
-    assert_equal 0, queue.size
+    assert_equal 0, queue.reload.size
 
     # delete queue on test complete
     resp = queue.delete_queue

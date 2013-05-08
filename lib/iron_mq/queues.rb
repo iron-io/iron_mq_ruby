@@ -15,7 +15,7 @@ module IronMQ
       load
     end
 
-    # this is only run once if it hasn't been called before
+    # this is only run once if it hasn't been called before unless force is true, then it will force reload.
     def load
       if @raw.nil?
         reload
@@ -43,6 +43,11 @@ module IronMQ
       @raw['total_messages'].to_i
     end
 
+    def push_type
+      load
+      @raw['push_type']
+    end
+
     def push_queue?
       # FIXME: `push_type` parameter in not guaranted it's push queue.
       #        When the parameter absent it is not guaranted that queue is not push queue.
@@ -64,7 +69,9 @@ module IronMQ
 
     # Backward compatibility, better name is `delete`
     def delete_queue
-      call_api_and_parse_response(:delete)
+      r = call_api_and_parse_response(:delete)
+      @raw = nil
+      return r
     rescue Rest::HttpError => ex
       if ex.code == 404
         Rest.logger.info("Delete got 404, safe to ignore.")
@@ -83,7 +90,7 @@ module IronMQ
 
     # Accepts an array of message ids
     def delete_messages(ids)
-      call_api_and_parse_response(:delete, "", :ids => ids)
+      call_api_and_parse_response(:delete, "/messages", :ids => ids)
     end
 
     def add_subscribers(subscribers)
@@ -106,6 +113,15 @@ module IronMQ
 
     def remove_subscriber(subscriber)
       remove_subscribers([subscriber])
+    end
+
+    # `options` was kept for backward compatibility
+    def subscribers(options = {})
+      load
+      if @raw['subscribers']
+        return @raw['subscribers'].map { |s| Subscriber.new(s, self, options) }
+      end
+      []
     end
 
     def add_alert(alert = {})
@@ -208,24 +224,14 @@ module IronMQ
 
     def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true, ignore404 = false)
       r = nil
-      begin
-        response = if meth.to_s == "delete"
-                     headers = options.delete(:headers) || options.delete("headers") || {}
+      response = if meth.to_s == "delete"
+                   headers = options.delete(:headers) || options.delete("headers") || {}
 
-                     @client.parse_response(@client.send(meth, "#{path(ext_path)}", options, headers))
-                   else
-                     @client.parse_response(@client.send(meth, "#{path(ext_path)}", options))
-                   end
-        r = instantiate ? ResponseBase.new(response) : response
-      rescue Rest::HttpError => ex
-        if ex.code == 404
-          IronCore::Logger.debug('IronMQ', "Not found, safe to ignore.")
-          # return ResponseBase as normal
-          r = {}
-        else
-          raise ex
-        end
-      end
+                   @client.parse_response(@client.send(meth, "#{path(ext_path)}", options, headers))
+                 else
+                   @client.parse_response(@client.send(meth, "#{path(ext_path)}", options))
+                 end
+      r = instantiate ? ResponseBase.new(response) : response
       r
     end
 

@@ -18,6 +18,14 @@ module IronMQ
       @raw['timeout']
     end
 
+    def expires_in
+      @raw['expires_in']
+    end
+
+    def delay
+      @raw['delay']
+    end
+
     def touch
       call_api_and_parse_response(:post, "/touch")
     end
