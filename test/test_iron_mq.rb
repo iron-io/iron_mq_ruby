@@ -242,10 +242,12 @@ class IronMQTests < TestBase
     # delete it before the test
     queue.delete_queue
 
-    assert_raise Rest::HttpError do
+    # now API returns [] for GET /queues/QNAME/messages instead 404 when queue does not exist
+    # assert_raise Rest::HttpError do
       # should raise a 404
-      m = queue.size
-    end
+    m = queue.get
+    assert_nil m
+    #end
 
     # create at least one queue
     queue.post('create queue message')
