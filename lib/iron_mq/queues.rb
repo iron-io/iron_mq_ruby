@@ -5,19 +5,14 @@ module IronMQ
   class Queue < ResponseBase
     attr_reader :name, :raw
 
-    def initialize(client, queue_name)
+    def initialize(client, queue_name, options = {})
       @client = client
       @name = queue_name
-
+      @cache_info = options[:cache_queue_info]
     end
 
     def info
-      load
-    end
-
-    # this is only run once if it hasn't been called before unless force is true, then it will force reload.
-    def load
-      if @raw.nil?
+      if @raw.nil? || !@cache_info
         reload
       end
       @raw
@@ -25,27 +20,24 @@ module IronMQ
 
     def reload
       @raw = call_api_and_parse_response(:get, "", {}, false, true)
+
       self
     end
 
     def id
-      load
-      @raw['id']
+      info['id']
     end
 
     def size
-      load
-      @raw['size'].to_i
+      info['size'].to_i
     end
 
     def total_messages
-      load
-      @raw['total_messages'].to_i
+      info['total_messages'].to_i
     end
 
     def push_type
-      load
-      @raw['push_type']
+      info['push_type']
     end
 
     def push_queue?
@@ -223,7 +215,6 @@ module IronMQ
     alias_method :poll, :poll_messages
 
     def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true, ignore404 = false)
-      r = nil
       response = if meth.to_s == "delete"
                    headers = options.delete(:headers) || options.delete("headers") || {}
 
@@ -231,8 +222,8 @@ module IronMQ
                  else
                    @client.parse_response(@client.send(meth, "#{path(ext_path)}", options))
                  end
-      r = instantiate ? ResponseBase.new(response) : response
-      r
+
+      instantiate ? ResponseBase.new(response) : response
     end
 
     private

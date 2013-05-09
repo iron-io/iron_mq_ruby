@@ -24,7 +24,7 @@ class TestBase < Test::Unit::TestCase
     config = @config['iron']
     @host = "#{config['host'] || "mq-aws-us-east-1.iron.io"}"
 
-    @client = IronMQ::Client.new(@config['iron'])
+    @client = IronMQ::Client.new(config.merge({:cache_queue_info => false}))
     puts "IronMQ::VERSION = #{IronMQ::VERSION}"
     Rest.logger.level = Logger::DEBUG # this doesn't work for some reason?
     IronCore::Logger.logger.level = Logger::DEBUG
