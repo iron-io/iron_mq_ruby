@@ -14,6 +14,7 @@ class TestPushQueues < TestBase
 
 
   def test_queue_subscriptions
+    puts "test_queue_subscriptions"
     types = ["multicast", "unicast"]
     # to delete queues later (clear project)
     queue_names = []
@@ -237,6 +238,7 @@ class TestPushQueues < TestBase
 
 
   def test_202
+    puts "test_202"
     types = ["multicast"]
     types.each do |t|
 

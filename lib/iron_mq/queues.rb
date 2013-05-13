@@ -193,8 +193,13 @@ module IronMQ
     alias_method :get, :get_messages
 
     # Backward compatibility
-    def messages;
-      self;
+    def messages
+      self
+    end
+
+    def get_message(id)
+      resp = call_api_and_parse_response(:get, "/messages/#{id}", {}, false)
+      Message.new(self, resp)
     end
 
     def peek_messages(options = {})

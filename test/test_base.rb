@@ -11,7 +11,7 @@ rescue Exception => ex
 end
 
 LOG = Logger.new(STDOUT)
-MAX_TRIES = 100
+MAX_TRIES = 10
 
 class TestBase < Test::Unit::TestCase
 

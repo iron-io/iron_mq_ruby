@@ -1,7 +1,7 @@
 require 'quicky'
 require File.expand_path('test_base.rb', File.dirname(__FILE__))
 
-TIMES = 1
+TIMES = 100
 
 class QuickRun < TestBase
 
@@ -20,11 +20,11 @@ class QuickRun < TestBase
     res2 = queue.get
     # p res2
 
-    quicky.loop(:test_quick, TIMES, :warmup => 2) do |i|
+    quicky.loop(:test_quick, TIMES) do |i|
       puts "==== LOOP #{i} =================================="
 
       post_id = nil
-      quicky.time(:post, :warmup => 2) do
+      quicky.time(:post) do
         res = queue.post("hello world!")
         # p res
         assert_not_nil res
@@ -33,16 +33,14 @@ class QuickRun < TestBase
         assert !(res.msg.nil? || res.msg.empty?)
       end
 
-      quicky.time(:get, :warmup => 2) do
+      quicky.time(:get) do
         msg = queue.get
-        # p res
-        puts "post_id=" + post_id.inspect
         assert_not_nil msg.id
         assert_equal msg.id, post_id
         assert !(msg.body.nil? || msg.body.empty?)
       end
 
-      quicky.time(:delete, :warmup => 2) do
+      quicky.time(:delete) do
         res = queue.delete(post_id)
         # p res
         assert_not_nil res
@@ -68,19 +66,23 @@ class QuickRun < TestBase
 
       res = msg.delete
       # p res
-      assert_equal 200, res.code, "API must delete message and response with HTTP 200 status, but returned HTTP #{res.code}"
+      assert_equal 200, res.code, "API must delete message and respond with HTTP 200 status, but returned HTTP #{res.code}"
     end
     puts "count: #{quicky.results(:post).count}"
     puts "avg post: #{quicky.results(:post).duration}"
     puts "avg get: #{quicky.results(:get).duration}"
     puts "avg delete: #{quicky.results(:delete).duration}"
 
+    sleep 5
+
+    puts "queue size: #{queue.reload.size}"
+
     # delete queue on test complete
     resp = queue.delete_queue
-    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
+    assert_equal 200, resp.code, "API must respond with HTTP 200 status, but returned HTTP #{resp.code}"
 
     resp = @client.queue('test2').delete_queue
-    assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
+    assert_equal 200, resp.code, "API must respond with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
 
