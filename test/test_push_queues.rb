@@ -202,7 +202,8 @@ class TestPushQueues < TestBase
 
     tries = MAX_TRIES
     while tries > 0
-      sleep 0.5
+      puts 'sleeping for 5 to wait for retry'
+      sleep 5
       tries -= 1
       subscribers = queue.messages.get(m.id).subscribers
       LOG.debug subscribers

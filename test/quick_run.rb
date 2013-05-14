@@ -47,6 +47,8 @@ class QuickRun < TestBase
         assert !(res.msg.nil? || res.msg.empty?)
       end
 
+      puts "queue size: #{queue.reload.size}"
+
       msg = queue.get
       # p msg
       assert_nil msg
