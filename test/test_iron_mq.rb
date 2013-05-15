@@ -126,7 +126,7 @@ class IronMQTests < TestBase
       ids << msg.id
     end
     sleep 0.5
-    assert_equal 10, queue.size
+    assert_equal 10, queue.reload.size
 
     queue.delete_messages(ids)
     sleep 0.5
@@ -179,7 +179,7 @@ class IronMQTests < TestBase
 
     tries = MAX_TRIES
     while tries > 0
-      sleep 2
+      sleep 30 # should be 1 minute timeout by default
       tries -= 1
 
       new_msg = queue.get
@@ -659,7 +659,6 @@ class IronMQTests < TestBase
 
     clear_queue(qname)
     q = @client.queue(qname)
-    puts "q.size: #{q.size}"
 
     q.post("message 1", :timeout=>200, :delay=>0, :expires_in=>2000)
     q.post("message 1", :timeout=>300, :delay=>0, :expires_in=>3000)
