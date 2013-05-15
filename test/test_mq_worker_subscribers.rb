@@ -21,7 +21,7 @@ class TestPushQueues < TestBase
     code_name = "hello"
     queue = @client.queue(publisher_name)
     receiver_queue = @client.queue(receiver_name)
-    receiver_queue.clear # clean it up
+    clear_queue(receiver_name)
 
     # test for bad subscribers
     puts "raising..."
