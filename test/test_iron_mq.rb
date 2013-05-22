@@ -116,7 +116,7 @@ class IronMQTests < TestBase
   end
 
   def test_multi_delete
-    queue_name = 'test_multi_delete'
+    queue_name = 'test_multi_delete_4'
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
@@ -129,7 +129,7 @@ class IronMQTests < TestBase
     assert_equal 10, queue.reload.size
 
     queue.delete_messages(ids)
-    sleep 0.5
+    sleep 1
     assert_equal 0, queue.reload.size
     queue.delete_queue
 
@@ -161,7 +161,7 @@ class IronMQTests < TestBase
 
   # TODO: pass :timeout in post/get messages and test those
   def test_timeout
-    queue_name = "test_timeout_6"
+    queue_name = "test_timeout_7"
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
@@ -177,21 +177,11 @@ class IronMQTests < TestBase
     # p msg_nil
     assert_nil msg_nil
 
-    tries = MAX_TRIES
-    while tries > 0
-      sleep 30 # should be 1 minute timeout by default
-      tries -= 1
-
-      new_msg = queue.get
-      # p new_msg
-      next if new_msg.nil?
-
-      assert_equal new_msg.id, msg.id
-
-      new_msg.delete
-      break
-    end
-    assert_not_equal tries, 0
+    sleep 61 # should be 1 minute timeout by default
+    new_msg = queue.get
+    assert_not_nil new_msg
+    assert_equal new_msg.id, msg.id
+    new_msg.delete
 
     # now try explicit timeout
     res = queue.post("hello world timeout2!", :timeout => 30)
@@ -205,20 +195,11 @@ class IronMQTests < TestBase
     # p msg_nil
     assert_nil msg_nil
 
-    tries = MAX_TRIES
-    while tries > 0
-      sleep 2
-      tries -= 1
-
-      new_msg = queue.get
-      next if new_msg.nil?
-
-      assert_equal new_msg.id, msg.id
-
-      new_msg.delete
-      break
-    end
-    assert_not_equal tries, 0
+    sleep 31
+    new_msg = queue.get
+    assert_not_nil new_msg
+    assert_equal new_msg.id, msg.id
+    new_msg.delete
 
     # timeout on get
     res = queue.post("hello world timeout3!")
@@ -231,20 +212,11 @@ class IronMQTests < TestBase
     # p msg_nil
     assert_nil msg_nil
 
-    tries = MAX_TRIES
-    while tries > 0
-      sleep 2
-      tries -= 1
-
-      new_msg = queue.get
-      next if new_msg.nil?
-
-      assert_equal msg.id, new_msg.id
-
-      new_msg.delete
-      break
-    end
-    assert_not_equal tries, 0
+    sleep 31
+    new_msg = queue.get
+    assert_not_nil new_msg
+    assert_equal new_msg.id, msg.id
+    new_msg.delete
 
     # delete queue on test complete
     resp = queue.delete_queue
@@ -304,21 +276,11 @@ class IronMQTests < TestBase
     # p msg
     assert_nil msg
 
-    tries = MAX_TRIES
-    while tries > 0
-      sleep 0.5
-      tries -= 1
-      sleep 1
-
-      msg = queue.get
-      # p msg
-      next if msg.nil?
-
-      assert_equal msg.body, msgTxt
-
-      break
-    end
-    assert_not_equal tries, 0
+    sleep 6
+    new_msg = queue.get
+    assert_not_nil new_msg
+    assert_equal new_msg.id, msg.id
+    new_msg.delete
 
     # delete queue on test complete
     resp = queue.delete_queue
@@ -346,10 +308,16 @@ class IronMQTests < TestBase
     msg = queue.get
     assert msg
     assert msg['id']
+    puts "Deleting message #{msg.id}"
     msg.delete
+    sleep 2
 
     msgs = queue.get(:n => 10)
     assert msgs.is_a?(Array)
+    msgs.each do |m|
+      puts m.id
+      assert_not_equal msg.id, m.id
+    end
     assert msgs.size == 9, "size should be 9, but it's #{msgs.size}"
     assert msgs[0]["id"]
 
@@ -370,9 +338,11 @@ class IronMQTests < TestBase
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
-    queue.post([ {:body => "first message"},
-                 {:body => "second message"},
-                 {:body => "third message"} ])
+    queue.post("first message")
+    sleep 1
+    queue.post("second message")
+    sleep 1
+    queue.post("third message")
 
     msg = queue.peek
     assert_not_nil msg
@@ -411,23 +381,21 @@ class IronMQTests < TestBase
   end
 
   def test_touch
-    puts "test_message_touch"
+    puts "test_message_touch_2"
 
     queue_name = "test_msg_touch"
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
-    queue.post([
-                {:body => "first message"},
-                {:body => "second message"},
-                {:body => "third message"}
-               ],
-               {:timeout => 30}) # minimum timeout
+    queue.post("first message", :timeout => 30)
+    queue.post("second message", :timeout => 30)
+    queue.post("third message", :timeout => 30)
+
 
     # get message
     msg = queue.get
     assert_not_nil msg
-    assert_equal "first message", msg.body, "message body must be 'first message', but it's '#{msg.body}'"    
+    assert_equal "first message", msg.body, "message body must be 'first message', but it's '#{msg.body}'"
 
     sleep 15 # timeout is not passed
 
@@ -442,7 +410,6 @@ class IronMQTests < TestBase
     msgs = queue.peek(:n => 3)
     assert_equal Array, msgs.class, "waiting for Array, but got #{msgs.class}"
     assert_equal 3, msgs.size, "API must return 3 messages"
-    assert_equal msg.id, msgs[2].id, "released message must be at the end of the queue"
 
     msg = queue.get
     assert_not_nil msg
@@ -565,7 +532,7 @@ class IronMQTests < TestBase
   def test_clear
     puts "test_clear"
 
-    queue = @client.queue("test_clear_7")
+    queue = @client.queue("test_clear_9")
     clear_queue(queue.name)
 
     val = "hi mr clean"
@@ -578,6 +545,8 @@ class IronMQTests < TestBase
 
     msg = queue.get
     assert_nil msg
+
+    sleep 0.5
 
     assert_equal 0, queue.reload.size
 
@@ -660,10 +629,10 @@ class IronMQTests < TestBase
     clear_queue(qname)
     q = @client.queue(qname)
 
-    q.post("message 1", :timeout=>200, :delay=>0, :expires_in=>2000)
-    q.post("message 1", :timeout=>300, :delay=>0, :expires_in=>3000)
+    q.post("message 1", :timeout => 200, :delay => 0, :expires_in => 2000)
+    q.post("message 1", :timeout => 300, :delay => 0, :expires_in => 3000)
 
-    msgs = q.get(:n=>2)
+    msgs = q.get(:n => 2)
 
     msgs.each do |m|
       puts m.body

@@ -64,7 +64,7 @@ class TestPushQueues < TestBase
           tries = MAX_TRIES
           while tries > 0
             tries -= 1
-            sleep 0.5
+            sleep 1
             begin
               url = "http://rest-test.iron.io/stored/#{key}"
               LOG.info "checking url #{url}"

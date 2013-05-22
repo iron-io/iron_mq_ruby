@@ -24,10 +24,9 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "beanstalk-client"
   gem.add_development_dependency "uber_config"
   gem.add_development_dependency "typhoeus", ">= 0.5.4"
-  gem.add_development_dependency "concur"
   gem.add_development_dependency "net-http-persistent"
   gem.add_development_dependency "quicky"
   gem.add_development_dependency "iron_worker_ng"
-
+  gem.add_development_dependency "go"
 end
 
