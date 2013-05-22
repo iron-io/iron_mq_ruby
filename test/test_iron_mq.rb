@@ -271,7 +271,7 @@ class IronMQTests < TestBase
     msgTxt = "testMessage-"+Time.now.to_s
     # puts msgTxt
     queue = @client.queue(queue_name)
-    queue.post(msgTxt, {:delay => 5})
+    msg_id = queue.post(msgTxt, {:delay => 5}).id
     msg = queue.get
     # p msg
     assert_nil msg
@@ -279,7 +279,7 @@ class IronMQTests < TestBase
     sleep 6
     new_msg = queue.get
     assert_not_nil new_msg
-    assert_equal new_msg.id, msg.id
+    assert_equal msg_id, new_msg.id
     new_msg.delete
 
     # delete queue on test complete
@@ -381,9 +381,9 @@ class IronMQTests < TestBase
   end
 
   def test_touch
-    puts "test_message_touch_2"
+    puts "in test_touch"
 
-    queue_name = "test_msg_touch"
+    queue_name = "test_msg_touch_3"
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
@@ -402,7 +402,9 @@ class IronMQTests < TestBase
     msgs = queue.peek(:n => 3) # all messages from queue
     assert_equal Array, msgs.class, "waiting for Array, but got #{msgs.class}"
     assert_equal 2, msgs.size, "API must return only 2 messages"
-    msgs.each { |m| assert_not_equal msg.id, m.id, "returned message which must be reserved" }
+    msgs.each do |m|
+      assert_not_equal msg.id, m.id, "returned a message which must be reserved"
+    end
 
     sleep 20 # ensure timeout is passed
 
@@ -486,42 +488,20 @@ class IronMQTests < TestBase
     # p msg
     assert_nil msgr
 
-    tries = MAX_TRIES
-    while tries > 0
-      sleep 0.5
-      tries -= 1
-      sleep 1
-
-      msg = queue.get
-      next if msg.nil?
-
-      #p msg
-      assert_equal msg.id, msg_id
-
-      break
-    end
-    assert_not_equal tries, 0
+    sleep 11
+    msg = queue.get
+    assert_not_nil msg
+    assert_equal msg_id, msg.id
 
     msg.release(:delay => 5)
     msg = queue.get
     # p msg
     assert_nil msg
 
-    tries = MAX_TRIES
-    while tries > 0
-      sleep 0.5
-      tries -= 1
-      sleep 1
-
-      msg = queue.get
-      next if msg.nil?
-
-      # p msg
-      assert_equal msg.id, msg_id
-
-      break
-    end
-    assert_not_equal tries, 0
+    sleep 6
+    msg = queue.get
+    assert_not_nil msg
+    assert_equal msg_id, msg.id
 
     # delete queue on test complete
     resp = queue.delete_queue
