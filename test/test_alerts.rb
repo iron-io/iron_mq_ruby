@@ -11,7 +11,7 @@ class TestPushQueues < TestBase
   end
 
   def test_size_alerts
-    omit_if @skip
+    return if @skip
 
     # Add a normal size alert
     # Post x messages
@@ -73,7 +73,7 @@ class TestPushQueues < TestBase
 
 
   def test_progressive_alerts
-    omit_if @skip
+    return if @skip
 
     # Add a normal size alert
     # Post x messages
