@@ -29,7 +29,7 @@ class IronMQTests < TestBase
 
 
   def test_basics
-    queue_name = 'test_basics_7'
+    queue_name = 'test_basics_71'
     clear_queue(queue_name)
 
     # NOTE: Kept for backward compatibility checking
@@ -116,7 +116,7 @@ class IronMQTests < TestBase
   end
 
   def test_multi_delete
-    queue_name = 'test_multi_delete_4'
+    queue_name = 'test_multi_delete_41'
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
@@ -136,7 +136,7 @@ class IronMQTests < TestBase
   end
 
   def test_queues_list
-    queue_name = 'test_queues_list'
+    queue_name = 'test_queues_list_1'
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
@@ -161,7 +161,7 @@ class IronMQTests < TestBase
 
   # TODO: pass :timeout in post/get messages and test those
   def test_timeout
-    queue_name = "test_timeout_7"
+    queue_name = "test_timeout_71"
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
@@ -226,7 +226,7 @@ class IronMQTests < TestBase
   def test_queues
     puts 'test_queues'
 
-    qname = "some_queue_that_does_not_exist"
+    qname = "some_queue_that_does_not_exist_1"
     queue = @client.queue(qname)
     # delete it before the test
     queue.delete_queue
@@ -265,7 +265,7 @@ class IronMQTests < TestBase
   def test_delay
     puts 'test_delay'
 
-    queue_name = "test_delay_6"
+    queue_name = "test_delay_61"
     clear_queue(queue_name)
 
     msgTxt = "testMessage-"+Time.now.to_s
@@ -290,7 +290,7 @@ class IronMQTests < TestBase
   def test_batch
     puts 'test_batch'
 
-    queue_name = "test_batch_6"
+    queue_name = "test_batch_61"
     clear_queue(queue_name)
 
     x = []
@@ -334,7 +334,7 @@ class IronMQTests < TestBase
   def test_peek
     puts "test_message_peek"
 
-    queue_name = "test_msg_peek"
+    queue_name = "test_msg_peek_1"
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
@@ -383,7 +383,7 @@ class IronMQTests < TestBase
   def test_touch
     puts "in test_touch"
 
-    queue_name = "test_msg_touch_3"
+    queue_name = "test_msg_touch_31"
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
@@ -450,7 +450,7 @@ class IronMQTests < TestBase
   def test_release
     puts 'test_release'
 
-    queue_name = "test_release_6"
+    queue_name = "test_release_61"
     clear_queue(queue_name)
 
     msg_txt = "testMessage-"+Time.now.to_s
@@ -512,7 +512,7 @@ class IronMQTests < TestBase
   def test_clear
     puts "test_clear"
 
-    queue = @client.queue("test_clear_9")
+    queue = @client.queue("test_clear_91")
     clear_queue(queue.name)
 
     val = "hi mr clean"
@@ -537,7 +537,7 @@ class IronMQTests < TestBase
 
 
   def test_poll
-    queue_name = "test_poll_6"
+    queue_name = "test_poll_61"
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
@@ -604,7 +604,7 @@ class IronMQTests < TestBase
 
   def test_queue_params
 
-    qname = "test_queue_params"
+    qname = "test_queue_params_1"
 
     clear_queue(qname)
     q = @client.queue(qname)
