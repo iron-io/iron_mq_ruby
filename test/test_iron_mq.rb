@@ -623,5 +623,14 @@ class IronMQTests < TestBase
 
   end
 
+  def test_queue_set_info
+    qname = "test_queue_set_info"
+    clear_queue(qname)
+    q = @client.queue(qname)
+    q.update_queue(:push_type => 'unicast')
+    assert_equal 'unicast', q.push_type
+    q.update_queue(:retries => 10)
+    assert_equal 'unicast', q.reload.push_type
+  end
 end
 
