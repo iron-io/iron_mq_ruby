@@ -4,7 +4,7 @@ require 'pp'
 require File.expand_path('test_base.rb', File.dirname(__FILE__))
 
 THREADS = 10
-TIMES_PER_THREAD = 100
+TIMES_PER_THREAD = 1000
 
 class QuickRun < TestBase
 
@@ -18,61 +18,10 @@ class QuickRun < TestBase
     ch = Go::Channel.new
     results = nil
 
-      THREADS.times do |i|
+    (THREADS-1).times do |ti|
 
         go do
-
-          begin
-
-            queue_name = "ironmq_gem_quick_a_#{i}"
-            clear_queue(queue_name)
-            queue = @client.queue(queue_name)
-
-            quicky = Quicky::Timer.new
-            consumer_ch = Go::Channel.new
-            quicky.loop(:test_quick, TIMES_PER_THREAD) do |i|
-              puts "==== LOOP #{i} =================================="
-
-              if i == 50 || i == TIMES_PER_THREAD-1
-                start_consumer(quicky, queue, consumer_ch)
-              end
-
-              post_id = nil
-              quicky.time(:post) do
-                res = queue.post("hello world!")
-                # p res
-                assert_not_nil res
-                assert_not_nil res.id
-                post_id = res.id
-                assert !(res.msg.nil? || res.msg.empty?)
-              end
-
-            end
-            # wait for consumer to end
-            #i = 0
-            #consumer_ch.each do |r|
-            #  i+=1
-            #  puts "consumer #{r}"
-            #  consumer_ch.close if i == TIMES_PER_THREAD
-            #end
-            sleep TIMES_PER_THREAD / 2
-
-            puts "count: #{quicky.results(:post).count}"
-            puts "avg post: #{quicky.results(:post).duration}"
-            puts "avg get: #{quicky.results(:get).duration}"
-            puts "avg delete: #{quicky.results(:delete).duration}"
-            puts "queue size: #{queue.reload.size}"
-            resp = queue.delete_queue
-            assert_equal 200, resp.code, "API must respond with HTTP 200 status, but returned HTTP #{resp.code}"
-
-            ch << quicky.results
-
-          rescue Exception => ex
-            p ex
-            p ex.backtrace
-          end
-
-
+          do_it(ch, ti)
         end
 
       end
@@ -86,6 +35,60 @@ class QuickRun < TestBase
       end
     end
     pp results.to_hash
+
+  end
+
+  def do_it(ch, ti)
+
+    begin
+
+      queue_name = "ironmq_gem_quick_#{ti}_#{rand(1000)}"
+      clear_queue(queue_name)
+      queue = @client.queue(queue_name)
+
+      quicky = Quicky::Timer.new
+      consumer_ch = Go::Channel.new
+      quicky.loop(:test_quick, TIMES_PER_THREAD) do |i|
+        puts "==== LOOP t#{ti} - #{i} =================================="
+
+        if i == 50 || i == TIMES_PER_THREAD-1
+          start_consumer(quicky, queue, consumer_ch)
+        end
+
+        post_id = nil
+        quicky.time(:post) do
+          res = queue.post("hello world!")
+          # p res
+          assert_not_nil res
+          assert_not_nil res.id
+          post_id = res.id
+          assert !(res.msg.nil? || res.msg.empty?)
+        end
+
+      end
+      # wait for consumer to end
+      #i = 0
+      #consumer_ch.each do |r|
+      #  i+=1
+      #  puts "consumer #{r}"
+      #  consumer_ch.close if i == TIMES_PER_THREAD
+      #end
+      sleep TIMES_PER_THREAD / 2
+
+      puts "count: #{quicky.results(:post).count}"
+      puts "avg post: #{quicky.results(:post).duration}"
+      puts "avg get: #{quicky.results(:get).duration}"
+      puts "avg delete: #{quicky.results(:delete).duration}"
+      puts "queue size: #{queue.reload.size}"
+      resp = queue.delete_queue
+      assert_equal 200, resp.code, "API must respond with HTTP 200 status, but returned HTTP #{resp.code}"
+
+      ch << quicky.results
+
+    rescue Exception => ex
+      p ex
+      p ex.backtrace
+    end
 
   end
 

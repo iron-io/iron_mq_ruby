@@ -26,6 +26,10 @@ module IronMQ
       @raw['delay']
     end
 
+    def reserved_count
+      @raw['reserved_count']
+    end
+
     def touch
       call_api_and_parse_response(:post, "/touch")
     end

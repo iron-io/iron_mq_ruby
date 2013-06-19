@@ -148,7 +148,7 @@ class BeanstalkTests < TestBase
     assert job.nil?, "job is not nil"
 
     # wait for delay to expire
-    sleep 2
+    sleep 3
     job = reserve(0)
     assert_not_nil job, "job is nil"
     assert_equal msg, job.body, "body not the same as message."

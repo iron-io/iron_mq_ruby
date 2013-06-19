@@ -27,6 +27,17 @@ class IronMQTests < TestBase
     end
   end
 
+  def test_get
+    queue_name = "some_queue_abcj9u23"
+    queue = @client.queue(queue_name)
+    msg = queue.get
+    v = "hello big world"
+    queue.post(v)
+    msg = queue.get
+    msg.delete
+    msg = queue.get
+
+  end
 
   def test_basics
     queue_name = 'test_basics_7'
@@ -116,7 +127,7 @@ class IronMQTests < TestBase
   end
 
   def test_multi_delete
-    queue_name = 'test_multi_delete_4'
+    queue_name = 'test_multi_delete_5'
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
@@ -251,7 +262,7 @@ class IronMQTests < TestBase
     end
     assert res.size > 0
 
-    res = @client.queues.list(:page => 15)
+    res = @client.queues.list(:page => 50)
     # puts "res.size 2: #{res.size}"
     # res.each do |q| { p q.name }
 
@@ -338,6 +349,13 @@ class IronMQTests < TestBase
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
+    queue.post("zero message")
+    msg = queue.get
+    msg.delete
+
+    msg = queue.peek
+    assert_nil msg
+
     queue.post("first message")
     sleep 1
     queue.post("second message")
@@ -620,6 +638,30 @@ class IronMQTests < TestBase
       puts "expires_in: #{m.expires_in}"
       puts "delay: #{m.delay}"
     end
+
+  end
+
+
+  def test_reserved_count
+    puts "test_reserved_count"
+
+    queue_name = "test_reserved_count"
+    clear_queue(queue_name)
+
+    queue = @client.queue(queue_name)
+    queue.post("zero message")
+    msg = queue.get
+    p msg
+    puts "id: #{msg.id} reserved_count: #{msg.reserved_count}"
+    msg.release
+    msg = queue.get
+    p msg
+    puts "id: #{msg.id} reserved_count: #{msg.reserved_count}"
+    msg.release
+    msg = queue.get
+    p msg
+    puts "id: #{msg.id} reserved_count: #{msg.reserved_count}"
+
 
   end
 

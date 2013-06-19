@@ -219,6 +219,7 @@ class TestPushQueues < TestBase
             do_retry = true
           end
         else
+          # this one should error a couple times, then be successful
           LOG.info "retries_remaining: #{s["retries_remaining"]}"
           if ["deleted", "error"].include? s["status"] || 200 == s["status_code"]
             assert_equal 0, s["retries_remaining"]
@@ -260,9 +261,13 @@ class TestPushQueues < TestBase
       res = queue.update_queue(:subscribers => subscribers,
                                :push_type => t)
 
+      queue.reload
       LOG.debug queue
+      queue = @client.queue(qname)
 
       assert_equal num_subscribers, queue.subscribers.size
+      assert_equal t, queue.push_type
+      puts "queue.push_type: #{queue.push_type}"
       # todo: assert subscriptions match
 
       msg = "hello #{x}"
@@ -281,7 +286,7 @@ class TestPushQueues < TestBase
           do_retry = true unless 202 == s["status_code"]
           do_retry = true unless "reserved" == s["status"]
         end
-        next if do_retry
+        next if do_retryde
         break
       end
       assert_not_equal tries, 0
@@ -295,6 +300,7 @@ class TestPushQueues < TestBase
         subscribers = queue.messages.get(m.id).subscribers
         LOG.debug subscribers
         assert_equal num_subscribers, subscribers.size
+        assert_equal t, queue.push_type
 
         do_retry = false
         subscribers.each do |s|
