@@ -6,3 +6,5 @@ log
 test/config.yml
 *.sublime*
 /*.gem
+config.yml
+

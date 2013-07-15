@@ -13,7 +13,7 @@ class TestPushQueues < TestBase
     key = "pushq-#{t}-#{i}-#{random}"
   end
 
-
+=begin
   def test_mq_worker_subscribers
 
     publisher_name = "publisher"
@@ -64,8 +64,7 @@ class TestPushQueues < TestBase
     iron_worker = IronWorkerNG::Client.new(wc)
     tasks = iron_worker.tasks.list(:code_name=>code_name, :from_time=>Time.now - 30)
     assert_equal 1, tasks.size
-
-
   end
-
+=end
+  
 end

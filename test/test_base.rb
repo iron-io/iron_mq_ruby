@@ -11,6 +11,7 @@ rescue Exception => ex
 end
 
 LOG = Logger.new(STDOUT)
+LOG.level = Logger::INFO
 MAX_TRIES = 10
 
 class TestBase < Test::Unit::TestCase
@@ -27,7 +28,7 @@ class TestBase < Test::Unit::TestCase
     @client = IronMQ::Client.new(@config['iron'])
     puts "IronMQ::VERSION = #{IronMQ::VERSION}"
     #Rest.logger.level = Logger::DEBUG # this doesn't work for some reason?
-    IronCore::Logger.logger.level = Logger::DEBUG
+#    IronCore::Logger.logger.level = Logger::DEBUG
 
     @queue_name = 'ironmq-ruby-tests' # default queue for tests
   end

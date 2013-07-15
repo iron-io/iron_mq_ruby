@@ -286,7 +286,7 @@ class TestPushQueues < TestBase
           do_retry = true unless 202 == s["status_code"]
           do_retry = true unless "reserved" == s["status"]
         end
-        next if do_retryde
+        next if do_retry
         break
       end
       assert_not_equal tries, 0

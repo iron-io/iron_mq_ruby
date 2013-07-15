@@ -2,7 +2,7 @@ require 'quicky'
 require 'go'
 require File.expand_path('test_base.rb', File.dirname(__FILE__))
 
-TIMES_PER_THREAD = 100
+TIMES_PER_THREAD = 1000
 
 class QuickRun < TestBase
 
@@ -17,8 +17,10 @@ class QuickRun < TestBase
     queue = @client.queue(queue_name)
 
     quicky = Quicky::Timer.new
+    j = 0
     quicky.loop(:test_quick, TIMES_PER_THREAD) do |i|
-      puts "==== LOOP #{i} =================================="
+      puts "==== LOOP #{i || j} =================================="
+      j += 1
 
       post_id = nil
       quicky.time(:post) do

@@ -10,6 +10,7 @@ class TestPushQueues < TestBase
     return if @skip # bypass these tests if rackspace
   end
 
+=begin
   def test_size_alerts
     return if @skip
 
@@ -137,6 +138,7 @@ class TestPushQueues < TestBase
     end
     sleep 0.5
   end
-
+=end
+  
 
 end
