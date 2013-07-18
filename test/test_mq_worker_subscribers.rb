@@ -1,9 +1,14 @@
-# Put config.yml file in ~/Dropbox/configs/ironmq_gem/test/config.yml
+#
+# This test requires a hello worker in your project, run next line to add one:
+# iron_worker upload https://github.com/treeder/hello_worker/blob/master/hello.worker --config config.yml
+#
+
 require File.expand_path('test_base.rb', File.dirname(__FILE__))
 require 'logger'
 require 'iron_worker_ng'
 
-class TestPushQueues < TestBase
+
+class TestWorkerSubscribers < TestBase
 
   def setup
     super
@@ -13,7 +18,6 @@ class TestPushQueues < TestBase
     key = "pushq-#{t}-#{i}-#{random}"
   end
 
-=begin
   def test_mq_worker_subscribers
 
     publisher_name = "publisher"
@@ -25,23 +29,20 @@ class TestPushQueues < TestBase
 
     # test for bad subscribers
     puts "raising..."
-    ex = assert_raise do
+    assert_raise Rest::HttpError do
       # can't subscribe to self
       res = queue.update_queue(:subscribers => [{:url => "ironmq:///#{publisher_name}"}])
     end
-    p ex
-    ex = assert_raise do
+    
+    assert_raise Rest::HttpError do
       # must have a token if sending to different project_id
       res = queue.update_queue(:subscribers => [{:url => "ironmq://ABCDEFG@/somerandomqueue"}])
     end
-    p ex
-
+    
     subscribers = []
     subscribers << {:url => "ironmq:///#{receiver_name}"}
     subscribers << {:url => "ironworker:///#{code_name}"}
-    # requires a hello worker in your project, run next line to add one:
-    # iron_worker upload https://github.com/treeder/hello_worker/blob/master/hello.worker
-
+  
     res = queue.update_queue(:subscribers => subscribers)
 
     LOG.debug queue.subscribers
@@ -62,9 +63,9 @@ class TestPushQueues < TestBase
     wc = @config['iron']
     wc[:host] = wc[:worker_host] if wc[:worker_host]
     iron_worker = IronWorkerNG::Client.new(wc)
-    tasks = iron_worker.tasks.list(:code_name=>code_name, :from_time=>Time.now - 30)
+    tasks = iron_worker.tasks.list(:code_name=>code_name, :from_time=>(Time.now - 30).to_i)
     assert_equal 1, tasks.size
   end
-=end
+
   
 end
