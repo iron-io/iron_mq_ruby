@@ -26,10 +26,10 @@ Or pass in credentials if you don't want to use an iron.json file or set ENV var
 ```ruby
 ironmq = IronMQ::Client.new(:token => "MY_TOKEN", :project_id => "MY_PROJECT_ID")
 ```
-You can also change the host if you want to use a different cloud or region, for example, to use Rackspace DFW:
+You can also change the host if you want to use a different cloud or region, for example, to use Rackspace ORD:
 
 ```ruby
-ironmq = IronMQ::Client.new(:host => "mq-rackspace-dfw.iron.io", :token => "MY_TOKEN", :project_id => "MY_PROJECT_ID")
+ironmq = IronMQ::Client.new(:host => "mq-rackspace-ord.iron.io", :token => "MY_TOKEN", :project_id => "MY_PROJECT_ID")
 ```
 The default host is AWS us-east-1 zone (mq-aws-us-east-1.iron.io). [See all available hosts/clouds/regions](http://dev.iron.io/mq/reference/clouds/).
 
