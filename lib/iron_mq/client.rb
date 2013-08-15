@@ -18,7 +18,7 @@ module IronMQ
           :user_agent => 'iron_mq_ruby-' + IronMQ::VERSION + ' (iron_core_ruby-' + IronCore.version + ')'
       }
 
-      super('iron', 'mq', options, default_options, [:project_id, :token, :api_version])
+      super('iron', 'mq', options, default_options, [:project_id, :token, :api_version, :encryption_key])
 
       IronCore::Logger.error 'IronMQ', "Token is not set", IronCore::Error if @token.nil?
 
