@@ -6,7 +6,7 @@ module IronMQ
     METHOD = 'AES-256-CBC'
 
     def self.encrypt(message, encryption_key)
-      iv = self.initialization_vector(METHOD)
+      iv = self.initialization_vector
 
       encoded_message =  self.encrypt_data(message, self.key_digest(encryption_key), iv, METHOD)
 
@@ -38,9 +38,8 @@ module IronMQ
       end
     end
 
-    def self.initialization_vector(cipher_type)
-      aes = OpenSSL::Cipher::Cipher.new(cipher_type)
-      aes.random_key
+    def self.initialization_vector
+      OpenSSL::Random.random_bytes(16)
     end
 
     def self.encrypt_data(data, key, iv, cipher_type)
