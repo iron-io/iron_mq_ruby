@@ -5,13 +5,19 @@ module IronMQ
   class Message < ResponseBase
     attr_reader :queue
 
+    ENCRYPTED_SIGNATURE = 'ENCRYPTED'
+
     def initialize(queue, data)
       @queue = queue
       super(data, 200)
     end
 
     def body
-      @raw['body']
+      if @queue.client.encryption_key && @raw['body'].to_s.start_with?(ENCRYPTED_SIGNATURE)
+        decrypt_body @raw['body']
+      else
+        @raw['body']
+      end
     end
 
     def timeout
@@ -66,6 +72,11 @@ module IronMQ
     def path(ext_path)
       "/messages/#{id}#{ext_path}"
     end
+
+    def decrypt_body(body)
+      AESCrypt.decrypt(body[ENCRYPTED_SIGNATURE.size + 1 .. -1], @queue.client.encryption_key)
+    end
+
   end
 
 end

@@ -3,7 +3,7 @@ require 'cgi'
 module IronMQ
 
   class Queue < ResponseBase
-    attr_reader :name, :raw
+    attr_reader :name, :raw, :client
 
     def initialize(client, queue_name)
       @client = client
@@ -156,6 +156,15 @@ module IronMQ
                [options.merge(:body => payload)]
              end
 
+      # Encrypt all messages
+      if @client.encryption_key
+        msgs.each do |msg|
+          body = [msg.delete(:body),
+                  msg.delete('body')].compact.first
+          msg[:body] = encrypt_body body
+        end
+      end
+
       # Do not instantiate response
       res = call_api_and_parse_response(:post, "/messages", {:messages => msgs}, false)
 
@@ -268,6 +277,10 @@ module IronMQ
 
     def wait_for_multiple?(options)
       options.is_a?(Hash) && ((options[:n] || options['n']).to_i > 1)
+    end
+
+    def encrypt_body(body)
+      Message::ENCRYPTED_SIGNATURE + ':' + AESCrypt::encrypt(body, @client.encryption_key)
     end
   end
 

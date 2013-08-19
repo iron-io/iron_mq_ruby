@@ -2,7 +2,7 @@ require 'quicky'
 require 'go'
 require File.expand_path('test_base.rb', File.dirname(__FILE__))
 
-TIMES_PER_THREAD = 1000
+TIMES_PER_THREAD = (ARGV[0] || 1000).to_i
 
 class QuickRun < TestBase
 
@@ -14,17 +14,20 @@ class QuickRun < TestBase
 
     queue_name = "ironmq_gem_quick_#{rand(100)}"
     clear_queue(queue_name)
+    clear_queue(queue_name + '_2')
     queue = @client.queue(queue_name)
 
     quicky = Quicky::Timer.new
     j = 0
     quicky.loop(:test_quick, TIMES_PER_THREAD) do |i|
-      puts "==== LOOP #{i || j} =================================="
+      puts "==== LOOP #{(i || j) + 1} / #{TIMES_PER_THREAD} =================================="
       j += 1
 
       post_id = nil
+      body = "Hello world!\nHello Everyone!!"
+
       quicky.time(:post) do
-        res = queue.post("hello world!")
+        res = queue.post(body)
         # p res
         assert_not_nil res
         assert_not_nil res.id
@@ -36,7 +39,7 @@ class QuickRun < TestBase
         msg = queue.get
         assert_not_nil msg.id
         assert_equal msg.id, post_id
-        assert !(msg.body.nil? || msg.body.empty?)
+        assert_equal msg.body, body
       end
 
       quicky.time(:delete) do
@@ -51,8 +54,8 @@ class QuickRun < TestBase
       assert_nil msg
 
 
-      q = @client.queue('test2')
-      res = q.post("hello world!")
+      q = @client.queue(queue_name + '_2')
+      res = q.post(body)
       # p res
       assert_not_nil res.id
       assert_not_nil res.msg
@@ -62,6 +65,8 @@ class QuickRun < TestBase
       assert_not_nil msg
       assert_not_nil msg.id
       assert_not_nil msg.body
+
+      assert_equal body, msg.body
 
       res = msg.delete
       # p res
