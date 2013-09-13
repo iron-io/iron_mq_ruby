@@ -77,8 +77,9 @@ class TmpTests < TestBase
     p error_hash
     assert_equal subscriber_urls[0][:url], error_hash['url']
     assert_equal 503, error_hash['code']
-    assert_equal orig_id, error_hash['msg_id']
+    assert_equal orig_id, error_hash['source_msg_id']
     assert_not_nil error_hash['msg']
+    assert_not_nil error_hash['msg_id']
   em.delete
     
   # now let's get the original message
