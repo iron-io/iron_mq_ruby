@@ -2,7 +2,7 @@ require 'quicky'
 require 'go'
 require File.expand_path('test_base.rb', File.dirname(__FILE__))
 
-TIMES_PER_THREAD = 1000
+TIMES_PER_THREAD = 10
 
 class QuickRun < TestBase
 

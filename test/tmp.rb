@@ -9,69 +9,88 @@ class TmpTests < TestBase
 
   end
 
+  def test_error_queues
+    @rest = Rest::Client.new
+    qname = "badrobot"
+    error_queue_name = "#{qname}--errors"
 
-  def test_release
-    puts 'test_release'
+    x = rand(1000)
 
-    queue_name = "test_release_6"
-    clear_queue(queue_name)
+    subscribers = []
+    subscribers << {:url => "http://rest-test.iron.io/code/503"}
+    subscriber_urls = subscribers
+    num_subscribers = subscribers.size
 
-    msg_txt = "testMessage-"+Time.now.to_s
-    # puts msgTxt
+    queue = @client.queue(qname)
+    res = queue.update_queue(:subscribers => subscribers,
+                             :push_type => "multicast",
+                             :retries => 3,
+                             :retries_delay => 3
+    )
+    res = queue.update_queue(:error_queue => error_queue_name)
 
-    queue = @client.queue(queue_name)
-
-    msg_id = queue.post(msg_txt, {:timeout => 60*5}).id
-    # puts "msg_id: #{msg_id}"
-    message = queue.get
-    # p msg
-    assert_equal msg_id, message.id
-    # Ok, so should have received same message, now let's release it quicker than the original timeout
-
-    # but first, ensure the next get is nil
-    msg = queue.get
-    # p msg
-    assert_nil msg
-
-    # now release it instantly
-    message.release
-    msg = queue.get
-    # p msg
-    assert msg
-    assert_equal msg_id, msg.id
-
-    # ok, so should be reserved again
-    msgr = queue.get
-    # p msgr
-    assert_nil msgr
-
-    # let's release it in 10 seconds
-    msg.release(:delay => 120)
-    msgr = queue.get
-    # p msg
-    assert_nil msgr
-
-    sleep 121
-    msg = queue.get
-    assert_not_nil msg
-    assert_equal msg_id, msg.id
-
-    msg.release(:delay => 5)
-    msg = queue.get
-    # p msg
-    assert_nil msg
-
-    sleep 6
-    msg = queue.get
-    assert_not_nil msg
-    assert_equal msg_id, msg.id
-
+    msg = "hello #{x}"
+    puts "Pushing msg: #{msg}"
+    m = queue.post(msg)
+    orig_id = m.id
+    puts "Msg id on post: #{orig_id}"
+    LOG.debug m
+    
+    tries = MAX_TRIES
+    while tries > 0
+      puts 'sleeping for 5 to wait for retry'
+      sleep 5
+      tries -= 1
+      subscribers = queue.messages.get(m.id).subscribers
+      LOG.debug subscribers
+      assert_equal num_subscribers, subscribers.size
+      do_retry = false
+      subscribers.each do |s|
+        LOG.debug s
+        if s["url"] == "http://rest-test.iron.io/code/503"
+          if "error" == s["status"]
+            assert_equal 0, s["retries_remaining"]
+          else
+            assert_equal 503, s["status_code"]
+            do_retry = true
+          end
+        else
+          # this one should error a couple times, then be successful
+          LOG.info "retries_remaining: #{s["retries_remaining"]}"
+          if ["deleted", "error"].include? s["status"] || 200 == s["status_code"]
+            assert_equal 0, s["retries_remaining"]
+          else
+            do_retry = true
+          end
+        end
+      end
+      next if do_retry
+      break
+    end
+    assert_not_equal tries, 0
+  
+    # check that the failed messages is in the error queue
+  error_queue = @client.queue(error_queue_name)
+    em = error_queue.get
+    assert_not_nil em
+    error_hash = JSON.parse(em.body)
+    p error_hash
+    assert_equal subscriber_urls[0][:url], error_hash['url']
+    assert_equal 503, error_hash['code']
+    assert_equal orig_id, error_hash['msg_id']
+    assert_not_nil error_hash['msg']
+  em.delete
+    
+  # now let's get the original message
+  orig_msg = queue.get_message(error_hash['msg_id'])
+  puts "orig_msg:"
+  p orig_msg.body
+  
+  error_queue.delete_queue
     # delete queue on test complete
     resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
-
-
 
 end
 
