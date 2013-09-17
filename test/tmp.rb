@@ -13,6 +13,8 @@ class TmpTests < TestBase
     @rest = Rest::Client.new
     qname = "badrobot"
     error_queue_name = "#{qname}--errors"
+    clear_queue(qname)
+    clear_queue(error_queue_name)
 
     x = rand(1000)
 
@@ -70,24 +72,27 @@ class TmpTests < TestBase
     assert_not_equal tries, 0
   
     # check that the failed messages is in the error queue
-  error_queue = @client.queue(error_queue_name)
+    error_queue = @client.queue(error_queue_name)
     em = error_queue.get
     assert_not_nil em
+    puts "rawbody: " + em.body
     error_hash = JSON.parse(em.body)
     p error_hash
-    assert_equal subscriber_urls[0][:url], error_hash['url']
+    assert error_hash['subscribers']
+    assert_equal subscriber_urls[0][:url], error_hash['subscribers'][0]['url']
     assert_equal 503, error_hash['code']
     assert_equal orig_id, error_hash['source_msg_id']
     assert_not_nil error_hash['msg']
-    assert_not_nil error_hash['msg_id']
-  em.delete
+    em.delete
     
-  # now let's get the original message
-  orig_msg = queue.get_message(error_hash['msg_id'])
-  puts "orig_msg:"
-  p orig_msg.body
+    # now let's get the original message
+    orig_msg = queue.get_message(error_hash['source_msg_id'])
+    puts "orig_msg:"
+    p orig_msg
+    p orig_msg.body
+    assert msg, orig_msg.body
   
-  error_queue.delete_queue
+    error_queue.delete_queue
     # delete queue on test complete
     resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
