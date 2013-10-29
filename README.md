@@ -73,6 +73,10 @@ queue.info # => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
 queue.id   # => "5127bf043264140e863e2283"
 ```
 
+**Warning:** the library is cached `info` calls by default. To be sure configuration information is up-to-date
+set `:cache_queue_info` parameter to `false` when instantiating `Client` and/or `Queue` classes.
+In this case client library will call IronMQ API each time you request for any parameter except `queue.name`.
+
 --
 
 ### Get a Message off a Queue
@@ -109,9 +113,18 @@ Be sure to delete a message from the queue when you're done with it.
 ironmq = IronMQ::Client.new(:token => "MY_TOKEN", :project_id => "MY_PROJECT_ID")
 ```
 
+**Optional parameters:**
+
+* `cache_queue_info`: On/off `Queue#info` and related calls caching **by default**.
+E.g. when instantiating `Queue`s with `Client#queue(queue_name)` method.
+The default is `true`.
+
+
 ### List Queues
 
 ```ruby
+all_queues = ironmq.queues_list # => [#<IronMQ::Queue:...>, ...]
+# or
 all_queues = ironmq.queues.list # => [#<IronMQ::Queue:...>, ...]
 # or
 all_queues = ironmq.queues.all  # => [#<IronMQ::Queue:...>, ...]
@@ -121,7 +134,9 @@ all_queues = ironmq.queues.all  # => [#<IronMQ::Queue:...>, ...]
 
 * `page`: The 0-based page to view. The default is 0.
 * `per_page`: The number of queues to return per page. The default is 30, the maximum is 100.
-* `raw`: Set it to true to obtain data in raw format. The default is false.
+* `raw`: Set it to true to obtain data in raw format. The default is `false`.
+* `cache_queue_info`: Cache `Queue#info` and related calls on queue instances.
+The default is `true` unless you indicated otherwise while create `Client` instance.
 
 ```ruby
 queues = ironmq.queues.all(:page => 1, :per_page => 10)
@@ -134,6 +149,9 @@ queues = ironmq.queues.all(:page => 1, :per_page => 10)
 ```ruby
 queue = ironmq.queue "my_queue" # => #<IronMQ::Queue:...>
 ```
+
+* `cache_queue_info`: Cache `Queue#info` and related calls on queue instances.
+The default is `true` unless you indicated otherwise while create `Client` instance.
 
 **Note:** if queue with desired name does not exist it returns fake queue.
 Queue will be created automatically on post of first message or queue configuration update.
@@ -163,9 +181,9 @@ push_type = queue.push_type # => "multicast"
 is_push_queue = queue.push_queue? # => true
 ```
 
-**Warning:** to be sure configuration information is up-to-date
-client library call IronMQ API each time you request for any parameter except `queue.name`.
-In this case you may prefer to use `queue.info` to have `Hash` with all available info parameters.
+**Warning:** the library is cached `info` calls by default. To be sure configuration information is up-to-date
+set `:cache_queue_info` parameter to `false` when instantiating `Client` and/or `Queue` classes.
+In this case client library will call IronMQ API each time you request for any parameter except `queue.name`.
 
 --
 
