@@ -215,7 +215,7 @@ class IronMQTests < TestBase
     # timeout on get
     res = queue.post("hello world timeout3!")
     msg = queue.get(:timeout => 30)
-    puts "MESSAGE IS #{msg.inspect}"
+#    puts "MESSAGE IS #{msg.inspect}"
     assert msg
     assert_equal msg.timeout, 30
 
