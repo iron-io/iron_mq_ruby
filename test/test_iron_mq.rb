@@ -674,5 +674,22 @@ class IronMQTests < TestBase
     q.update_queue(:retries => 10)
     assert_equal 'unicast', q.reload.push_type
   end
+
+  def test_dequeue_delete
+    queue_name = "test_dequeue_delete_#{Time.now.to_i}"
+    clear_queue(queue_name)
+    queue = @client.queue(queue_name)
+    v = "hello thou shalt only see me once"
+    queue.post(v)
+    msg = queue.get(delete: 1, timeout: 30)
+    assert_equal msg.body, "hello thou shalt only see me once"
+    sleep 1
+    # get the queue again
+    queue = @client.queue(queue_name)
+    assert_equal 0, queue.size
+    sleep 31
+    msg = queue.get
+    assert_equal nil, msg
+  end
 end
 
