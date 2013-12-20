@@ -10,6 +10,14 @@ module IronMQ
       @options = options
     end
 
+    def url
+      @raw['url']
+    end
+
+    def headers
+      @raw['headers']
+    end
+
     # `options` was kept for backward compatibility
     def delete(options = {})
       @message.call_api_and_parse_response(:delete, path)

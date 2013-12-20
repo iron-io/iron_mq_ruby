@@ -69,6 +69,7 @@ class TestPushQueues < TestBase
               url = "http://rest-test.iron.io/stored/#{key}"
               LOG.info "checking url #{url}"
               response = @rest.get(url)
+              p response.body
               parsed = JSON.parse(response.body)
               LOG.debug parsed['body']
               assert_equal msg, parsed['body']
@@ -78,7 +79,7 @@ class TestPushQueues < TestBase
               LOG.debug ex.code
               assert_equal 404, ex.code
             end
-          end          
+          end
           assert_not_equal tries, 0
         end
       elsif t == "unicast"
@@ -103,7 +104,7 @@ class TestPushQueues < TestBase
             end
           end
           break if found == 1
-        end        
+        end
         assert_not_equal tries, 0
       end
 
@@ -111,7 +112,7 @@ class TestPushQueues < TestBase
       while tries > 0
 
         # Need to wait > 60s here, because in case of retries on pusherd
-        # side (due lost connection for example) there will be no response earlier 
+        # side (due lost connection for example) there will be no response earlier
         # (default retries_delay is 60s).
         sleep 1
         tries -= 1
@@ -149,6 +150,60 @@ class TestPushQueues < TestBase
     end
   end
 
+  def test_headers
+    puts "test_headers"
+    qname = "push-headers"
+    subscribers = []
+
+    x = rand(1000)
+    key = "somemsg_#{x}"
+    subscribers << {:url => "http://rest-test.iron.io/code/200?store=#{key}",
+    :headers=>{"Content-Type"=>"application/json"}}
+
+    queue = @client.queue(qname)
+    queue.update_queue(:subscribers => subscribers,
+                       :push_type => "multicast")
+
+    LOG.debug queue.subscribers
+    assert_equal subscribers.size, queue.subscribers.size
+    queue.reload.subscribers.each do |s|
+      p s.headers
+      assert_not_nil s.headers['Content-Type']
+    end
+
+    msg = "{\"hello\": #{x}}"
+    m = queue.post(msg)
+
+    LOG.info "Checking results..."
+    @rest = Rest::Client.new
+    found = 0
+    tries = MAX_TRIES
+    while tries > 0
+      tries -= 1
+      sleep 1
+      begin
+        url = "http://rest-test.iron.io/stored/#{key}"
+        LOG.info "checking url #{url}"
+        response = @rest.get(url)
+        p response.body
+        parsed = JSON.parse(response.body)
+        LOG.debug parsed['body']
+        assert_equal msg, parsed['body']
+        assert_not_nil parsed['headers']['Content-Type']
+        assert_equal 'application/json', parsed['headers']['Content-Type']
+        break
+      rescue Rest::HttpError => ex
+        LOG.debug ex.code
+        assert_equal 404, ex.code
+      end
+      assert_not_equal tries, 0
+    end
+
+    # delete queue after all tests on it were completed
+    resp = queue.delete_queue
+    assert_equal 200, resp.code, "API must respond with HTTP 200 status, but returned HTTP #{resp.code}"
+  end
+
 
   def test_failure
     @rest = Rest::Client.new
@@ -176,7 +231,7 @@ class TestPushQueues < TestBase
     msg = "hello #{x}"
     m = queue.post(msg)
     LOG.debug m
-    
+
     tries = MAX_TRIES
     while tries > 0
       sleep 0.5
@@ -333,7 +388,7 @@ class TestPushQueues < TestBase
         subscribers = queue.messages.get(m.id).subscribers
         LOG.debug subscribers
         next unless num_subscribers == subscribers.size
-        
+
         do_retry = false
         subscribers.each do |s|
           LOG.debug s
@@ -385,7 +440,7 @@ class TestPushQueues < TestBase
   end
 
 
-  # tests when converting a push queue back to a pull queue
+# tests when converting a push queue back to a pull queue
   def test_converting_types
     queue = @client.queue('converting_queue')
     subscribers = [{:url => "http://rest-test.iron.io/code/200"},
@@ -406,7 +461,7 @@ class TestPushQueues < TestBase
     assert_nil queue.push_type
 
   end
-    
+
   def test_error_queues
     @rest = Rest::Client.new
     qname = "badrobot"
@@ -435,7 +490,7 @@ class TestPushQueues < TestBase
     orig_id = m.id
     puts "Msg id on post: #{orig_id}"
     LOG.debug m
-    
+
     tries = MAX_TRIES
     while tries > 0
       puts 'sleeping for 5 to wait for retry'
@@ -468,7 +523,7 @@ class TestPushQueues < TestBase
       break
     end
     assert_not_equal tries, 0
-  
+
     # check that the failed messages is in the error queue
     error_queue = @client.queue(error_queue_name)
     em = error_queue.get
@@ -482,14 +537,14 @@ class TestPushQueues < TestBase
     assert_equal orig_id, error_hash['source_msg_id']
     assert_not_nil error_hash['msg']
     em.delete
-    
+
     # now let's get the original message
     orig_msg = queue.get_message(error_hash['source_msg_id'])
     puts "orig_msg:"
     p orig_msg
     p orig_msg.body
     assert msg, orig_msg.body
-  
+
     error_queue.delete_queue
     # delete queue on test complete
     resp = queue.delete_queue
