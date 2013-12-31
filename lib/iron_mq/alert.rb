@@ -11,21 +11,25 @@ module IronMQ
     end
 
     def id
-      @raw["id"]
+      @raw['id']
     end
 
     # alert type
     def type
-      @raw["type"]
+      @raw['type']
     end
 
     # target queue
     def queue
-      @raw["queue"]
+      @raw['queue']
     end
 
     def trigger
-      @raw["trigger"]
+      @raw['trigger']
+    end
+
+    def direction
+      @raw['direction']
     end
 
     # `options` was kept for backward compatibility
@@ -33,9 +37,9 @@ module IronMQ
       @message.call_api_and_parse_response(:delete, path)
     rescue Rest::HttpError => ex
       if ex.code == 404
-        IronCore::Logger.info("IronMQ", "Delete got 404, safe to ignore.")
+        IronCore::Logger.info('IronMQ', 'Delete got 404, safe to ignore.')
         # return ResponseBase as normal
-        ResponseBase.new({"msg" => "Deleted"}, 404)
+        ResponseBase.new({'msg' => 'Deleted'}, 404)
       else
         raise ex
       end
