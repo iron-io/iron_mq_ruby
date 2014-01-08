@@ -8,7 +8,6 @@ module IronMQ
     def initialize(client, queue_name)
       @client = client
       @name = queue_name
-
     end
 
     def info
@@ -17,9 +16,8 @@ module IronMQ
 
     # this is only run once if it hasn't been called before unless force is true, then it will force reload.
     def load
-      if @raw.nil?
-        reload
-      end
+      reload if @raw.nil?
+
       @raw
     end
 
@@ -243,11 +241,7 @@ module IronMQ
     private
 
     def to_alerts(alert_array)
-      r = []
-      alert_array.each do |a|
-        r << Alert.new(self, a)
-      end
-      r
+      alert_array.each_with_object([]) { |a, res| res << Alert.new(self, a) }
     end
 
     def path(ext_path)
