@@ -12,6 +12,41 @@ class TestPushQueues < TestBase
     key = "pushq-#{t}-#{i}-#{random}"
   end
 
+  def test_subscriber_add_remove
+    puts "test_subscriber_add_remove"
+    qname = "subscribers_add_remove_test"
+    s = "http://preview.aculios.com/queue/process?token=BBw4EucqB9vv2KSc"
+    # s = "http://nowhere.com"
+    queue = @client.queue(qname)
+    subscribers = [{:url => s}]
+    res = queue.update_queue(:subscribers => subscribers)
+    LOG.debug queue.subscribers
+    assert_equal 1, queue.subscribers.size
+
+    # add the last one
+    queue.reload # temporary, can remove
+    #queue.add_subscriber({:url => "http://nowhere.com"})
+    queue.reload
+    assert_equal 1, queue.subscribers.size
+    p queue.subscribers[0].url
+    queue.remove_subscriber({:url => s})
+    queue.reload
+    assert_equal 0, queue.subscribers.size
+    p queue.subscribers
+
+    # add it back with add
+    queue.add_subscriber({:url => s})
+    queue.reload
+    assert_equal 1, queue.subscribers.size
+    p queue.subscribers[0].url
+    queue.remove_subscriber({:url => s})
+    queue.reload
+    assert_equal 0, queue.subscribers.size
+    p queue.subscribers
+
+    queue.delete_queue
+  end
+
 
   def test_queue_subscriptions
     puts "test_queue_subscriptions"
