@@ -16,15 +16,13 @@ class TestPushQueues < TestBase
     puts "test_subscriber_add_remove"
     qname = "subscribers_add_remove_test"
     s = "http://nowhere.com"
+    s2 = "http://somewhere.com"
     queue = @client.queue(qname)
     subscribers = [{:url => s}]
     res = queue.update_queue(:subscribers => subscribers)
     LOG.debug queue.subscribers
     assert_equal 1, queue.subscribers.size
 
-    # add the last one
-    queue.reload # temporary, can remove
-    #queue.add_subscriber({:url => "http://nowhere.com"})
     queue.reload
     assert_equal 1, queue.subscribers.size
     p queue.subscribers[0].url
@@ -42,6 +40,18 @@ class TestPushQueues < TestBase
     queue.reload
     assert_equal 0, queue.subscribers.size
     p queue.subscribers
+
+    # add two, remove first
+    queue.add_subscriber({:url => s})
+    queue.add_subscriber({:url => s2})
+    queue.reload
+    assert_equal 2, queue.subscribers.size
+    p queue.subscribers[0].url
+    queue.remove_subscriber({:url => s})
+    queue.reload
+    assert_equal 1, queue.subscribers.size
+    p queue.subscribers[0].url
+    assert_equal s2, queue.subscribers[0].url
 
     queue.delete_queue
   end
