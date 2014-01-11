@@ -15,7 +15,7 @@ class TestPushQueues < TestBase
   def test_subscriber_add_remove
     puts "test_subscriber_add_remove"
     qname = "subscribers_add_remove_test"
-    s = "http://nowhere.com"
+    s = "http://nowhere.com:8080/somepath"
     s2 = "http://somewhere.com"
     queue = @client.queue(qname)
     subscribers = [{:url => s}]
