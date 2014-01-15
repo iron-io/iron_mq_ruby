@@ -10,6 +10,57 @@ class TestAlerts < TestBase
     return if @skip # bypass these tests if rackspace
   end
 
+  def test_configuration
+    queue = @client.queue 'bad-alerts-params'
+    delete_queues queue
+
+    # no configuration
+    alert = {}
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    # only type is specified
+    alert[:type] = 'size'
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    # type and trigger value specified
+    alert[:trigger] = 30
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    # type, trigger, and direction
+    alert[:direction] = 'asc'
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    # type, trigger, direction, and alert queue name - alright
+    alert[:queue] = 'bad-alerts-params-alerts'
+    assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
+
+    # type, trigger, direction, queue name, and delay - alright
+    alert[:delay] = 8
+    assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
+
+    # wrong delay
+    alert[:delay] = -13
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    alert[:delay] = '1234'
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    # wrong type
+    alert[:delay] = 0
+    alert[:type] = 'wrong'
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    # wrong trigger
+    alert[:type] = 'progressive'
+    alert[:trigger] = 'c'
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    # wrong direction
+    alert[:trigger] = 30
+    alert[:direction] = 'both'
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+  end
+
   def test_size_alerts
     return if @skip
 
@@ -52,24 +103,6 @@ class TestAlerts < TestBase
     # must not trigger alert
     delete_messages(queue, 8)
     assert_equal 2, get_queue_size(alert_queue)
-
-    delete_queues(queue, alert_queue)
-
-    # Test size alerts, direction is "both"
-    queue, alert_queue = clear_queue_add_alert(type, trigger, 'both')
-
-    # trigger ascending alert
-    trigger_alert(queue, alert_queue, trigger)
-
-    # must not trigger alert
-    post_messages(queue, 8)
-    assert_equal 1, get_queue_size(alert_queue)
-
-    # trigger descending alert, queue size will be trigger - 3
-    trigger_alert(queue, alert_queue, trigger, 3)
-
-    # trigger ascending alert, queue size will be trigger + 3
-    trigger_alert(queue, alert_queue, trigger, 3)
 
     delete_queues(queue, alert_queue)
   end
@@ -116,32 +149,6 @@ class TestAlerts < TestBase
     assert_equal 2, get_queue_size(alert_queue)
 
     delete_queues(queue, alert_queue)
-
-    # Test "both" direction progressive alerts
-    queue, alert_queue = clear_queue_add_alert(type, trigger, 'both')
-
-    trigger_alert(queue, alert_queue, trigger, 2)
-    trigger_alert(queue, alert_queue, 2 * trigger) # queue size = 2 * trigger
-
-    # must not trigger descending alert
-    delete_messages(queue, trigger / 2)
-    assert_equal 2, get_queue_size(alert_queue)
-
-    # trigger descending alert, queue size will be trigger - 3
-    trigger_alert(queue, alert_queue, trigger, 3)
-
-    # trigger ascending alert, queue size will be trigger + 5
-    trigger_alert(queue, alert_queue, trigger, 5)
-
-    # must not trigger alerts below, queue size will be 2 * trigger - 1
-    post_messages(queue, trigger - 5 - 1)
-    assert_equal 4, get_queue_size(alert_queue)
-
-    # one message before trigger value
-    delete_messages(queue, trigger - 2)
-    assert_equal 4, get_queue_size(alert_queue)
-
-    delete_queues(queue, alert_queue)
   end
 
   def post_messages(queue, n)
@@ -176,19 +183,19 @@ class TestAlerts < TestBase
       puts "Try to trigger descending alert... delete #{nmsgs} messages"
       delete_messages(queue, nmsgs)
     end
-    assert_equal aq_size, get_queue_size(alert_queue)
+    assert_equal aq_size, get_queue_size(alert_queue), 'Alert is triggered, but must not be'
 
     if qsize < trigger
-      puts "Post more #{1 + overhead} messages"
+      puts "Post #{1 + overhead} more message(s)"
       post_messages(queue, 1 + overhead)
     else
-      puts "Delete more #{1 + overhead} messages"
+      puts "Delete #{1 + overhead} more message(s)"
       delete_messages(queue, 1 + overhead)
     end
-    assert_equal aq_size + 1, get_queue_size(alert_queue)
+    assert_equal aq_size + 1, get_queue_size(alert_queue), 'Alert is not triggered, but must be'
   end
 
-  def clear_queue_add_alert(type, trigger, direction)
+  def clear_queue_add_alert(type, trigger, direction, delay = nil)
     puts "clear_queue_add_alert(), called at #{caller[0]}"
 
     qname = "#{type}-#{direction}-#{trigger}"
@@ -200,8 +207,11 @@ class TestAlerts < TestBase
     delete_queues(queue, alert_queue)
     # todo: should :queue be called something else,
     # like alert_queue? or url and have to use ironmq:// url?
-    r = queue.add_alert({ :type => type, :trigger => trigger,
-                          :queue => alert_qname, :direction => direction })
+    r = queue.add_alert({ :type => type,
+                          :trigger => trigger,
+                          :queue => alert_qname,
+                          :direction => direction,
+                          :delay => delay.to_i })
     #p r
 
     alerts = queue.alerts
