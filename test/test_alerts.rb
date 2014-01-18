@@ -105,6 +105,51 @@ class TestAlerts < TestBase
     assert_equal 2, get_queue_size(alert_queue)
 
     delete_queues(queue, alert_queue)
+
+    # test ascending alert with delay
+    delay = 10
+    trigger = 10
+    queue, alert_queue = clear_queue_add_alert(type, trigger, 'asc', delay)
+
+    # Trigger alert
+    post_messages(queue, trigger + 1)
+    to_time = Time.now + delay - 4
+    assert_equal 1, get_queue_size(alert_queue)
+
+    while (lambda { Time.now }).call < to_time do
+      delete_messages(queue, 2) # queeu size is `trigger - 1`
+      post_messages(queue, 2) # size is `trigger + 1`
+      assert_equal 1, get_queue_size(alert_queue)
+    end
+    sleep 4
+
+    delete_messages(queue, 2) # queeu size is `trigger - 1`
+    post_messages(queue, 2) # size is `trigger - 1`
+    assert_equal 2, get_queue_size(alert_queue)
+
+    delete_queues(queue, alert_queue)
+
+    # test descending alert with delay
+    queue, alert_queue = clear_queue_add_alert(type, trigger, 'desc', delay)
+
+    # Trigger alert
+    post_messages(queue, trigger + 1)
+    delete_messages(queue, 2)
+    to_time = Time.now + delay - 4
+    assert_equal 1, get_queue_size(alert_queue)
+
+    while (lambda { Time.now }).call < to_time do
+      post_messages(queue, 2) # queeu size is `trigger + 1`
+      delete_messages(queue, 2) # size is `trigger - 1`
+      assert_equal 1, get_queue_size(alert_queue)
+    end
+    sleep 4
+
+    post_messages(queue, 2) # size is `trigger + 1`
+    delete_messages(queue, 2) # queeu size is `trigger - 1`
+    assert_equal 2, get_queue_size(alert_queue)
+
+    delete_queues(queue, alert_queue)
   end
 
   def test_progressive_alerts
@@ -149,16 +194,75 @@ class TestAlerts < TestBase
     assert_equal 2, get_queue_size(alert_queue)
 
     delete_queues(queue, alert_queue)
+
+    # test ascending alert with delay
+    delay = 10
+    trigger = 3
+    queue, alert_queue = clear_queue_add_alert(type, trigger, 'asc', delay)
+
+    # Trigger alert
+    post_messages(queue, trigger + 1)
+    # Get current time as delay start time
+    to_time = Time.now + delay - 4
+    # Check queue for alert
+    assert_equal 1, get_queue_size(alert_queue)
+
+    while (lambda { Time.now }).call < to_time do
+      # will trigger alert if delay does not work
+      post_messages(queue, trigger + 1)
+      # but must not trigger
+      assert_equal 1, get_queue_size(alert_queue)
+    end
+    sleep 4
+
+    # Trigger alert again
+    post_messages(queue, trigger + 1)
+    assert_equal 2, get_queue_size(alert_queue)
+
+    delete_queues(queue, alert_queue)
+
+    # test descending alert with delay
+    queue, alert_queue = clear_queue_add_alert(type, 2, 'desc', delay)
+
+    # Trigger alert
+    post_messages(queue, 20 * trigger)
+    to_time = Time.now + delay - 4
+
+    while (lambda { Time.now }).call < to_time do
+      delete_messages(queue, trigger + 1)
+      assert_equal 1, get_queue_size(alert_queue)
+      break if get_queue_size(queue) <= trigger
+    end
+    sleep 4
+
+    post_messages(queue, trigger + 1)
+    delete_messages(queue, trigger)
+    assert_equal 2, get_queue_size(alert_queue)
+
+    delete_queues(queue, alert_queue)
+  end
+
+  def test_delay_concurrent
+    assert false, 'NOT IMPLEMENTED'
   end
 
   def post_messages(queue, n)
-    queue.post(Array.new(n, { :body => 'message' }))
+    per_100, last_n = (n > 100) ? [n / 100, n % 100] : [0, n]
+
+    per_100.times { queue.post(Array.new(100, { :body => 'message' })) }
+
+    queue.post(Array.new(last_n, { :body => 'message' })) if last_n > 0
+
     sleep 1
   end
 
   def delete_messages(queue, n)
-    msgs = queue.get(:n => n)
-    [msgs].flatten.each { |msg| msg.delete }
+    per_100, last_n = (n > 100) ? [n / 100, n % 100] : [0, n]
+
+    per_100.times { [queue.get(:n => last_n)].flatten.each { |msg| msg.delete } }
+
+    [queue.get(:n => last_n)].flatten.each { |msg| msg.delete } if last_n > 0
+
     sleep 1
   end
 
@@ -198,7 +302,7 @@ class TestAlerts < TestBase
   def clear_queue_add_alert(type, trigger, direction, delay = nil)
     puts "clear_queue_add_alert(), called at #{caller[0]}"
 
-    qname = "#{type}-#{direction}-#{trigger}"
+    qname = "#{type}-#{direction}-#{trigger}-#{delay}"
     alert_qname = "#{qname}-alerts"
 
     queue = @client.queue(qname)
