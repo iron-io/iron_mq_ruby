@@ -122,18 +122,26 @@ module IronMQ
       []
     end
 
-    def add_alert(alert = {})
+    def add_alert(alert)
       add_alerts([alert])
     end
 
     def add_alerts(alerts)
-      call_api_and_parse_response(:post, "/alerts", :alerts => alerts)
+      call_api_and_parse_response(:post, '/alerts', :alerts => alerts)
+    end
+
+    def remove_alerts(alerts)
+      call_api_and_parse_response(:delete, '/alerts', :alerts => alerts)
+    end
+
+    def remove_alert(alert)
+      remove_alerts([alert])
     end
 
     def alerts
       load
-      return nil unless @raw["alerts"]
-      to_alerts(@raw["alerts"])
+      return nil unless @raw['alerts']
+      to_alerts(@raw['alerts'])
     end
 
     def post_messages(payload, options = {})
