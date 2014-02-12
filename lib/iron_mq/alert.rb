@@ -32,6 +32,10 @@ module IronMQ
       @raw['direction']
     end
 
+    def delay
+      @raw['delay']
+    end
+
     # `options` was kept for backward compatibility
     def delete(options = {})
       @message.call_api_and_parse_response(:delete, path)
