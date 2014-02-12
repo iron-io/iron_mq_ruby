@@ -77,11 +77,11 @@ class TestAlerts < TestBase
 
     # must not trigger alert, queue size will be trigger + 13
     post_messages(queue, 10)
-    assert_equal 1, get_queue_size(alert_queue)
+    assert_queue_size 1, alert_queue
 
     # must not trigger alert, queue size will be trigger - 3
     delete_messages(queue, 16)
-    assert_equal 1, get_queue_size(alert_queue)
+    assert_queue_size 1, alert_queue
 
     trigger_alert(queue, alert_queue, trigger)
 
@@ -92,20 +92,20 @@ class TestAlerts < TestBase
 
     # must not trigger descending alert
     post_messages(queue, 15)
-    assert_equal 0, get_queue_size(alert_queue)
+    assert_queue_size 0, alert_queue
 
     # will remove 5 msgs, queue size will be 10
     trigger_alert(queue, alert_queue, trigger)
 
     # must not trigger alert
     post_messages(queue, 12)
-    assert_equal 1, get_queue_size(alert_queue)
+    assert_queue_size 1, alert_queue
 
     trigger_alert(queue, alert_queue, trigger)
 
     # must not trigger alert
     delete_messages(queue, 8)
-    assert_equal 2, get_queue_size(alert_queue)
+    assert_queue_size 2, alert_queue
 
     delete_queues(queue, alert_queue)
 
@@ -117,18 +117,18 @@ class TestAlerts < TestBase
     # Trigger alert
     post_messages(queue, trigger + 1)
     to_time = Time.now + delay - 4
-    assert_equal 1, get_queue_size(alert_queue)
+    assert_queue_size 1, alert_queue
 
     while (lambda { Time.now }).call < to_time do
       delete_messages(queue, 2) # queeu size is `trigger - 1`
       post_messages(queue, 2) # size is `trigger + 1`
-      assert_equal 1, get_queue_size(alert_queue)
+      assert_queue_size 1, alert_queue
     end
     sleep 4
 
     delete_messages(queue, 2) # queeu size is `trigger - 1`
     post_messages(queue, 2) # size is `trigger - 1`
-    assert_equal 2, get_queue_size(alert_queue)
+    assert_queue_size 2, alert_queue
 
     delete_queues(queue, alert_queue)
 
@@ -139,18 +139,18 @@ class TestAlerts < TestBase
     post_messages(queue, trigger + 1)
     delete_messages(queue, 2)
     to_time = Time.now + delay - 4
-    assert_equal 1, get_queue_size(alert_queue)
+    assert_queue_size 1, alert_queue
 
     while (lambda { Time.now }).call < to_time do
       post_messages(queue, 2) # queeu size is `trigger + 1`
       delete_messages(queue, 2) # size is `trigger - 1`
-      assert_equal 1, get_queue_size(alert_queue)
+      assert_queue_size 1, alert_queue
     end
     sleep 4
 
     post_messages(queue, 2) # size is `trigger + 1`
     delete_messages(queue, 2) # queeu size is `trigger - 1`
-    assert_equal 2, get_queue_size(alert_queue)
+    assert_queue_size 2, alert_queue
 
     delete_queues(queue, alert_queue)
   end
@@ -168,7 +168,7 @@ class TestAlerts < TestBase
 
     # Must not trigger alerts
     delete_messages(queue, 15)
-    assert_equal 3, get_queue_size(alert_queue)
+    assert_queue_size 3, alert_queue
 
     trig = (get_queue_size(queue) / trigger.to_f).ceil * trigger
     trigger_alert(queue, alert_queue, trig)
@@ -183,18 +183,18 @@ class TestAlerts < TestBase
 
     # must not trigger alert
     post_messages(queue, 25)
-    assert_equal 0, get_queue_size(alert_queue)
+    assert_queue_size 0, alert_queue
 
     # trigger descending alert twice
     2.downto(1) { |n| trigger_alert(queue, alert_queue, n * trigger) }
 
     # must not trigger alert at size of 0
     delete_messages(queue, 5)
-    assert_equal 2, get_queue_size(alert_queue)
+    assert_queue_size 2, alert_queue
 
     # must not trigger alert
     post_messages(queue, 15)
-    assert_equal 2, get_queue_size(alert_queue)
+    assert_queue_size 2, alert_queue
 
     delete_queues(queue, alert_queue)
 
@@ -208,39 +208,39 @@ class TestAlerts < TestBase
     # Get current time as delay start time
     to_time = Time.now + delay - 4
     # Check queue for alert
-    assert_equal 1, get_queue_size(alert_queue)
+    assert_queue_size 1, alert_queue
 
     while (lambda { Time.now }).call < to_time do
       # will trigger alert if delay does not work
       post_messages(queue, trigger + 1)
       # but must not trigger
-      assert_equal 1, get_queue_size(alert_queue)
+      assert_queue_size 1, alert_queue
     end
     sleep 4
 
     # Trigger alert again
     post_messages(queue, trigger + 1)
-    assert_equal 2, get_queue_size(alert_queue)
+    assert_queue_size 2, alert_queue
 
     delete_queues(queue, alert_queue)
 
     # test descending alert with delay
     queue, alert_queue = clear_queue_add_alert(type, 2, 'desc', delay)
 
-    # Trigger alert
+    # Does not trigger alert
     post_messages(queue, 20 * trigger)
     to_time = Time.now + delay - 4
 
     while (lambda { Time.now }).call < to_time do
       delete_messages(queue, trigger + 1)
-      assert_equal 1, get_queue_size(alert_queue)
+      assert_queue_size 1, alert_queue
       break if get_queue_size(queue) <= trigger
     end
     sleep 4
 
     post_messages(queue, trigger + 1)
     delete_messages(queue, trigger)
-    assert_equal 2, get_queue_size(alert_queue)
+    assert_queue_size 2, alert_queue
 
     delete_queues(queue, alert_queue)
   end
@@ -255,8 +255,6 @@ class TestAlerts < TestBase
     per_100.times { queue.post(Array.new(100, { :body => 'message' })) }
 
     queue.post(Array.new(last_n, { :body => 'message' })) if last_n > 0
-
-    sleep 1
   end
 
   def delete_messages(queue, n)
@@ -265,8 +263,6 @@ class TestAlerts < TestBase
     per_100.times { [queue.get(:n => last_n)].flatten.each { |msg| msg.delete } }
 
     [queue.get(:n => last_n)].flatten.each { |msg| msg.delete } if last_n > 0
-
-    sleep 1
   end
 
   def delete_queues(*queues)
@@ -302,7 +298,7 @@ class TestAlerts < TestBase
       puts "Try to trigger descending alert... delete #{nmsgs} messages"
       delete_messages(queue, nmsgs)
     end
-    assert_equal aq_size, get_queue_size(alert_queue), 'Alert is triggered, but must not be'
+    assert_queue_size aq_size, alert_queue, 'Alert is triggered, but must not be'
 
     if qsize < trigger
       puts "Post #{1 + overhead} more message(s)"
@@ -311,13 +307,13 @@ class TestAlerts < TestBase
       puts "Delete #{1 + overhead} more message(s)"
       delete_messages(queue, 1 + overhead)
     end
-    assert_equal aq_size + 1, get_queue_size(alert_queue), 'Alert is not triggered, but must be'
+    assert_queue_size aq_size + 1, alert_queue, 'Alert is not triggered, but must be'
   end
 
   def clear_queue_add_alert(type, trigger, direction, delay = nil)
     puts "clear_queue_add_alert(), called at #{caller[0]}"
 
-    qname = "#{type}-#{direction}-#{trigger}-#{delay}"
+    qname = "#{type}-#{direction}-#{trigger}-#{delay || 'no_delay'}"
     alert_qname = "#{qname}-alerts"
 
     queue = @client.queue(qname)
@@ -353,6 +349,12 @@ class TestAlerts < TestBase
     rescue Rest::HttpError => ex
       ex.message =~ /404/ ? 0 : raise(ex)
     end
+  end
+
+  def assert_queue_size(size, queue, msg = nil)
+    puts "assert_queue_size(), called at #{caller[0]}"
+    sleep 1
+    assert_equal size, get_queue_size(queue), msg.to_s
   end
 
 end
