@@ -3,6 +3,7 @@ module IronMQ
   class Alert
     # `options` was kept for backward compatibility
     attr_accessor :options
+    attr_reader :raw
 
     def initialize(queue, alert_hash, options = {})
       @queue = queue
