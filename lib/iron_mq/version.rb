@@ -1,4 +1,4 @@
 module IronMQ
-  VERSION = "4.0.3"
+  VERSION = "5.0.0"
 end
 

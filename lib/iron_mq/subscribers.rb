@@ -22,13 +22,13 @@ module IronMQ
     def delete(options = {})
       @message.call_api_and_parse_response(:delete, path)
     rescue Rest::HttpError => ex
-      if ex.code == 404
-        Rest.logger.info("Delete got 404, safe to ignore.")
-        # return ResponseBase as normal
-        ResponseBase.new({"msg" => "Deleted"}, 404)
-      else
+      #if ex.code == 404
+      #  Rest.logger.info("Delete got 404, safe to ignore.")
+      #  # return ResponseBase as normal
+      #  ResponseBase.new({"msg" => "Deleted"}, 404)
+      #else
         raise ex
-      end
+      #end
     end
 
     alias_method :acknowledge, :delete

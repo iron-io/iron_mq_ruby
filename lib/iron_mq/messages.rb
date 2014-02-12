@@ -48,13 +48,13 @@ module IronMQ
     def delete
       call_api_and_parse_response(:delete)
     rescue Rest::HttpError => ex
-      if ex.code == 404
-        Rest.logger.info("Delete got 404, safe to ignore.")
-        # return ResponseBase as normal
-        ResponseBase.new({"msg" => "Deleted"}, 404)
-      else
+      #if ex.code == 404
+      #  Rest.logger.info("Delete got 404, safe to ignore.")
+      #  # return ResponseBase as normal
+      #  ResponseBase.new({"msg" => "Deleted"}, 404)
+      #else
         raise ex
-      end
+      #end
     end
 
     def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true)

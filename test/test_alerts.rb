@@ -40,7 +40,10 @@ class TestAlerts < TestBase
 
     # wrong delay
     alert[:delay] = -13
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raise(Rest::HttpError) {
+      r = queue.add_alert(alert)
+      p r
+    }
 
     alert[:delay] = '1234'
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
@@ -267,7 +270,19 @@ class TestAlerts < TestBase
   end
 
   def delete_queues(*queues)
-    queues.each { |q| q.delete_queue }
+    queues.each do |q|
+      begin
+        q.delete_queue
+      rescue Rest::HttpError => ex
+        if ex.code == 404
+          Rest.logger.info("Delete queue got 404, ignoring.")
+          # return ResponseBase as normal
+          return nil
+        else
+          raise ex
+        end
+      end
+    end
   end
 
   def trigger_alert(queue, alert_queue, trigger, overhead = 0)
@@ -323,7 +338,7 @@ class TestAlerts < TestBase
 
     assert_equal 1, alerts.size
     alert = alerts[0]
-    #p alert
+    p alert
     assert_equal type, alert.type
     assert_equal trigger, alert.trigger
     assert_equal alert_qname, alert.queue
