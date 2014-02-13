@@ -62,6 +62,17 @@ class TestAlerts < TestBase
     alert[:trigger] = 30
     alert[:direction] = 'both'
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    # delete queue to clear
+    delete_queues queue
+
+    # Test max alerts number
+    alert[:direction] = 'asc'
+    # insert 6 alerts
+    assert_raise(Rest::HttpError) { queue.add_alerts(Array.new(6, alert)) }
+
+    queue.add_alerts(Array.new(5, alert))
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
   end
 
   def test_size_alerts
