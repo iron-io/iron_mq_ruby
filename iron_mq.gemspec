@@ -6,6 +6,7 @@ Gem::Specification.new do |gem|
   gem.description   = "Ruby client for IronMQ by www.iron.io"
   gem.summary       = "Ruby client for IronMQ by www.iron.io"
   gem.homepage      = "https://github.com/iron-io/iron_mq_ruby"
+  gem.license       = "BSD-2-Clause"
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
