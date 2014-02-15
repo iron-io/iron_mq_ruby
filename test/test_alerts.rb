@@ -19,7 +19,7 @@ class TestAlerts < TestBase
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
 
     # only type is specified
-    alert[:type] = 'size'
+    alert[:type] = 'fixed'
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
 
     # type and trigger value specified
@@ -34,22 +34,19 @@ class TestAlerts < TestBase
     alert[:queue] = 'bad-alerts-params-alerts'
     assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
 
-    # type, trigger, direction, queue name, and delay - alright
-    alert[:delay] = 8
+    # type, trigger, direction, queue name, and buffer - alright
+    alert[:buffer] = 8
     assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
 
-    # wrong delay
-    alert[:delay] = -13
-    assert_raise(Rest::HttpError) {
-      r = queue.add_alert(alert)
-      p r
-    }
+    # wrong buffer
+    alert[:buffer] = -13
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
 
-    alert[:delay] = '1234'
+    alert[:buffer] = '1234'
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
 
     # wrong type
-    alert[:delay] = 0
+    alert[:buffer] = 0
     alert[:type] = 'wrong'
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
 
@@ -78,7 +75,7 @@ class TestAlerts < TestBase
   def test_size_alerts
     return if @skip
 
-    type = 'size'
+    type = 'fixed'
     trigger = 10
     # Test size alets, direction is ascending
     queue, alert_queue = clear_queue_add_alert(type, trigger, 'asc')
@@ -120,14 +117,14 @@ class TestAlerts < TestBase
 
     delete_queues(queue, alert_queue)
 
-    # test ascending alert with delay
-    delay = 10
+    # test ascending alert with buffer
+    buffer = 10
     trigger = 10
-    queue, alert_queue = clear_queue_add_alert(type, trigger, 'asc', delay)
+    queue, alert_queue = clear_queue_add_alert(type, trigger, 'asc', buffer)
 
     # Trigger alert
     post_messages(queue, trigger + 1)
-    to_time = Time.now + delay - 4
+    to_time = Time.now + buffer - 4
     assert_queue_size 1, alert_queue
 
     while (lambda { Time.now }).call < to_time do
@@ -143,13 +140,13 @@ class TestAlerts < TestBase
 
     delete_queues(queue, alert_queue)
 
-    # test descending alert with delay
-    queue, alert_queue = clear_queue_add_alert(type, trigger, 'desc', delay)
+    # test descending alert with buffer
+    queue, alert_queue = clear_queue_add_alert(type, trigger, 'desc', buffer)
 
     # Trigger alert
     post_messages(queue, trigger + 1)
     delete_messages(queue, 2)
-    to_time = Time.now + delay - 4
+    to_time = Time.now + buffer - 4
     assert_queue_size 1, alert_queue
 
     while (lambda { Time.now }).call < to_time do
@@ -209,20 +206,20 @@ class TestAlerts < TestBase
 
     delete_queues(queue, alert_queue)
 
-    # test ascending alert with delay
-    delay = 10
+    # test ascending alert with buffer
+    buffer = 10
     trigger = 3
-    queue, alert_queue = clear_queue_add_alert(type, trigger, 'asc', delay)
+    queue, alert_queue = clear_queue_add_alert(type, trigger, 'asc', buffer)
 
     # Trigger alert
     post_messages(queue, trigger + 1)
-    # Get current time as delay start time
-    to_time = Time.now + delay - 4
+    # Get current time as buffer start time
+    to_time = Time.now + buffer - 4
     # Check queue for alert
     assert_queue_size 1, alert_queue
 
     while (lambda { Time.now }).call < to_time do
-      # will trigger alert if delay does not work
+      # will trigger alert if buffer does not work
       post_messages(queue, trigger + 1)
       # but must not trigger
       assert_queue_size 1, alert_queue
@@ -235,12 +232,12 @@ class TestAlerts < TestBase
 
     delete_queues(queue, alert_queue)
 
-    # test descending alert with delay
-    queue, alert_queue = clear_queue_add_alert(type, 2, 'desc', delay)
+    # test descending alert with buffer
+    queue, alert_queue = clear_queue_add_alert(type, 2, 'desc', buffer)
 
     # Does not trigger alert
     post_messages(queue, 20 * trigger)
-    to_time = Time.now + delay - 4
+    to_time = Time.now + buffer - 4
 
     while (lambda { Time.now }).call < to_time do
       delete_messages(queue, trigger + 1)
@@ -256,7 +253,7 @@ class TestAlerts < TestBase
     delete_queues(queue, alert_queue)
   end
 
-  def test_delay_concurrent
+  def test_buffer_concurrent
     assert false, 'NOT IMPLEMENTED'
   end
 
@@ -321,10 +318,10 @@ class TestAlerts < TestBase
     assert_queue_size aq_size + 1, alert_queue, 'Alert is not triggered, but must be'
   end
 
-  def clear_queue_add_alert(type, trigger, direction, delay = nil)
+  def clear_queue_add_alert(type, trigger, direction, buffer = nil)
     puts "clear_queue_add_alert(), called at #{caller[0]}"
 
-    qname = "#{type}-#{direction}-#{trigger}-#{delay || 'no_delay'}"
+    qname = "#{type}-#{direction}-#{trigger}-#{buffer || 'no_buffer'}"
     alert_qname = "#{qname}-alerts"
 
     queue = @client.queue(qname)
@@ -337,7 +334,7 @@ class TestAlerts < TestBase
                           :trigger => trigger,
                           :queue => alert_qname,
                           :direction => direction,
-                          :delay => delay.to_i })
+                          :buffer => buffer.to_i })
     #p r
 
     alerts = queue.alerts
