@@ -30,8 +30,8 @@ module IronMQ
       @raw['direction']
     end
 
-    def delay
-      @raw['delay']
+    def buffer
+      @raw['buffer']
     end
 
     def delete
