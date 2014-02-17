@@ -11,7 +11,8 @@ class TestAlerts < TestBase
   end
 
   def test_configuration
-    queue = @client.queue 'bad-alerts-params'
+    q_name = 'bad-alerts-params'
+    queue = @client.queue q_name
     delete_queues queue
 
     # no configuration
@@ -31,7 +32,8 @@ class TestAlerts < TestBase
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
 
     # type, trigger, direction, and alert queue name - alright
-    alert[:queue] = 'bad-alerts-params-alerts'
+    aq_name = 'bad-alerts-params-alerts'
+    alert[:queue] = aq_name
     assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
 
     # type, trigger, direction, queue name, and buffer - alright
@@ -70,6 +72,21 @@ class TestAlerts < TestBase
 
     queue.add_alerts(Array.new(5, alert))
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    delete_queues queue
+
+    # Cyclic alerts tests
+    # Progressive alert posts to its queue (queue is the same as alert queue)
+    alert[:queue] = q_name
+    alert[:type] = 'progressive'
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    # Q1 progressive alert posts to Q2, Q2 progressive alert posts to Q1
+    a_queue = @client.queue aq_name
+    queue.add_alert(alert.merge({:queue => aq_name}))
+    assert_raise(Rest::HttpError) do
+      a_queue.add_alert(alert.merge({:queue => q_name}))
+    end
   end
 
   def test_size_alerts
