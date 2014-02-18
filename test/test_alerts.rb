@@ -36,19 +36,19 @@ class TestAlerts < TestBase
     alert[:queue] = aq_name
     assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
 
-    # type, trigger, direction, queue name, and buffer - alright
-    alert[:buffer] = 8
+    # type, trigger, direction, queue name, and snooze - alright
+    alert[:snooze] = 8
     assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
 
-    # wrong buffer
-    alert[:buffer] = -13
+    # wrong snooze
+    alert[:snooze] = -13
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
 
-    alert[:buffer] = '1234'
+    alert[:snooze] = '1234'
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
 
     # wrong type
-    alert[:buffer] = 0
+    alert[:snooze] = 0
     alert[:type] = 'wrong'
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
 
@@ -134,14 +134,14 @@ class TestAlerts < TestBase
 
     delete_queues(queue, alert_queue)
 
-    # test ascending alert with buffer
-    buffer = 10
+    # test ascending alert with snooze
+    snooze = 10
     trigger = 10
-    queue, alert_queue = clear_queue_add_alert(type, trigger, 'asc', buffer)
+    queue, alert_queue = clear_queue_add_alert(type, trigger, 'asc', snooze)
 
     # Trigger alert
     post_messages(queue, trigger + 1)
-    to_time = Time.now + buffer - 4
+    to_time = Time.now + snooze - 4
     assert_queue_size 1, alert_queue
 
     while (lambda { Time.now }).call < to_time do
@@ -157,13 +157,13 @@ class TestAlerts < TestBase
 
     delete_queues(queue, alert_queue)
 
-    # test descending alert with buffer
-    queue, alert_queue = clear_queue_add_alert(type, trigger, 'desc', buffer)
+    # test descending alert with snooze
+    queue, alert_queue = clear_queue_add_alert(type, trigger, 'desc', snooze)
 
     # Trigger alert
     post_messages(queue, trigger + 1)
     delete_messages(queue, 2)
-    to_time = Time.now + buffer - 4
+    to_time = Time.now + snooze - 4
     assert_queue_size 1, alert_queue
 
     while (lambda { Time.now }).call < to_time do
@@ -223,20 +223,20 @@ class TestAlerts < TestBase
 
     delete_queues(queue, alert_queue)
 
-    # test ascending alert with buffer
-    buffer = 10
+    # test ascending alert with snooze
+    snooze = 10
     trigger = 3
-    queue, alert_queue = clear_queue_add_alert(type, trigger, 'asc', buffer)
+    queue, alert_queue = clear_queue_add_alert(type, trigger, 'asc', snooze)
 
     # Trigger alert
     post_messages(queue, trigger + 1)
-    # Get current time as buffer start time
-    to_time = Time.now + buffer - 4
+    # Get current time as snooze start time
+    to_time = Time.now + snooze - 4
     # Check queue for alert
     assert_queue_size 1, alert_queue
 
     while (lambda { Time.now }).call < to_time do
-      # will trigger alert if buffer does not work
+      # will trigger alert if snooze does not work
       post_messages(queue, trigger + 1)
       # but must not trigger
       assert_queue_size 1, alert_queue
@@ -249,12 +249,12 @@ class TestAlerts < TestBase
 
     delete_queues(queue, alert_queue)
 
-    # test descending alert with buffer
-    queue, alert_queue = clear_queue_add_alert(type, 2, 'desc', buffer)
+    # test descending alert with snooze
+    queue, alert_queue = clear_queue_add_alert(type, 2, 'desc', snooze)
 
     # Does not trigger alert
     post_messages(queue, 20 * trigger)
-    to_time = Time.now + buffer - 4
+    to_time = Time.now + snooze - 4
 
     while (lambda { Time.now }).call < to_time do
       delete_messages(queue, trigger + 1)
@@ -270,7 +270,7 @@ class TestAlerts < TestBase
     delete_queues(queue, alert_queue)
   end
 
-  def test_buffer_concurrent
+  def test_snooze_concurrent
     assert false, 'NOT IMPLEMENTED'
   end
 
@@ -335,10 +335,10 @@ class TestAlerts < TestBase
     assert_queue_size aq_size + 1, alert_queue, 'Alert is not triggered, but must be'
   end
 
-  def clear_queue_add_alert(type, trigger, direction, buffer = nil)
+  def clear_queue_add_alert(type, trigger, direction, snooze = nil)
     puts "clear_queue_add_alert(), called at #{caller[0]}"
 
-    qname = "#{type}-#{direction}-#{trigger}-#{buffer || 'no_buffer'}"
+    qname = "#{type}-#{direction}-#{trigger}-#{snooze || 'no_snooze'}"
     alert_qname = "#{qname}-alerts"
 
     queue = @client.queue(qname)
@@ -351,7 +351,7 @@ class TestAlerts < TestBase
                           :trigger => trigger,
                           :queue => alert_qname,
                           :direction => direction,
-                          :buffer => buffer.to_i })
+                          :snooze => snooze.to_i })
     #p r
 
     alerts = queue.alerts
@@ -359,7 +359,7 @@ class TestAlerts < TestBase
 
     assert_equal 1, alerts.size
     alert = alerts[0]
-    p alert
+    #p alert
     assert_equal type, alert.type
     assert_equal trigger, alert.trigger
     assert_equal alert_qname, alert.queue

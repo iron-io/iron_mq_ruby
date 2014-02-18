@@ -30,8 +30,8 @@ module IronMQ
       @raw['direction']
     end
 
-    def buffer
-      @raw['buffer']
+    def snooze
+      @raw['snooze']
     end
 
     def delete
