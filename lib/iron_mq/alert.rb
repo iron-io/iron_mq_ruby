@@ -1,13 +1,11 @@
 module IronMQ
 
   class Alert
-    # `options` was kept for backward compatibility
-    attr_accessor :options
+    attr_reader :raw
 
-    def initialize(queue, alert_hash, options = {})
+    def initialize(queue, alert_hash)
       @queue = queue
       @raw = alert_hash
-      @options = options
     end
 
     def id
@@ -32,9 +30,12 @@ module IronMQ
       @raw['direction']
     end
 
-    # `options` was kept for backward compatibility
-    def delete(options = {})
-      @message.call_api_and_parse_response(:delete, path)
+    def snooze
+      @raw['snooze']
+    end
+
+    def delete
+      @queue.call_api_and_parse_response(:delete, path)
     rescue Rest::HttpError => ex
       #if ex.code == 404
       #  IronCore::Logger.info('IronMQ', 'Delete got 404, safe to ignore.')
