@@ -122,12 +122,12 @@ module IronMQ
       []
     end
 
-    def add_alert(alert)
-      add_alerts([alert])
-    end
-
     def add_alerts(alerts)
       call_api_and_parse_response(:post, '/alerts', :alerts => alerts)
+    end
+
+    def add_alert(alert)
+      add_alerts([alert])
     end
 
     def remove_alerts(alerts)
@@ -136,6 +136,14 @@ module IronMQ
 
     def remove_alert(alert)
       remove_alerts([alert])
+    end
+
+    def replace_alerts(alerts)
+      call_api_and_parse_response(:put, '/alerts', :alerts => alerts)
+    end
+
+    def clear_alerts
+      replace_alerts([])
     end
 
     def alerts
