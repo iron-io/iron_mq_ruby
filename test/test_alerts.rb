@@ -36,9 +36,14 @@ class TestAlerts < TestBase
     alert[:queue] = aq_name
     assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
 
-    # type, trigger, direction, queue name, and snooze - alright
+    # type, trigger, direction, queue name, and snooze - alert duplication
     alert[:snooze] = 8
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    # alright, no alert duplication
+    alert[:trigger] = 50
     assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
+    queue.clear_alerts
 
     # wrong snooze
     alert[:snooze] = -13
@@ -62,8 +67,11 @@ class TestAlerts < TestBase
     alert[:direction] = 'both'
     assert_raise(Rest::HttpError) { queue.add_alert(alert) }
 
-    # delete queue to clear
-    delete_queues queue
+    # default direction is "asc"
+    alert.delete(:direction)
+    assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
+
+    queue.clear_alerts
 
     # Test max alerts number
     alert[:direction] = 'asc'
@@ -83,10 +91,14 @@ class TestAlerts < TestBase
 
     # Q1 progressive alert posts to Q2, Q2 progressive alert posts to Q1
     a_queue = @client.queue aq_name
+    delete_queues a_queue
+
     queue.add_alert(alert.merge({:queue => aq_name}))
     assert_raise(Rest::HttpError) do
       a_queue.add_alert(alert.merge({:queue => q_name}))
     end
+
+    delete_queues queue, a_queue
   end
 
   def test_size_alerts
@@ -141,15 +153,19 @@ class TestAlerts < TestBase
 
     # Trigger alert
     post_messages(queue, trigger + 1)
-    to_time = Time.now + snooze - 4
+    to_time = Time.now + snooze - 2
     assert_queue_size 1, alert_queue
 
-    while (lambda { Time.now }).call < to_time do
+    while true do
       delete_messages(queue, 2) # queeu size is `trigger - 1`
       post_messages(queue, 2) # size is `trigger + 1`
-      assert_queue_size 1, alert_queue
+      if Time.now < to_time
+        assert_queue_size 1, alert_queue
+      else
+        break
+      end
     end
-    sleep 4
+    sleep 2
 
     delete_messages(queue, 2) # queeu size is `trigger - 1`
     post_messages(queue, 2) # size is `trigger - 1`
@@ -163,15 +179,19 @@ class TestAlerts < TestBase
     # Trigger alert
     post_messages(queue, trigger + 1)
     delete_messages(queue, 2)
-    to_time = Time.now + snooze - 4
+    to_time = Time.now + snooze - 2
     assert_queue_size 1, alert_queue
 
-    while (lambda { Time.now }).call < to_time do
+    while true do
       post_messages(queue, 2) # queeu size is `trigger + 1`
       delete_messages(queue, 2) # size is `trigger - 1`
-      assert_queue_size 1, alert_queue
+      if Time.now < to_time
+        assert_queue_size 1, alert_queue
+      else
+        break
+      end
     end
-    sleep 4
+    sleep 2
 
     post_messages(queue, 2) # size is `trigger + 1`
     delete_messages(queue, 2) # queeu size is `trigger - 1`
@@ -235,11 +255,15 @@ class TestAlerts < TestBase
     # Check queue for alert
     assert_queue_size 1, alert_queue
 
-    while (lambda { Time.now }).call < to_time do
+    while true do
       # will trigger alert if snooze does not work
       post_messages(queue, trigger + 1)
       # but must not trigger
-      assert_queue_size 1, alert_queue
+      if Time.now < to_time
+        assert_queue_size 1, alert_queue
+      else
+        break
+      end
     end
     sleep 4
 
@@ -250,18 +274,24 @@ class TestAlerts < TestBase
     delete_queues(queue, alert_queue)
 
     # test descending alert with snooze
-    queue, alert_queue = clear_queue_add_alert(type, 2, 'desc', snooze)
+    queue, alert_queue = clear_queue_add_alert(type, 1, 'desc', snooze)
 
     # Does not trigger alert
     post_messages(queue, 20 * trigger)
-    to_time = Time.now + snooze - 4
+    to_time = Time.now + snooze - 3
 
-    while (lambda { Time.now }).call < to_time do
+    while true do
       delete_messages(queue, trigger + 1)
-      assert_queue_size 1, alert_queue
+      amsgs = alert_queue.peek({ :n => 10 })
+      puts amsgs.map { |am| am.body }.join("\n")
+      if Time.now < to_time
+        assert_queue_size 1, alert_queue
+      else
+        break
+      end
       break if get_queue_size(queue) <= trigger
     end
-    sleep 4
+    sleep 3
 
     post_messages(queue, trigger + 1)
     delete_messages(queue, trigger)
