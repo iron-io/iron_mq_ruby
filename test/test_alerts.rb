@@ -99,6 +99,21 @@ class TestAlerts < TestBase
     end
 
     delete_queues queue, a_queue
+
+    # Push queues have no alerts feature
+    queue = @client.queue 'push_queue'
+    delete_queues queue
+
+    queue.add_subscriber({ :url => 'http://iron.io/receiver' })
+    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+
+    delete_queues queue
+
+    assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
+    # conversion queue with alerts to push queue must raise exception
+    assert_raise(Rest::HttpError) { queue.update({ :push_type => 'multicast' }) }
+
+    delete_queues queue
   end
 
   def test_size_alerts
@@ -353,6 +368,7 @@ class TestAlerts < TestBase
       puts "Try to trigger descending alert... delete #{nmsgs} messages"
       delete_messages(queue, nmsgs)
     end
+    sleep 1
     assert_queue_size aq_size, alert_queue, 'Alert is triggered, but must not be'
 
     if qsize < trigger
@@ -362,6 +378,7 @@ class TestAlerts < TestBase
       puts "Delete #{1 + overhead} more message(s)"
       delete_messages(queue, 1 + overhead)
     end
+    sleep 1
     assert_queue_size aq_size + 1, alert_queue, 'Alert is not triggered, but must be'
   end
 
