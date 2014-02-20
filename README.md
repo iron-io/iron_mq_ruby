@@ -334,7 +334,7 @@ You may add up to 5 alerts per queue.
 ```ruby
 queue.add_alert({:type => "progressive",
                   :trigger => 10,
-                  :queue => q2.name,
+                  :queue => "my_alert_queue",
                   :direction => "asc",
                   :snooze => "0"
                  })
