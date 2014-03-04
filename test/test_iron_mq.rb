@@ -681,7 +681,7 @@ class IronMQTests < TestBase
     queue = @client.queue(queue_name)
     v = "hello thou shalt only see me once"
     queue.post(v)
-    msg = queue.get(delete: 1, timeout: 30)
+    msg = queue.get(delete: true, timeout: 30)
     assert_equal msg.body, "hello thou shalt only see me once"
     sleep 1
     # get the queue again
