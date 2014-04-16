@@ -29,5 +29,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "quicky"
   gem.add_development_dependency "iron_worker_ng"
   gem.add_development_dependency "go"
+  gem.add_development_dependency "parallel"
 end
 

@@ -7,4 +7,5 @@ test/config.yml
 *.sublime*
 /*.gem
 config.yml
+iron.json
 
