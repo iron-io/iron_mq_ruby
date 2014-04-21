@@ -336,7 +336,7 @@ queue.add_alert({:type => "progressive",
                   :trigger => 10,
                   :queue => "my_alert_queue",
                   :direction => "asc",
-                  :snooze => "0"
+                  :snooze => 0
                  })
 queue.clear #  => #<IronMQ::ResponseBase:0x007f95d3b25438 @raw={"msg"=>"Updated"}, @code=200>
 ```
