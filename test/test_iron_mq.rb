@@ -240,7 +240,11 @@ class IronMQTests < TestBase
     qname = "some_queue_that_does_not_exist_1"
     queue = @client.queue(qname)
     # delete it before the test
-    queue.delete_queue
+    begin
+      queue.delete_queue
+    rescue => ex
+      #ignore
+    end
 
     assert_raise Rest::HttpError do
       # should raise a 404
@@ -701,6 +705,7 @@ class IronMQTests < TestBase
     assert_nil msg
     v = "hello long"
     # ok, nothing in the queue, let's do a long poll
+    starti = Time.now.to_i
     thr = Thread.new {
       sleep 5
       puts "Posting now"
@@ -713,11 +718,16 @@ class IronMQTests < TestBase
     }
     puts "Now going to wait for it..."
     msg = queue.get(wait: 20)
-    p msg
+    # p msg
+    endi = Time.now.to_i
+    duration = endi - starti
+    p duration
+    assert duration > 4 && duration <= 7
     assert_not_nil msg
     assert_equal v, msg.body
     msg.delete
 
   end
+
 end
 
