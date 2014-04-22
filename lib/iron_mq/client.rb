@@ -40,7 +40,7 @@ module IronMQ
       is_raw = [options.delete(:raw),
                 options.delete('raw')].compact.first
       response = parse_response(get('', options)) # GET base_url
-      p response
+      # p response
       # returns list of evaluated queues
       if is_raw
         response.map{ |q_info| ResponseBase.new(q_info) }

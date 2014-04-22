@@ -77,10 +77,10 @@ queue.id   # => "5127bf043264140e863e2283"
 
 --
 
-### Get a Message off a Queue
+### Reserve/Get a Message from a Queue
 
 ```ruby
-msg = queue.get
+msg = queue.reserve
 msg.body # => "hello world!"
 ```
 
@@ -220,13 +220,13 @@ Default is 604,800 seconds (7 days). Maximum is 2,592,000 seconds (30 days).
 ### Get Messages from a Queue
 
 ```ruby
-message = queue.get # => #<IronMQ::Message:...>
+message = queue.reserve # => #<IronMQ::Message:...>
 
 # or N messages
-messages = queue.get(:n => 7) # => [#<IronMQ::Message:...>, ...]
+messages = queue.reserve(:n => 7) # => [#<IronMQ::Message:...>, ...]
 
 # or message by ID
-message = queue.get "5127bf043264140e863e2283" # => #<IronMQ::Message:...>
+message = queue.get_message "5127bf043264140e863e2283" # => #<IronMQ::Message:...>
 ```
 
 **Optional parameters:**
@@ -248,7 +248,7 @@ Otherwise, `Message` object would be returned.
 Touching a reserved message extends its timeout by the duration specified when the message was created, which is 60 seconds by default.
 
 ```ruby
-message = queue.get # => #<IronMQ::Message:...>
+message = queue.reserve # => #<IronMQ::Message:...>
 
 message.touch # => #<IronMQ::ResponseBase:...>
 ```
@@ -258,7 +258,7 @@ message.touch # => #<IronMQ::ResponseBase:...>
 ### Release Message
 
 ```ruby
-message = queue.get # => #<IronMQ::Message:...>
+message = queue.reserve # => #<IronMQ::Message:...>
 
 response = message.release # => #<IronMQ::ResponseBase:...>
 # or
@@ -275,7 +275,7 @@ Default is 0 seconds. Maximum is 604,800 seconds (7 days).
 ### Delete a Message from a Queue
 
 ```ruby
-message = queue.get # => #<IronMQ::Queue:...>
+message = queue.reserve # => #<IronMQ::Queue:...>
 
 message.delete # => #<IronMQ::ResponseBase:...>
 ```
@@ -430,7 +430,7 @@ This creates fake `Message` objects. They contain only IDs.
 After pushing a message:
 
 ```ruby
-subscribers = queue.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
+subscribers = queue.get_message(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
 
 subscribers.each { |ss| puts "#{ss.id}: #{(ss.code == 200) ? 'Success' : 'Fail'}" }
 ```
@@ -445,7 +445,7 @@ This creates fake `IronMQ::Message` instance on which you call for subscribers' 
 ### Acknowledge / Delete Message Push Status
 
 ```ruby
-subscribers = queue.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
+subscribers = queue.get_message(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
 
 subscribers.each do |ss|
   ss.delete

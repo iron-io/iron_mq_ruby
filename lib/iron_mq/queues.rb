@@ -214,7 +214,7 @@ module IronMQ
     end
 
     def peek_messages(options = {})
-      resp = call_api_and_parse_response(:get, "/messages/peek", options)
+      resp = call_api_and_parse_response(:get, "/messages", options)
 
       process_messages(resp["messages"], options)
     end
