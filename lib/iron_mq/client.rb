@@ -14,7 +14,7 @@ module IronMQ
           :scheme => 'https',
           :host => IronMQ::Client::AWS_US_EAST_HOST,
           :port => 443,
-          :api_version => 1,
+          :api_version => 3,
           :user_agent => 'iron_mq_ruby-' + IronMQ::VERSION + ' (iron_core_ruby-' + IronCore.version + ')'
       }
 
@@ -40,11 +40,12 @@ module IronMQ
       is_raw = [options.delete(:raw),
                 options.delete('raw')].compact.first
       response = parse_response(get('', options)) # GET base_url
+      p response
       # returns list of evaluated queues
       if is_raw
         response.map{ |q_info| ResponseBase.new(q_info) }
       else
-        response.map{ |q_info| Queue.new(self, q_info["name"]) }
+        response["queues"].map{ |q_info| Queue.new(self, q_info["name"]) }
       end
     end
 

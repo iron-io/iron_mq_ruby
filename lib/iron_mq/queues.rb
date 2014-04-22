@@ -60,7 +60,7 @@ module IronMQ
     alias_method :update_queue, :update
 
     def clear
-      call_api_and_parse_response(:post, "/clear", {}, false, true)
+      call_api_and_parse_response(:delete, "/messages", {}, false, true)
     end
 
     alias_method :clear_queue, :clear
@@ -193,18 +193,15 @@ module IronMQ
 
     alias_method :post, :post_messages
 
-    def get_messages(options = {})
-      if options.is_a?(String)
-        # assume it's an id
-        return Message.new(self, {"id" => options})
-      end
-
-      resp = call_api_and_parse_response(:get, "/messages", options, false)
-
+    def reserve_messages(options = {})
+      resp = call_api_and_parse_response(:post, "/reservations", options, false)
       process_messages(resp["messages"], options)
     end
 
-    alias_method :get, :get_messages
+    # backwards compatibility
+    alias_method :get, :reserve_messages
+    alias_method :get_messages, :reserve_messages
+    alias_method :reserve, :reserve_messages
 
     # Backward compatibility
     def messages
@@ -245,7 +242,7 @@ module IronMQ
       r = nil
       response = if meth.to_s == "delete"
                    headers = options.delete(:headers) || options.delete("headers") || {}
-
+                   headers['Content-Type'] = "application/json"
                    @client.parse_response(@client.send(meth, "#{path(ext_path)}", options, headers))
                  else
                    @client.parse_response(@client.send(meth, "#{path(ext_path)}", options))

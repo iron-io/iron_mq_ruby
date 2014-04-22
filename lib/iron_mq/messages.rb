@@ -30,6 +30,10 @@ module IronMQ
       @raw['reserved_count']
     end
 
+    def reservation_id
+      @raw['reservation_id']
+    end
+
     def touch
       call_api_and_parse_response(:post, "/touch")
     end
@@ -58,6 +62,7 @@ module IronMQ
     end
 
     def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true)
+      options[:reservation_id] = self.reservation_id
       @queue.call_api_and_parse_response(meth, "#{path(ext_path)}", options, instantiate)
     end
 
