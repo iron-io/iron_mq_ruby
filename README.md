@@ -232,11 +232,12 @@ message = queue.get "5127bf043264140e863e2283" # => #<IronMQ::Message:...>
 **Optional parameters:**
 
 * `n`: The maximum number of messages to get. Default is 1. Maximum is 100.
-
 * `timeout`: After timeout (in seconds), item will be placed back onto queue.
 You must delete the message from the queue to ensure it does not go back onto the queue.
 If not set, value from POST is used. Default is 60 seconds. Minimum is 30 seconds.
 Maximum is 86,400 seconds (24 hours).
+* `wait`: : Time in seconds to wait for a message to become available. This enables long polling. Default is 0 (does not wait), maximum is 30.
+* `delete`: true/false. This will delete the message on get. Be careful though, only use this if you are ok with losing a message if something goes wrong after you get it. Default is false.
 
 When `n` parameter is specified and greater than 1 method returns `Array` of `Message`s.
 Otherwise, `Message` object would be returned.
