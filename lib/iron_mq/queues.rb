@@ -8,6 +8,7 @@ module IronMQ
     def initialize(client, queue_name)
       @client = client
       @name = queue_name
+      raise ArgumentError, "Must provide a queue name" unless queue_name.is_a?(String) and queue_name.strip.length > 0
     end
 
     def info
