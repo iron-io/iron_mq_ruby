@@ -680,54 +680,20 @@ class IronMQTests < TestBase
   end
 
   def test_dequeue_delete
-    queue_name = "test_dequeue_delete_3"
+    queue_name = "test_dequeue_delete_#{Time.now.to_i}"
     clear_queue(queue_name)
     queue = @client.queue(queue_name)
     v = "hello thou shalt only see me once"
     queue.post(v)
-    assert_equal 1, queue.reload.size
-    msg = queue.get(delete: true, timeout: 7)
-    assert_equal v, msg.body
+    msg = queue.get(delete: true, timeout: 30)
+    assert_equal msg.body, "hello thou shalt only see me once"
     sleep 1
     # get the queue again
     queue = @client.queue(queue_name)
     assert_equal 0, queue.size
-    sleep 10
+    sleep 31
     msg = queue.get
-    assert_nil msg
+    assert_equal nil, msg
   end
-
-  def test_long_polling
-    queue_name = "test_long_polling"
-    clear_queue(queue_name)
-    queue = @client.queue(queue_name)
-    msg = queue.get
-    assert_nil msg
-    v = "hello long"
-    # ok, nothing in the queue, let's do a long poll
-    starti = Time.now.to_i
-    thr = Thread.new {
-      sleep 5
-      puts "Posting now"
-      begin
-        queue.post(v)
-      rescue Exception => ex
-        p ex
-      end
-
-    }
-    puts "Now going to wait for it..."
-    msg = queue.get(wait: 20)
-    # p msg
-    endi = Time.now.to_i
-    duration = endi - starti
-    p duration
-    assert duration > 4 && duration <= 7
-    assert_not_nil msg
-    assert_equal v, msg.body
-    msg.delete
-
-  end
-
 end
 
