@@ -10,6 +10,10 @@ module IronMQ
       @options = options
     end
 
+    def name
+      @raw['name']
+    end
+
     def url
       @raw['url']
     end
@@ -20,7 +24,8 @@ module IronMQ
 
     # `options` was kept for backward compatibility
     def delete(options = {})
-      @message.call_api_and_parse_response(:delete, path)
+      @message.call_api_and_parse_response(:delete, path,
+                                           {:subscriber_name => name})
     rescue Rest::HttpError => ex
       #if ex.code == 404
       #  Rest.logger.info("Delete got 404, safe to ignore.")
@@ -36,7 +41,7 @@ module IronMQ
     private
 
     def path
-      "/subscribers/#{id}"
+      "/subscribers/#{name}"
     end
   end
 
