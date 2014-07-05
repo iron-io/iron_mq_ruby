@@ -18,49 +18,46 @@ module IronMQ
     def load
       reload if @raw.nil?
 
-      @raw
+      @raw['queue']
     end
 
     def reload
-      @raw = call_api_and_parse_response(:get, "", {}, false, true)
+      @raw = call_api_and_parse_response(:get, '', {}, false, true)
       self
     end
 
     def id
-      load
-      @raw['id']
+      load['id']
     end
 
     def size
-      load
-      @raw['size'].to_i
+      load['size'].to_i
     end
 
     def total_messages
-      load
-      @raw['total_messages'].to_i
+      load['total_messages'].to_i
     end
 
-    def push_type
-      load
-      @raw['push_type']
+    def type
+      load['type']
     end
 
     def push_queue?
-      # FIXME: `push_type` parameter in not guaranted it's push queue.
-      #        When the parameter absent it is not guaranted that queue is not push queue.
-      ptype = push_type
-      not (ptype.nil? || ptype.empty?)
+      ['multicast', 'unicast'].include?(type)
+    end
+
+    def push_info
+      load['push']
     end
 
     def update(options)
-      call_api_and_parse_response(:post, "", options)
+      call_api_and_parse_response(:put, '', options)
     end
 
     alias_method :update_queue, :update
 
     def clear
-      call_api_and_parse_response(:delete, "/messages", {}, false, true)
+      call_api_and_parse_response(:delete, '/messages', {}, false, true)
     end
 
     alias_method :clear_queue, :clear
@@ -88,11 +85,11 @@ module IronMQ
 
     # Accepts an array of message ids
     def delete_messages(ids)
-      call_api_and_parse_response(:delete, "/messages", :ids => ids)
+      call_api_and_parse_response(:delete, '/messages', :ids => ids)
     end
 
     def add_subscribers(subscribers)
-      call_api_and_parse_response(:post, "/subscribers", :subscribers => subscribers)
+      call_api_and_parse_response(:post, '/subscribers', :subscribers => subscribers)
     end
 
     # `options` for backward compatibility
@@ -102,10 +99,10 @@ module IronMQ
 
     def remove_subscribers(subscribers)
       call_api_and_parse_response(:delete,
-                                  "/subscribers",
+                                  '/subscribers',
                                   {
                                       :subscribers => subscribers,
-                                      :headers => {"Content-Type" => @client.content_type}
+                                      :headers => {'Content-Type' => @client.content_type}
                                   })
     end
 

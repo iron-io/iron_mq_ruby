@@ -11,27 +11,31 @@ module IronMQ
     end
 
     def body
-      @raw['body']
+      @raw['message']['body']
     end
 
     def timeout
-      @raw['timeout']
+      @raw['message']['timeout']
     end
 
     def expires_in
-      @raw['expires_in']
+      @raw['message']['expires_in']
     end
 
     def delay
-      @raw['delay']
+      @raw['message']['delay']
     end
 
     def reserved_count
-      @raw['reserved_count']
+      @raw['message']['reserved_count']
     end
 
     def reservation_id
-      @raw['reservation_id']
+      @raw['message']['reservation_id']
+    end
+
+    def push_statuses
+      @raw['message']['push_statuses']
     end
 
     def touch
@@ -62,7 +66,7 @@ module IronMQ
     end
 
     def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true)
-      options[:reservation_id] = self.reservation_id
+      options[:reservation_id] = self.reservation_id if self.reservation_id && !self.reservation_id.empty?
       @queue.call_api_and_parse_response(meth, "#{path(ext_path)}", options, instantiate)
     end
 
