@@ -29,7 +29,7 @@ class TestBulk < TestBase
     LOG.info "#{times} gets and deletes took #{Time.now.to_f - t.to_f}"
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 

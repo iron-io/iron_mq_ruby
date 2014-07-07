@@ -22,17 +22,16 @@ class IronMQTests < TestBase
     assert res.id
     assert res.msg
     sleep 0.3
+    p queue.reload
     assert_equal 1, queue.reload.size
 
     message = queue.reserve
     # p res
     assert res["id"]
     assert res.id
+    message.delete
 
-    res = queue.delete(res["id"])
-    # p res
     res = queue.reserve
-    # p res
     assert_nil res
 
     sleep 0.3
@@ -66,7 +65,7 @@ class IronMQTests < TestBase
     assert res.id
     assert_equal v, res.body
 
-    res = queue.delete(res.id)
+    res.delete
 
     res = queue.reserve
     # p res
@@ -88,11 +87,9 @@ class IronMQTests < TestBase
     assert_nil res
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
-
-
 
   def test_multi_delete
     puts 'test_multi_delete'
@@ -126,7 +123,7 @@ class IronMQTests < TestBase
     sleep 1
     assert_equal 0, queue.reload.size
 
-    queue.delete_queue
+    queue.delete
 
 
 
@@ -168,7 +165,7 @@ class IronMQTests < TestBase
     end
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -234,7 +231,7 @@ class IronMQTests < TestBase
     new_msg.delete
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -247,7 +244,7 @@ class IronMQTests < TestBase
     queue = @client.queue(qname)
     # delete it before the test
     begin
-      queue.delete_queue
+      queue.delete
     rescue => ex
       #ignore
     end
@@ -280,7 +277,7 @@ class IronMQTests < TestBase
     assert_equal 0, res.size
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -305,7 +302,7 @@ class IronMQTests < TestBase
     new_msg.delete
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -350,7 +347,7 @@ class IronMQTests < TestBase
     end
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -408,7 +405,7 @@ class IronMQTests < TestBase
     assert_equal "second message", msg.body, "message body must be 'second message', but it's '#{msg.body}'"
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -477,7 +474,7 @@ class IronMQTests < TestBase
     assert_equal msg.id, msgs[2].id, "released message must be at the end of the queue"
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -539,7 +536,7 @@ class IronMQTests < TestBase
     assert_equal msg_id, msg.id
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -565,7 +562,7 @@ class IronMQTests < TestBase
     assert_equal 0, queue.reload.size
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -588,7 +585,7 @@ class IronMQTests < TestBase
     assert_equal 5, i
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -596,7 +593,7 @@ class IronMQTests < TestBase
     queue = @client.queue("test_delete")
     queue.post("hi")
     old_id = queue.id
-    queue.delete_queue
+    queue.delete
 
     LOG.info "sleeping for a bit to let queue delete..."
     sleep 60
@@ -610,7 +607,7 @@ class IronMQTests < TestBase
     assert_equal "hi2", msg.body, "message body must be 'hi2', but got '#{msg.body}'"
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -631,7 +628,7 @@ class IronMQTests < TestBase
     assert_equal v, msg.body
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -687,8 +684,8 @@ class IronMQTests < TestBase
     qname = "test_queue_set_info"
     clear_queue(qname)
     q = @client.queue(qname)
-    q.update_queue(:push_type => 'unicast')
-    assert_equal 'unicast', q.push_type
+    q.update_queue(:type => 'unicast')
+    assert_equal 'unicast', q.type
     q.update_queue(:retries => 10)
     assert_equal 'unicast', q.reload.push_type
   end

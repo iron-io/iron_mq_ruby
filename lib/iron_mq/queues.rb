@@ -18,11 +18,11 @@ module IronMQ
     def load
       reload if @raw.nil?
 
-      @raw['queue']
+      @raw
     end
 
     def reload
-      @raw = call_api_and_parse_response(:get, '', {}, false, true)
+      @raw = call_api_and_parse_response(:get, '', {}, false, true)["queue"]
       self
     end
 
@@ -62,8 +62,7 @@ module IronMQ
 
     alias_method :clear_queue, :clear
 
-    # Backward compatibility, better name is `delete`
-    def delete_queue
+    def delete
       r = call_api_and_parse_response(:delete)
       @raw = nil
       return r
@@ -75,12 +74,6 @@ module IronMQ
       #else
         raise ex
       #end
-    end
-
-    # Backward compatibility
-    def delete(message_id, options = {})
-      # API does not accept any options
-      Message.new(self, {"id" => message_id}).delete
     end
 
     # Accepts an array of message ids

@@ -338,7 +338,7 @@ class TestAlerts < TestBase
   def delete_queues(*queues)
     queues.each do |q|
       begin
-        q.delete_queue
+        q.delete
       rescue Rest::HttpError => ex
         if ex.code == 404
           Rest.logger.info("Delete queue got 404, ignoring.")

@@ -174,7 +174,7 @@ In this case you may prefer to use `queue.info` to have `Hash` with all availabl
 ### Delete a Message Queue
 
 ```ruby
-response = queue.delete_queue # => #<IronMQ::ResponseBase:...>
+response = queue.delete # => #<IronMQ::ResponseBase:...>
 ```
 
 --
