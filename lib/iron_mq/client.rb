@@ -77,6 +77,34 @@ module IronMQ
     def queues
       self
     end
+
+    def create_queue(queue_name, options = {})
+      body = prepare_options(options)
+      response = self.put("/#{queue_name}", {queue: body})
+      queue_hash = JSON.parse(response.body.to_s)
+      ResponseBase.new(queue_hash['queue'])
+    end
+
+    def update_queue(queue_name, options = {})
+      response = self.patch("/#{queue_name}", {queue: prepare_options(options)})
+      queue_hash = JSON.parse(response.body.to_s)
+      ResponseBase.new(queue_hash['queue'])
+    end
+
+    private
+
+    def prepare_options(options)
+      push = {}
+      if options[:subscribers]
+        subscribers = options.delete(:subscribers).map{|val| {url: val}}
+        push[:subscribers] = subscribers
+      end
+      push[:retries] = options[:retries] unless options[:retries].nil?
+      push[:retries_delay] = options[:retries_delay] unless options[:retries_delay].nil?
+      push[:error_queue] = options[:error_queue] unless options[:error_queue].nil?
+      options[:push] = push
+      options
+    end
   end
 
 end

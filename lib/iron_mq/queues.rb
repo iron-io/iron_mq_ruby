@@ -18,7 +18,7 @@ module IronMQ
     def load
       reload if @raw.nil?
 
-      @raw
+      @raw['queue']
     end
 
     def reload
@@ -33,17 +33,17 @@ module IronMQ
 
     def size
       load
-      @raw['size'].to_i
+      @raw['queue']['size'].to_i
     end
 
     def total_messages
       load
-      @raw['total_messages'].to_i
+      @raw['queue']['total_messages'].to_i
     end
 
     def push_type
       load
-      @raw['push_type']
+      @raw['queue']['type']
     end
 
     def push_queue?
@@ -54,7 +54,7 @@ module IronMQ
     end
 
     def update(options)
-      call_api_and_parse_response(:post, "", options)
+      call_api_and_parse_response(:put, "", options)
     end
 
     alias_method :update_queue, :update
@@ -81,9 +81,14 @@ module IronMQ
     end
 
     # Backward compatibility
-    def delete(message_id, options = {})
+    def delete(message_id, reservation_id = nil)
       # API does not accept any options
-      Message.new(self, {"id" => message_id}).delete
+      options = {}
+      options['id'] = message_id
+      unless reservation_id.nil?
+        options['reservation_id'] = reservation_id
+      end
+      Message.new(self, options).delete
     end
 
     # Accepts an array of message ids
@@ -91,8 +96,14 @@ module IronMQ
       call_api_and_parse_response(:delete, "/messages", :ids => ids)
     end
 
+    def delete_reserved_messages(messages)
+      ids = messages.map {|message| {id: message.id, reservation_id: message.reservation_id }}
+      call_api_and_parse_response(:delete, "/messages", :ids => ids)
+    end
+
     def add_subscribers(subscribers)
-      call_api_and_parse_response(:post, "/subscribers", :subscribers => subscribers)
+      values = subscribers.map{|val| {url: val}}
+      call_api_and_parse_response(:patch, "", queue: {push: {subscribers: values}})
     end
 
     # `options` for backward compatibility
@@ -113,6 +124,10 @@ module IronMQ
       remove_subscribers([subscriber])
     end
 
+    def clear_subscribers
+      call_api_and_parse_response(:patch, "", queue: {push: {subscribers: [{}]}})
+    end
+
     # `options` was kept for backward compatibility
     def subscribers(options = {})
       load
@@ -122,7 +137,7 @@ module IronMQ
     end
 
     def add_alerts(alerts)
-      call_api_and_parse_response(:post, '/alerts', :alerts => alerts)
+      call_api_and_parse_response(:patch, '', queue: {alerts: alerts})
     end
 
     def add_alert(alert)
@@ -209,7 +224,7 @@ module IronMQ
 
     def get_message(id)
       resp = call_api_and_parse_response(:get, "/messages/#{id}", {}, false)
-      Message.new(self, resp)
+      Message.new(self, resp['message'])
     end
 
     def peek_messages(options = {})
