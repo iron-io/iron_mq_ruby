@@ -1,0 +1,33 @@
+require 'tmpdir'
+require 'rake/testtask'
+
+Dir.chdir(File.dirname(__FILE__) + '/..')
+
+Rake::TestTask.new do |t|
+  if ENV['NEW_PROJECT']
+    require_relative '../lib/iron_worker_ng.rb'
+
+    client = IronWorkerNG::Client.new
+    name = 'IWtest ' + Time.now.strftime('%b %-d %T')
+    resp = client.api.post('projects', name: name)
+    res = JSON.parse(resp.body)
+    raise "Failed to create new project: #{res}" unless
+        res['msg'].start_with? 'Project Created'
+
+    ENV['IRON_PROJECT_ID'] = res['id']
+  end
+  if ENV['IRON_PROJECT_ID']
+    t.options = "-- --project-id=#{ENV['IRON_PROJECT_ID']}"
+  end
+
+  t.libs << "lib"
+
+  files = FileList['test/**/test_*.rb']
+  t.test_files = files.keep_if do |f|
+    f =~ Regexp.new(ENV['TESTP'] || '') and
+        not ( r = ENV['EXCLP'] and
+            f =~ Regexp.new(r) )
+  end
+
+  t.verbose = true
+end

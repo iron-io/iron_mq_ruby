@@ -128,8 +128,6 @@ class IronMQTests < TestBase
 
     queue.delete_queue
 
-
-
   end
 
   def test_reservation_ids
@@ -238,8 +236,6 @@ class IronMQTests < TestBase
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
-
-
   def test_queues
     puts 'test_queues'
 
@@ -308,7 +304,6 @@ class IronMQTests < TestBase
     resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
-
 
   def test_batch
     puts 'test_batch'
@@ -410,8 +405,6 @@ class IronMQTests < TestBase
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
-
-
   def test_touch
     puts "in test_touch"
 
@@ -483,7 +476,6 @@ class IronMQTests < TestBase
     resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
-
 
   def test_release
     puts 'test_release'
@@ -637,8 +629,6 @@ class IronMQTests < TestBase
   end
 
 
-
-
   def test_queue_params
 
     qname = "test_queue_params_1"
@@ -695,21 +685,20 @@ class IronMQTests < TestBase
   end
 
   def test_dequeue_delete
-    queue_name = "test_dequeue_delete_3"
+    queue_name = "test_dequeue_delete_#{Time.now.to_i}"
     clear_queue(queue_name)
     queue = @client.queue(queue_name)
     v = "hello thou shalt only see me once"
     queue.post(v)
-    assert_equal 1, queue.reload.size
-    msg = queue.get(delete: true, timeout: 7)
-    assert_equal v, msg.body
+    msg = queue.get(delete: true, timeout: 30)
+    assert_equal msg.body, "hello thou shalt only see me once"
     sleep 1
     # get the queue again
     queue = @client.queue(queue_name)
     assert_equal 0, queue.size
-    sleep 10
+    sleep 31
     msg = queue.get
-    assert_nil msg
+    assert_equal nil, msg
   end
 
   def test_long_polling
