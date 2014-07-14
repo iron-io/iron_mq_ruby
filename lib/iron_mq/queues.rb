@@ -8,7 +8,6 @@ module IronMQ
     def initialize(client, queue_name)
       @client = client
       @name = queue_name
-      raise ArgumentError, "Must provide a queue name" unless queue_name.is_a?(String) and queue_name.strip.length > 0
     end
 
     def info
@@ -23,35 +22,32 @@ module IronMQ
     end
 
     def reload
-      @raw = call_api_and_parse_response(:get, "", {}, false, true)
+      @raw = call_api_and_parse_response(:get, '', {}, false, true)
       self
     end
 
     def id
-      load
-      @raw['id']
+      load['id']
     end
 
     def size
-      load
-      @raw['queue']['size'].to_i
+      load['size'].to_i
     end
 
     def total_messages
-      load
-      @raw['queue']['total_messages'].to_i
+      load['total_messages'].to_i
     end
 
-    def push_type
-      load
-      @raw['queue']['type']
+    def type
+      load['type']
     end
 
     def push_queue?
-      # FIXME: `push_type` parameter in not guaranted it's push queue.
-      #        When the parameter absent it is not guaranted that queue is not push queue.
-      ptype = push_type
-      not (ptype.nil? || ptype.empty?)
+      ['multicast', 'unicast'].include?(type)
+    end
+
+    def push_info
+      load['push']
     end
 
     def update(options)
@@ -61,7 +57,7 @@ module IronMQ
     alias_method :update_queue, :update
 
     def clear
-      call_api_and_parse_response(:delete, "/messages", {}, false, true)
+      call_api_and_parse_response(:delete, '/messages', {}, false, true)
     end
 
     alias_method :clear_queue, :clear
@@ -94,7 +90,7 @@ module IronMQ
 
     # Accepts an array of message ids
     def delete_messages(ids)
-      call_api_and_parse_response(:delete, "/messages", :ids => ids)
+      call_api_and_parse_response(:delete, '/messages', :ids => ids)
     end
 
     def delete_reserved_messages(messages)
@@ -114,10 +110,10 @@ module IronMQ
 
     def remove_subscribers(subscribers)
       call_api_and_parse_response(:delete,
-                                  "/subscribers",
+                                  '/subscribers',
                                   {
                                       :subscribers => subscribers,
-                                      :headers => {"Content-Type" => @client.content_type}
+                                      :headers => {'Content-Type' => @client.content_type}
                                   })
     end
 
