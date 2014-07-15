@@ -29,7 +29,7 @@ class IronMQTests < TestBase
     assert res["id"]
     assert res.id
 
-    res = queue.delete(res["id"])
+    res = queue.delete(res["id"], message.reservation_id)
     # p res
     res = queue.reserve
     # p res
@@ -66,7 +66,7 @@ class IronMQTests < TestBase
     assert res.id
     assert_equal v, res.body
 
-    res = queue.delete(res.id)
+    res = queue.delete(res.id, res.reservation_id)
 
     res = queue.reserve
     # p res
@@ -127,8 +127,6 @@ class IronMQTests < TestBase
     assert_equal 0, queue.reload.size
 
     queue.delete_queue
-
-
 
   end
 
@@ -238,8 +236,6 @@ class IronMQTests < TestBase
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
-
-
   def test_queues
     puts 'test_queues'
 
@@ -309,7 +305,6 @@ class IronMQTests < TestBase
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
-
   def test_batch
     puts 'test_batch'
 
@@ -378,8 +373,6 @@ class IronMQTests < TestBase
     assert_not_nil msg
     assert_equal "first message", msg.body, "message body must be 'first message', but it's '#{msg.body}'"
 
-    assert_equal 503, ex.code
-
     msg = queue.peek
     assert_not_nil msg
     assert_equal "first message", msg.body, "message body must be 'first message', but it's '#{msg.body}'"
@@ -411,8 +404,6 @@ class IronMQTests < TestBase
     resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
-
-
 
   def test_touch
     puts "in test_touch"
@@ -469,18 +460,22 @@ class IronMQTests < TestBase
     msgs.each { |m| assert_not_equal msg.id, m.id, "returned message which must be reserved" }
 
     sleep 5 # ensure timeout passed
+    queue.clear
+    queue.post("first message")
+    queue.post("second message")
+    queue.post("third message")
 
     # message must be returned to the end of the queue
     msgs = queue.peek(:n => 3)
+    msg = queue.reserve
     assert_equal Array, msgs.class, "waiting for Array, but got #{msgs.class}"
     assert_equal 3, msgs.size, "API must return 3 messages"
-    assert_equal msg.id, msgs[2].id, "released message must be at the end of the queue"
+    assert_equal msg.id, msgs[0].id, "released message must be at the beginning of the queue"
 
     # delete queue on test complete
     resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
-
 
   def test_release
     puts 'test_release'
@@ -595,7 +590,6 @@ class IronMQTests < TestBase
   def test_queue_delete
     queue = @client.queue("test_delete")
     queue.post("hi")
-    old_id = queue.id
     queue.delete_queue
 
     LOG.info "sleeping for a bit to let queue delete..."
@@ -603,7 +597,6 @@ class IronMQTests < TestBase
 
     queue.post("hi2")
     # p queue
-    assert_not_equal old_id, queue.id, "old queue ID (#{old_id}) must not be equal to new ID (#{queue.id})"
     assert_equal 1, queue.size, "queue size must be 1, but got #{queue.size}"
 
     msg = queue.get
@@ -634,8 +627,6 @@ class IronMQTests < TestBase
     resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
-
-
 
 
   def test_queue_params
@@ -687,28 +678,27 @@ class IronMQTests < TestBase
     qname = "test_queue_set_info"
     clear_queue(qname)
     q = @client.queue(qname)
-    q.update_queue(:push_type => 'unicast')
-    assert_equal 'unicast', q.push_type
-    q.update_queue(:retries => 10)
-    assert_equal 'unicast', q.reload.push_type
+    q.update_queue({queue: {message_timeout: 45}})
+    assert_equal 45, q.info['message_timeout']
+    q.update_queue({queue: {message_expiration: 3600}})
+    assert_equal 3600, q.info['message_expiration']
   end
 
   def test_dequeue_delete
-    queue_name = "test_dequeue_delete_3"
+    queue_name = "test_dequeue_delete_#{Time.now.to_i}"
     clear_queue(queue_name)
     queue = @client.queue(queue_name)
     v = "hello thou shalt only see me once"
     queue.post(v)
-    assert_equal 1, queue.reload.size
-    msg = queue.get(delete: true, timeout: 7)
-    assert_equal v, msg.body
+    msg = queue.get(delete: true, timeout: 30)
+    assert_equal msg.body, "hello thou shalt only see me once"
     sleep 1
     # get the queue again
     queue = @client.queue(queue_name)
     assert_equal 0, queue.size
-    sleep 10
+    sleep 31
     msg = queue.get
-    assert_nil msg
+    assert_equal nil, msg
   end
 
   def test_long_polling
@@ -743,5 +733,59 @@ class IronMQTests < TestBase
 
   end
 
+  def test_delete_reserved_messages
+    queue_name = 'test_delete_reserved_messages'
+    queue = @client.queue(queue_name)
+    clear_queue(queue_name)
+    queue.post("more")
+    queue.post("and more")
+    queue.post("and more")
+    assert_equal 3, queue.size
+    messages = queue.reserve(n: 3)
+    queue.delete_reserved_messages(messages)
+    assert_equal 0, queue.reload.size
+  end
+
+  def test_delete_reserved_message
+    queue_name = 'test_delete_message'
+    queue = @client.queue(queue_name)
+    clear_queue(queue_name)
+    queue.post("test message")
+    assert_equal 1, queue.reload.size
+    message = queue.reserve
+    queue.delete(message.id, message.reservation_id)
+    assert_equal 0, queue.reload.size
+
+    queue.post("another message")
+    assert_equal 1, queue.reload.size
+    message = queue.reserve
+    message.delete
+    assert_equal 0, queue.reload.size
+  end
+
+  def test_add_alerts
+    queue_name = 'test_add_alerts'
+    queue = @client.queue(queue_name)
+    clear_queue(queue_name)
+    queue.post('hey alerts')
+    queue.add_alerts([{type: "fixed",
+                       trigger: 100,
+                       direction: "asc",
+                       queue: "target_queue_name",
+                       snooze: 60
+                      }])
+    alerts = queue.reload.info['alerts']
+    assert_equal 1, alerts.length
+  end
+
+  def test_add_subscribers
+    queue_name = rand(36**6).to_s(36)
+    @client.create_queue(queue_name, type: 'multicast', subscribers: ['www.test1.com'])
+    queue = @client.queue(queue_name)
+    clear_queue(queue_name)
+    queue.add_subscribers(['www.test2.com', 'www.test3.com'])
+    subscribers = queue.reload.info['push']['subscribers']
+    assert_equal 2, subscribers.length
+  end
 end
 

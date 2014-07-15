@@ -11,31 +11,31 @@ module IronMQ
     end
 
     def body
-      @raw['message']['body']
+      @raw['body']
     end
 
     def timeout
-      @raw['message']['timeout']
+      @raw['timeout']
     end
 
     def expires_in
-      @raw['message']['expires_in']
+      @raw['expires_in']
     end
 
     def delay
-      @raw['message']['delay']
+      @raw['delay']
     end
 
     def reserved_count
-      @raw['message']['reserved_count']
+      @raw['reserved_count']
     end
 
     def reservation_id
-      @raw['message']['reservation_id']
+      @raw['reservation_id']
     end
 
     def push_statuses
-      @raw['message']['push_statuses']
+      @raw['push_statuses']
     end
 
     def touch
@@ -61,7 +61,7 @@ module IronMQ
       #  # return ResponseBase as normal
       #  ResponseBase.new({"msg" => "Deleted"}, 404)
       #else
-        raise ex
+      raise ex
       #end
     end
 

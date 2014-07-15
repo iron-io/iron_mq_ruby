@@ -100,6 +100,11 @@ queue.delete(msg.id)
 
 Be sure to delete a message from the queue when you're done with it.
 
+```ruby
+messages = queue.reserve(n: 3)
+queue.delete_reserved_messages(messages)
+```
+Delete reserved messages when you're done with it.
 --
 
 
@@ -121,8 +126,10 @@ all_queues = ironmq.queues.all  # => [#<IronMQ::Queue:...>, ...]
 
 **Optional parameters:**
 
-* `page`: The 0-based page to view. The default is 0.
-* `per_page`: The number of queues to return per page. The default is 30, the maximum is 100.
+* `per_page` - number of elements in response, default is 30.
+* `previous` - this is the last queue on the previous page, it will start from the next one. If queue with specified 
+               name doesn’t exist result will contain first per_page queues that lexicographically greater than previous
+* `prefix` - an optional queue prefix to search on. e.g., prefix=ca could return queues `["cars", "cats", etc.]`
 * `raw`: Set it to true to obtain data in raw format. The default is false.
 
 ```ruby
@@ -232,11 +239,12 @@ message = queue.get_message "5127bf043264140e863e2283" # => #<IronMQ::Message:..
 **Optional parameters:**
 
 * `n`: The maximum number of messages to get. Default is 1. Maximum is 100.
-
 * `timeout`: After timeout (in seconds), item will be placed back onto queue.
 You must delete the message from the queue to ensure it does not go back onto the queue.
 If not set, value from POST is used. Default is 60 seconds. Minimum is 30 seconds.
 Maximum is 86,400 seconds (24 hours).
+* `wait`: : Time in seconds to wait for a message to become available. This enables long polling. Default is 0 (does not wait), maximum is 30.
+* `delete`: true/false. This will delete the message on get. Be careful though, only use this if you are ok with losing a message if something goes wrong after you get it. Default is false.
 
 When `n` parameter is specified and greater than 1 method returns `Array` of `Message`s.
 Otherwise, `Message` object would be returned.
@@ -363,7 +371,7 @@ queue_info = queue.update(options) # => {"id"=>"5127bf043264140e863e2283", "name
 This set of subscribers will replace the existing subscribers.
 To add or remove subscribers, see the add subscribers endpoint or the remove subscribers endpoint.
 See below for example json.
-* `push_type`: Either `multicast` to push to all subscribers or `unicast` to push to one and only one subscriber. Default is `multicast`.
+* `type`: Either `multicast` to push to all subscribers or `unicast` to push to one and only one subscriber. Default is `multicast`.
 * `retries`: How many times to retry on failure. Default is 3. Maximum is 100.
 * `retries_delay`: Delay between each retry in seconds. Default is 60.
 
@@ -371,19 +379,16 @@ See below for example json.
 
 ### Set Subscribers on a Queue
 
-Subscribers can be any HTTP endpoint. `push_type` is one of:
+Subscribers can be any HTTP endpoint. push `type` is one of:
 
 * `multicast`: will push to all endpoints/subscribers
 * `unicast`: will push to one and only one endpoint/subscriber
 
 ```ruby
+ironmq = IronMQ::Client.new
 ptype = :multicast
-subscribers = [
-  {:url => "http://rest-test.iron.io/code/200?store=key1"},
-  {:url => "http://rest-test.iron.io/code/200?store=key2"}
-]
-
-queue.update(:subscribers => subscribers, :push_type => ptype)
+subscribers = ["http://rest-test.iron.io/code/200?store=key1", "http://rest-test.iron.io/code/200?store=key2"]
+ironmq.create_queue("queue_name",:subscribers => subscribers, :type => ptype )
 ```
 
 --
@@ -391,20 +396,11 @@ queue.update(:subscribers => subscribers, :push_type => ptype)
 ### Add/Remove Subscribers on a Queue
 
 ```ruby
-queue.add_subscriber({:url => "http://nowhere.com"})
+queue.add_subscriber("http://nowhere.com")
 
-queue.add_subscribers([
-  {:url => 'http://first.endpoint.xx/process'},
-  {:url => 'http://second.endpoint.xx/process'}
-])
+queue.add_subscribers(['http://first.endpoint.xx/process', 'http://second.endpoint.xx/process'])
 
-
-queue.remove_subscriber({url: "http://nowhere.com"})
-
-queue.remove_subscribers([
-  {:url => 'http://first.endpoint.xx/process'},
-  {:url => 'http://second.endpoint.xx/process'}
-])
+queue.clear_subscribers
 ```
 
 --
