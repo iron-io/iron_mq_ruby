@@ -40,7 +40,7 @@ The default host is AWS us-east-1 zone (mq-aws-us-east-1.iron.io). [See all avai
 ### Get Queues List
 
 ```ruby
-list_queues = ironmq.queues # => [#<IronMQ::Queue:...>, ...]
+queues = ironmq.list_queues # => [#<IronMQ::Queue:...>, ...]
 ```
 
 --
