@@ -128,9 +128,9 @@ module IronMQ
     # `options` was kept for backward compatibility
     def subscribers(options = {})
       load
-      return [] unless @raw['subscribers']
+      return [] if info['push'].nil? || info['push']['subscribers'].nil?
 
-      @raw['subscribers'].map { |s| Subscriber.new(s, self, options) }
+      info['push']['subscribers'].map { |s| Subscriber.new(s, self, options) }
     end
 
     def add_alerts(alerts)
