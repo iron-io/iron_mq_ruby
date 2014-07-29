@@ -94,15 +94,15 @@ module IronMQ
     private
 
     def prepare_options(options)
-      push = {}
       if options[:subscribers]
+        push = {}
         subscribers = options.delete(:subscribers).map{|val| {url: val}}
         push[:subscribers] = subscribers
+        options[:push] = push
       end
       push[:retries] = options[:retries] unless options[:retries].nil?
       push[:retries_delay] = options[:retries_delay] unless options[:retries_delay].nil?
       push[:error_queue] = options[:error_queue] unless options[:error_queue].nil?
-      options[:push] = push
       options
     end
   end
