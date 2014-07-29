@@ -80,13 +80,13 @@ module IronMQ
 
     def create_queue(queue_name, options = {})
       body = prepare_options(options)
-      response = self.put("/#{queue_name}", {queue: body})
+      response = self.put("/#{CGI::escape(queue_name).gsub('+', '%20')}", {queue: body})
       queue_hash = JSON.parse(response.body.to_s)
       ResponseBase.new(queue_hash['queue'])
     end
 
     def update_queue(queue_name, options = {})
-      response = self.patch("/#{queue_name}", {queue: prepare_options(options)})
+      response = self.patch("/#{CGI::escape(queue_name).gsub('+', '%20')}", {queue: prepare_options(options)})
       queue_hash = JSON.parse(response.body.to_s)
       ResponseBase.new(queue_hash['queue'])
     end
