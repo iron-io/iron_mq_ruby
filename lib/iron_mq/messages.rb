@@ -61,7 +61,7 @@ module IronMQ
       #  # return ResponseBase as normal
       #  ResponseBase.new({"msg" => "Deleted"}, 404)
       #else
-        raise ex
+      raise ex
       #end
     end
 
