@@ -11,8 +11,23 @@ much as possible so if you see an option in the API docs, you can use it in the 
 
 1\. Install the gem:
 
+<!---
+
 ```ruby
 gem install iron_mq
+```
+-->
+
+We don't have v3 in rubygems yet, but you can use Bundler to easily use this gem. Add this to your Gemfile:
+
+```ruby
+gem 'iron_mq', :git => 'https://github.com/iron-io/iron_mq_ruby.git', :branch => 'v3'
+```
+
+Then do a `bundle update` and when executing, be sure to use `bundle exec` like so:
+
+```
+bundle exec ruby script.rb
 ```
 
 2\. [Setup your Iron.io credentials](http://dev.iron.io/mq/reference/configuration/)
