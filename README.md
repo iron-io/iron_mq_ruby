@@ -382,11 +382,10 @@ queue.add_alert({
                   queue: 'my_alert_queue',
                   direction: 'asc',
                   snooze: 0
-                 })
+                })
 queue.clear
 # => #<IronMQ::ResponseBase:0x007f95d3b25438 @raw={"msg"=>"Updated"}, @code=200>
 ```
-
 
 
 --
@@ -426,17 +425,19 @@ Subscribers can be any HTTP endpoint. push `type` is one of:
 ```ruby
 ironmq = IronMQ::Client.new
 ptype = :multicast
-subscribers = [
-  {
-    name: 'key-one-sub',
-    url: 'http://rest-test.iron.io/code/200?store=key1'
-  },
-  {
-    name: 'key-two-sub',
-    url: 'http://rest-test.iron.io/code/200?store=key2'
-  }
-]
-ironmq.create_queue('queue_name', subscribers: subscribers, type: ptype )
+subscribers =
+  [
+   {
+     name: 'key-one-sub',
+     url: 'http://rest-test.iron.io/code/200?store=key1'
+   },
+   {
+     name: 'key-two-sub',
+     url: 'http://rest-test.iron.io/code/200?store=key2'
+   }
+  ]
+ironmq.create_queue('queue_name',
+                    subscribers: subscribers, type: ptype )
 ```
 
 --
@@ -445,20 +446,20 @@ ironmq.create_queue('queue_name', subscribers: subscribers, type: ptype )
 
 ```ruby
 queue.add_subscriber({
-  name: 'nowhere',
-  url: 'http://nowhere.com'
-})
+                       name: 'nowhere',
+                       url: 'http://nowhere.com'
+                     })
 
 queue.add_subscribers([
-  {
-    name: 'first',
-    url: 'http://first.endpoint.xx/process'
-  },
-  {
-    name: 'second',
-    url: 'http://second.endpoint.xx/process'
-  }
-])
+                       {
+                         name: 'first',
+                         url: 'http://first.endpoint.xx/process'
+                       },
+                       {
+                         name: 'second',
+                         url: 'http://second.endpoint.xx/process'
+                       }
+                      ])
 
 queue.clear_subscribers
 ```
@@ -566,12 +567,12 @@ To add single alert to a queue.
 
 ```ruby
 queue.add_alert({
-  type: 'fixed',
-  direction: 'asc',
-  trigger: 1,
-  queue: 'alerts-queue',
-  snooze: 600
-})
+                  type: 'fixed',
+                  direction: 'asc',
+                  trigger: 1,
+                  queue: 'alerts-queue',
+                  snooze: 600
+                })
 # => #<IronMQ::ResponseBase:0x007f8d22980420 @raw={"msg"=>"Alerts were added."}, @code=200>
 ```
 
@@ -579,18 +580,18 @@ To add multiple alerts at a time.
 
 ```ruby
 queue.add_alerts([
-  {
-    type: 'fixed',
-    direction: 'desc',
-    trigger: 1,
-    queue: 'alerts-queue'
-  },
-  {
-    type: 'progressive',
-    trigger: 1000,
-    queue: 'critical-alerts-queue'
-  }
-])
+                  {
+                    type: 'fixed',
+                    direction: 'desc',
+                    trigger: 1,
+                    queue: 'alerts-queue'
+                  },
+                  {
+                    type: 'progressive',
+                    trigger: 1000,
+                    queue: 'critical-alerts-queue'
+                  }
+                 ])
 # => #<IronMQ::ResponseBase:0x00abcdf1980420 @raw={"msg"=>"Alerts were added."}, @code=200>
 ```
 
@@ -619,12 +620,12 @@ Following code sample shows how to replace alerts on a queue.
 
 ```ruby
 queue.replace_alerts([
-  {
-    type: 'fixed',
-    trigger: 100,
-    queue: 'alerts'
-  }
-])
+                      {
+                        type: 'fixed',
+                        trigger: 100,
+                        queue: 'alerts'
+                      }
+                     ])
 # => #<IronMQ::ResponseBase:0x00008d229a16bf @raw={"msg"=>"Alerts were replaced."}, @code=200>
 ```
 
