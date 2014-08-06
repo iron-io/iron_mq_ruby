@@ -13,7 +13,7 @@ module IronMQ
     end
 
     def id
-      @raw["id"]
+      @raw['id']
     end
 
     def [](key)
@@ -21,7 +21,7 @@ module IronMQ
     end
 
     def msg
-      @raw["msg"]
+      @raw['msg']
     end
     #
     #def raw

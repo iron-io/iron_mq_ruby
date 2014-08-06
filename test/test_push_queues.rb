@@ -53,7 +53,7 @@ class TestPushQueues < TestBase
     p queue.subscribers[0].url
     assert_equal s2, queue.subscribers[0].url
 
-    queue.delete_queue
+    queue.delete
   end
 
 
@@ -189,7 +189,7 @@ class TestPushQueues < TestBase
       assert_not_equal tries, 0
 
       # delete queue after all tests on it were completed
-      resp = queue.delete_queue
+      resp = queue.delete
       assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
     end
   end
@@ -244,7 +244,7 @@ class TestPushQueues < TestBase
     end
 
     # delete queue after all tests on it were completed
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must respond with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -333,7 +333,7 @@ class TestPushQueues < TestBase
     assert_not_equal tries, 0
 
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -445,7 +445,7 @@ class TestPushQueues < TestBase
       assert_not_equal 0, tries
 
       # delete queue on test complete
-      resp = queue.delete_queue
+      resp = queue.delete
       assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
     end
   end
@@ -479,7 +479,7 @@ class TestPushQueues < TestBase
       end
     end
 
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
@@ -589,9 +589,9 @@ class TestPushQueues < TestBase
     p orig_msg.body
     assert msg, orig_msg.body
 
-    error_queue.delete_queue
+    error_queue.delete
     # delete queue on test complete
-    resp = queue.delete_queue
+    resp = queue.delete
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 

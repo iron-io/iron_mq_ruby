@@ -8,7 +8,6 @@ module IronMQ
     def initialize(client, queue_name)
       @client = client
       @name = queue_name
-      raise ArgumentError, "Must provide a queue name" unless queue_name.is_a?(String) and queue_name.strip.length > 0
     end
 
     def info
@@ -19,49 +18,46 @@ module IronMQ
     def load
       reload if @raw.nil?
 
-      @raw
+      @raw['queue']
     end
 
     def reload
-      @raw = call_api_and_parse_response(:get, "", {}, false, true)
+      @raw = call_api_and_parse_response(:get, '', {}, false, true)
       self
     end
 
     def id
-      load
-      @raw['id']
+      load['id']
     end
 
     def size
-      load
-      @raw['size'].to_i
+      load['size'].to_i
     end
 
     def total_messages
-      load
-      @raw['total_messages'].to_i
+      load['total_messages'].to_i
     end
 
-    def push_type
-      load
-      @raw['push_type']
+    def type
+      load['type']
     end
 
     def push_queue?
-      # FIXME: `push_type` parameter in not guaranted it's push queue.
-      #        When the parameter absent it is not guaranted that queue is not push queue.
-      ptype = push_type
-      not (ptype.nil? || ptype.empty?)
+      ['multicast', 'unicast'].include?(type)
+    end
+
+    def push_info
+      load['push']
     end
 
     def update(options)
-      call_api_and_parse_response(:post, "", options)
+      call_api_and_parse_response(:put, '', options)
     end
 
     alias_method :update_queue, :update
 
     def clear
-      call_api_and_parse_response(:post, "/clear", {}, false, true)
+      call_api_and_parse_response(:delete, '/messages', {}, false, true)
     end
 
     alias_method :clear_queue, :clear
@@ -73,27 +69,41 @@ module IronMQ
       return r
     rescue Rest::HttpError => ex
       #if ex.code == 404
-      #  Rest.logger.info("Delete got 404, safe to ignore.")
+      #  Rest.logger.info('Delete got 404, safe to ignore.')
       #  # return ResponseBase as normal
-      #  ResponseBase.new({"msg" => "Deleted"}, 404)
+      #  ResponseBase.new({'msg' => 'Deleted'}, 404)
       #else
         raise ex
       #end
     end
 
     # Backward compatibility
-    def delete(message_id, options = {})
+    def delete(message_id, reservation_id = nil)
       # API does not accept any options
-      Message.new(self, {"id" => message_id}).delete
+      options = {}
+      options['id'] = message_id
+      unless reservation_id.nil?
+        options['reservation_id'] = reservation_id
+      end
+      Message.new(self, options).delete
     end
 
     # Accepts an array of message ids
     def delete_messages(ids)
-      call_api_and_parse_response(:delete, "/messages", :ids => ids)
+      call_api_and_parse_response(:delete, '/messages', ids: ids)
+    end
+
+    def delete_reserved_messages(messages)
+      ids = messages.map do |message|
+        {id: message.id, reservation_id: message.reservation_id}
+      end
+
+      call_api_and_parse_response(:delete, '/messages', ids: ids)
     end
 
     def add_subscribers(subscribers)
-      call_api_and_parse_response(:post, "/subscribers", :subscribers => subscribers)
+      call_api_and_parse_response(:patch, '',
+                                  queue: {push: {subscribers: subscribers}})
     end
 
     # `options` for backward compatibility
@@ -103,10 +113,12 @@ module IronMQ
 
     def remove_subscribers(subscribers)
       call_api_and_parse_response(:delete,
-                                  "/subscribers",
+                                  '/subscribers',
                                   {
-                                      :subscribers => subscribers,
-                                      :headers => {"Content-Type" => @client.content_type}
+                                    subscribers: subscribers,
+                                    headers: {
+                                      'Content-Type' => @client.content_type
+                                    }
                                   })
     end
 
@@ -114,17 +126,21 @@ module IronMQ
       remove_subscribers([subscriber])
     end
 
+    def clear_subscribers
+      call_api_and_parse_response(:patch, '',
+                                  queue: {push: {subscribers: [{}]}})
+    end
+
     # `options` was kept for backward compatibility
     def subscribers(options = {})
       load
-      if @raw['subscribers']
-        return @raw['subscribers'].map { |s| Subscriber.new(s, self, options) }
-      end
-      []
+      return [] if info['push'].nil? || info['push']['subscribers'].nil?
+
+      info['push']['subscribers'].map { |s| Subscriber.new(s, self, options) }
     end
 
     def add_alerts(alerts)
-      call_api_and_parse_response(:post, '/alerts', :alerts => alerts)
+      call_api_and_parse_response(:patch, '', queue: {alerts: alerts})
     end
 
     def add_alert(alert)
@@ -132,7 +148,7 @@ module IronMQ
     end
 
     def remove_alerts(alerts)
-      call_api_and_parse_response(:delete, '/alerts', :alerts => alerts)
+      call_api_and_parse_response(:delete, '/alerts', alerts: alerts)
     end
 
     def remove_alert(alert)
@@ -140,7 +156,7 @@ module IronMQ
     end
 
     def replace_alerts(alerts)
-      call_api_and_parse_response(:put, '/alerts', :alerts => alerts)
+      call_api_and_parse_response(:put, '/alerts', alerts: alerts)
     end
 
     def clear_alerts
@@ -168,44 +184,42 @@ module IronMQ
                #        For now user must pass objects like `[{:body => msg1}, {:body => msg2}]`
                payload.map { |msg| msg.merge(options) }
              else
-               [options.merge(:body => payload)]
+               [options.merge(body: payload)]
              end
 
       # Do not instantiate response
-      res = call_api_and_parse_response(:post, "/messages", {:messages => msgs}, false)
+      res = call_api_and_parse_response(:post, '/messages',
+                                        {messages: msgs}, false)
 
       if instantiate
         n = batch ? 2 : 1
-        msg_ids = res["ids"].map { |id| {"id" => id} }
+        msg_ids = res['ids'].map { |id| {'id' => id} }
 
-        process_messages(msg_ids, {:n => n})
+        process_messages(msg_ids, {n: n})
       else
         if batch
           # FIXME: Return Array of ResponseBase instead, it seems more clear than raw response
           #
-          #          res["ids"].map { |id| ResponseBase.new({"id" => id, "msg" => res["msg"]}) }
+          #          res['ids'].map { |id| ResponseBase.new({'id' => id, 'msg' => res['msg']}) }
           #
           ResponseBase.new(res) # Backward capable
         else
-          ResponseBase.new({"id" => res["ids"][0], "msg" => res["msg"]})
+          ResponseBase.new({'id' => res['ids'][0], 'msg' => res['msg']})
         end
       end
     end
 
     alias_method :post, :post_messages
 
-    def get_messages(options = {})
-      if options.is_a?(String)
-        # assume it's an id
-        return Message.new(self, {"id" => options})
-      end
-
-      resp = call_api_and_parse_response(:get, "/messages", options, false)
-
-      process_messages(resp["messages"], options)
+    def reserve_messages(options = {})
+      resp = call_api_and_parse_response(:post, '/reservations', options, false)
+      process_messages(resp['messages'], options)
     end
 
-    alias_method :get, :get_messages
+    # backwards compatibility
+    alias_method :get, :reserve_messages
+    alias_method :get_messages, :reserve_messages
+    alias_method :reserve, :reserve_messages
 
     # Backward compatibility
     def messages
@@ -214,13 +228,13 @@ module IronMQ
 
     def get_message(id)
       resp = call_api_and_parse_response(:get, "/messages/#{id}", {}, false)
-      Message.new(self, resp)
+      Message.new(self, resp['message'])
     end
 
     def peek_messages(options = {})
-      resp = call_api_and_parse_response(:get, "/messages/peek", options)
+      resp = call_api_and_parse_response(:get, '/messages', options)
 
-      process_messages(resp["messages"], options)
+      process_messages(resp['messages'], options)
     end
 
     alias_method :peek, :peek_messages
@@ -242,17 +256,24 @@ module IronMQ
 
     alias_method :poll, :poll_messages
 
-    def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true, ignore404 = false)
-      r = nil
-      response = if meth.to_s == "delete"
-                   headers = options.delete(:headers) || options.delete("headers") || {}
+    def call_api_and_parse_response(meth, ext_path = '', options = {},
+                                    instantiate = true, ignore404 = false)
+      response =
+        if meth.to_s == 'delete'
+          headers = options.delete(:headers) ||
+                    options.delete('headers') ||
+                    Hash.new
+          headers['Content-Type'] = 'application/json'
+          @client.parse_response(@client.send(meth,
+                                              "#{path(ext_path)}",
+                                              options, headers))
+        else
+          @client.parse_response(@client.send(meth,
+                                              "#{path(ext_path)}",
+                                              options))
+        end
 
-                   @client.parse_response(@client.send(meth, "#{path(ext_path)}", options, headers))
-                 else
-                   @client.parse_response(@client.send(meth, "#{path(ext_path)}", options))
-                 end
-      r = instantiate ? ResponseBase.new(response) : response
-      r
+      instantiate ? ResponseBase.new(response) : response
     end
 
     private

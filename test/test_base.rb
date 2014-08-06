@@ -27,8 +27,8 @@ class TestBase < Test::Unit::TestCase
 
     @client = IronMQ::Client.new(@config['iron'])
     puts "IronMQ::VERSION = #{IronMQ::VERSION}"
-    #Rest.logger.level = Logger::DEBUG # this doesn't work for some reason?
-    #IronCore::Logger.logger.level = Logger::DEBUG
+    # Rest.logger.level = Logger::DEBUG # this doesn't work for some reason?
+    # IronCore::Logger.logger.level = Logger::DEBUG
 
     @queue_name = 'ironmq-ruby-tests' # default queue for tests
   end
@@ -46,6 +46,7 @@ class TestBase < Test::Unit::TestCase
     rescue Rest::HttpError => ex
       if ex.code == 404
         # this is fine
+        puts '404 ON CLEAR!!'
       else
         raise ex
       end

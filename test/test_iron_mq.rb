@@ -7,36 +7,6 @@ class IronMQTests < TestBase
     super
     LOG.info "@host: #{@host}"
 
-    queues = @client.queues.list
-    # p queues
-  end
-
-  def test_performance_post_100_messages
-    queue = @client.queue('test_perf_100')
-    # slower to rackspace since this is running on aws
-    timeout = @host.include?('rackspace') ? 40 : 12
-
-    assert_performance(timeout) do
-      100.times do
-        queue.post("hello world!")
-      end
-
-      # delete queue on test complete
-      resp = queue.delete_queue
-      assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
-    end
-  end
-
-  def test_get
-    queue_name = "some_queue_abcj9u23"
-    queue = @client.queue(queue_name)
-    msg = queue.get
-    v = "hello big world"
-    queue.post(v)
-    msg = queue.get
-    msg.delete
-    msg = queue.get
-
   end
 
   def test_basics
@@ -44,8 +14,7 @@ class IronMQTests < TestBase
     clear_queue(queue_name)
 
     # NOTE: Kept for backward compatibility checking
-    queue = @client.queues.get(:name => queue_name)
-    # p queue
+    queue = @client.queue(queue_name)
     res = queue.post("hello world!")
     # p res
 
@@ -53,17 +22,16 @@ class IronMQTests < TestBase
     assert res.id
     assert res.msg
     sleep 0.3
-    assert_equal 1, queue.size
+    assert_equal 1, queue.reload.size
 
-    message = queue.get
+    message = queue.reserve
     # p res
     assert res["id"]
     assert res.id
 
-    res = queue.delete(res["id"])
+    res = queue.delete(res["id"], message.reservation_id)
     # p res
-    puts "shouldn't be any more"
-    res = queue.get
+    res = queue.reserve
     # p res
     assert_nil res
 
@@ -73,15 +41,14 @@ class IronMQTests < TestBase
     res = queue.post("hello world 2!")
     # p res
 
-    msg = queue.get
+    msg = queue.reserve
     # p msg
     assert msg
 
     res = msg.delete
     #p res
 
-    puts "shouldn't be any more"
-    res = queue.get
+    res = queue.reserve
     # p res
     assert_nil res
 
@@ -92,16 +59,16 @@ class IronMQTests < TestBase
     # p res
     assert res.msg
 
-    res = queue.get
-    # p res
+    res = queue.reserve
+    puts "queue.reserve got: #{res.body}"
+    p res
     assert res["id"]
     assert res.id
     assert_equal v, res.body
 
-    res = queue.delete(res.id)
-    # p res
-    puts "shouldn't be any more"
-    res = queue.get
+    res = queue.delete(res.id, res.reservation_id)
+
+    res = queue.reserve
     # p res
     assert_nil res
 
@@ -110,14 +77,13 @@ class IronMQTests < TestBase
     # p res
     assert res.msg
 
-    res = queue.get
+    res = queue.reserve
     # p res
     assert res.body
 
     res = res.delete
     # p res
-    puts "shouldn't be any more"
-    res = queue.get
+    res = queue.reserve
     # p res
     assert_nil res
 
@@ -126,7 +92,10 @@ class IronMQTests < TestBase
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
+
+
   def test_multi_delete
+    puts 'test_multi_delete'
     queue_name = 'test_multi_delete_41'
     clear_queue(queue_name)
 
@@ -134,7 +103,7 @@ class IronMQTests < TestBase
     ids = []
     10.times do |i|
       msg = queue.post("hello #{i}")
-      ids << msg.id
+      ids << {id: msg.id}
     end
     sleep 0.5
     assert_equal 10, queue.reload.size
@@ -142,7 +111,39 @@ class IronMQTests < TestBase
     queue.delete_messages(ids)
     sleep 1
     assert_equal 0, queue.reload.size
+
+    # now try it with reserved messages
+    ids = []
+    10.times do |i|
+      msg = queue.post("hello #{i}")
+    end
+    sleep 0.5
+    assert_equal 10, queue.reload.size
+    while (msg = queue.reserve) != nil do
+      ids << {id: msg.id, reservation_id: msg.reservation_id}
+    end
+    queue.delete_messages(ids)
+    sleep 1
+    assert_equal 0, queue.reload.size
+
     queue.delete_queue
+
+  end
+
+  def test_reservation_ids
+    puts 'test_reservation_ids'
+    # get a message, let it timeout, then try to delete it. That should fail.
+    queue_name = 'test_res_ids'
+    clear_queue(queue_name)
+
+    queue = @client.queue(queue_name)
+    msg = queue.post("hello")
+    msg = queue.reserve(:timeout=>3)
+    sleep 3
+    ex = assert_raise Rest::HttpError do
+      msg.delete
+    end
+    assert_equal 403, ex.code
 
   end
 
@@ -195,35 +196,36 @@ class IronMQTests < TestBase
     new_msg.delete
 
     # now try explicit timeout
-    res = queue.post("hello world timeout2!", :timeout => 30)
-    # p res
-    msg = queue.get
+    timeout = 5
+    res = queue.post("hello world timeout2!", :timeout => timeout)
+    # p resds
+    msg = queue.get(:timeout=>timeout)
     # p msg
     assert msg
-    assert_equal 30, msg.timeout
+    # assert_equal 30, msg.timeout - removed in v3
 
-    msg_nil = queue.get
+    msg_nil = queue.get(:timeout=>timeout)
     # p msg_nil
     assert_nil msg_nil
 
-    sleep 31
-    new_msg = queue.get
+    sleep timeout + 1
+    new_msg = queue.get(:timeout=>timeout)
     assert_not_nil new_msg
     assert_equal new_msg.id, msg.id
     new_msg.delete
 
     # timeout on get
     res = queue.post("hello world timeout3!")
-    msg = queue.get(:timeout => 30)
-#    puts "MESSAGE IS #{msg.inspect}"
+    msg = queue.get(:timeout => timeout)
+    #    puts "MESSAGE IS #{msg.inspect}"
     assert msg
-    assert_equal msg.timeout, 30
+    # assert_equal msg.timeout, 30 - removed in v3
 
-    msg_nil = queue.get
+    msg_nil = queue.get(:timeout=>timeout)
     # p msg_nil
     assert_nil msg_nil
 
-    sleep 31
+    sleep timeout+1
     new_msg = queue.get
     assert_not_nil new_msg
     assert_equal new_msg.id, msg.id
@@ -259,14 +261,15 @@ class IronMQTests < TestBase
 
     res = @client.queues.list
     # puts "res.size: #{res.size}"
+    assert res.size > 0
+    lastq = nil
     res.each do |q|
-      # puts "queue_name: " + q.name
+      puts "queue_name: " + q.name
       # puts "queue size: " + q.size.to_s
       assert q.size >= 0
+      lastq = q
     end
-    assert res.size > 0
-
-    res = @client.queues.list(:page => 50)
+    res = @client.queues.list(:previous => lastq.name)
     # puts "res.size 2: #{res.size}"
     # res.each do |q| { p q.name }
 
@@ -409,17 +412,17 @@ class IronMQTests < TestBase
     clear_queue(queue_name)
 
     queue = @client.queue(queue_name)
-    queue.post("first message", :timeout => 30)
-    queue.post("second message", :timeout => 30)
-    queue.post("third message", :timeout => 30)
+    queue.post("first message")
+    queue.post("second message")
+    queue.post("third message")
 
 
     # get message
-    msg = queue.get
+    msg = queue.get(:timeout => 10)
     assert_not_nil msg
     assert_equal "first message", msg.body, "message body must be 'first message', but it's '#{msg.body}'"
 
-    sleep 15 # timeout is not passed
+    sleep 5 # timeout is not passed
 
     msgs = queue.peek(:n => 3) # all messages from queue
     assert_equal Array, msgs.class, "waiting for Array, but got #{msgs.class}"
@@ -428,41 +431,46 @@ class IronMQTests < TestBase
       assert_not_equal msg.id, m.id, "returned a message which must be reserved"
     end
 
-    sleep 20 # ensure timeout is passed
+    sleep 5.5 # ensure timeout is passed
 
     # message must return to the queue
     msgs = queue.peek(:n => 3)
     assert_equal Array, msgs.class, "waiting for Array, but got #{msgs.class}"
     assert_equal 3, msgs.size, "API must return 3 messages"
 
-    msg = queue.get
+    msg = queue.get(:timeout=>10)
     assert_not_nil msg
     assert_equal "second message", msg.body, "message body must be 'second message', but it's '#{msg.body}'"
 
-    sleep 15 # timeout is not passed
+    sleep 5 # timeout is not passed
 
     msgs = queue.peek(:n => 3) # must return another message
     assert_equal Array, msgs.class, "waiting for Array, but got #{msgs.class}"
     assert_equal 2, msgs.size, "API must return only 2 messages"
     msgs.each { |m| assert_not_equal msg.id, m.id, "returned message which must be reserved" }
 
-    resp = msg.touch # more 30 seconds timeout
+    resp = msg.touch # (:timeout=>10) # increase timeout again, should be another 10 seconds
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
 
-    sleep 20 # new timeout is not passed, but previous is (15 + 20 vs 30 + 30 seconds)
+    sleep 5 # new timeout is not passed, but previous is (15 + 20 vs 30 + 30 seconds)
 
     msgs = queue.peek(:n => 3) # must return the same as for msg2
     assert_equal Array, msgs.class, "waiting for Array, but got #{msgs.class}"
     assert_equal 2, msgs.size, "API must return only 2 messages"
     msgs.each { |m| assert_not_equal msg.id, m.id, "returned message which must be reserved" }
 
-    sleep 15 # ensure timeout passed
+    sleep 5 # ensure timeout passed
+    queue.clear
+    queue.post("first message")
+    queue.post("second message")
+    queue.post("third message")
 
     # message must be returned to the end of the queue
     msgs = queue.peek(:n => 3)
+    msg = queue.reserve
     assert_equal Array, msgs.class, "waiting for Array, but got #{msgs.class}"
     assert_equal 3, msgs.size, "API must return 3 messages"
-    assert_equal msg.id, msgs[2].id, "released message must be at the end of the queue"
+    assert_equal msg.id, msgs[0].id, "released message must be at the beginning of the queue"
 
     # delete queue on test complete
     resp = queue.delete_queue
@@ -530,7 +538,6 @@ class IronMQTests < TestBase
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
-
   def test_clear
     puts "test_clear"
 
@@ -583,7 +590,6 @@ class IronMQTests < TestBase
   def test_queue_delete
     queue = @client.queue("test_delete")
     queue.post("hi")
-    old_id = queue.id
     queue.delete_queue
 
     LOG.info "sleeping for a bit to let queue delete..."
@@ -591,7 +597,6 @@ class IronMQTests < TestBase
 
     queue.post("hi2")
     # p queue
-    assert_not_equal old_id, queue.id, "old queue ID (#{old_id}) must not be equal to new ID (#{queue.id})"
     assert_equal 1, queue.size, "queue size must be 1, but got #{queue.size}"
 
     msg = queue.get
@@ -604,7 +609,7 @@ class IronMQTests < TestBase
 
   def test_webhooks
     qname ="webhook_queue"
-    url = "#{@client.base_url}/#{qname}/messages/webhook?oauth=#{@client.token}"
+    url = "#{@client.base_url}/#{qname}/webhook?oauth=#{@client.token}"
     # p url
 
     v = "hello webhook"
@@ -673,10 +678,10 @@ class IronMQTests < TestBase
     qname = "test_queue_set_info"
     clear_queue(qname)
     q = @client.queue(qname)
-    q.update_queue(:push_type => 'unicast')
-    assert_equal 'unicast', q.push_type
-    q.update_queue(:retries => 10)
-    assert_equal 'unicast', q.reload.push_type
+    q.update_queue({queue: {message_timeout: 45}})
+    assert_equal 45, q.info['message_timeout']
+    q.update_queue({queue: {message_expiration: 3600}})
+    assert_equal 3600, q.info['message_expiration']
   end
 
   def test_dequeue_delete
@@ -694,6 +699,93 @@ class IronMQTests < TestBase
     sleep 31
     msg = queue.get
     assert_equal nil, msg
+  end
+
+  def test_long_polling
+    queue_name = "test_long_polling"
+    clear_queue(queue_name)
+    queue = @client.queue(queue_name)
+    msg = queue.get
+    assert_nil msg
+    v = "hello long"
+    # ok, nothing in the queue, let's do a long poll
+    starti = Time.now.to_i
+    thr = Thread.new {
+      sleep 5
+      puts "Posting now"
+      begin
+        queue.post(v)
+      rescue Exception => ex
+        p ex
+      end
+
+    }
+    puts "Now going to wait for it..."
+    msg = queue.get(wait: 20)
+    # p msg
+    endi = Time.now.to_i
+    duration = endi - starti
+    p duration
+    assert duration > 4 && duration <= 7
+    assert_not_nil msg
+    assert_equal v, msg.body
+    msg.delete
+
+  end
+
+  def test_delete_reserved_messages
+    queue_name = 'test_delete_reserved_messages'
+    queue = @client.queue(queue_name)
+    clear_queue(queue_name)
+    queue.post("more")
+    queue.post("and more")
+    queue.post("and more")
+    assert_equal 3, queue.size
+    messages = queue.reserve(n: 3)
+    queue.delete_reserved_messages(messages)
+    assert_equal 0, queue.reload.size
+  end
+
+  def test_delete_reserved_message
+    queue_name = 'test_delete_message'
+    queue = @client.queue(queue_name)
+    clear_queue(queue_name)
+    queue.post("test message")
+    assert_equal 1, queue.reload.size
+    message = queue.reserve
+    queue.delete(message.id, message.reservation_id)
+    assert_equal 0, queue.reload.size
+
+    queue.post("another message")
+    assert_equal 1, queue.reload.size
+    message = queue.reserve
+    message.delete
+    assert_equal 0, queue.reload.size
+  end
+
+  def test_add_alerts
+    queue_name = 'test_add_alerts'
+    queue = @client.queue(queue_name)
+    clear_queue(queue_name)
+    queue.post('hey alerts')
+    queue.add_alerts([{type: "fixed",
+                       trigger: 100,
+                       direction: "asc",
+                       queue: "target_queue_name",
+                       snooze: 60
+                      }])
+    alerts = queue.reload.info['alerts']
+    assert_equal 1, alerts.length
+  end
+
+  def test_add_subscribers
+    queue_name = rand(36**6).to_s(36)
+    @client.create_queue(queue_name, type: 'multicast', subscribers: ['www.test1.com'])
+    queue = @client.queue(queue_name)
+    clear_queue(queue_name)
+    queue.add_subscribers(['www.test2.com', 'www.test3.com'])
+    subscribers = queue.reload.info['push']['subscribers']
+    assert_equal 2, subscribers.length
   end
 end
 

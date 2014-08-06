@@ -80,7 +80,7 @@ class QuickRun < TestBase
       puts "avg get: #{quicky.results(:get).duration}"
       puts "avg delete: #{quicky.results(:delete).duration}"
       puts "queue size: #{queue.reload.size}"
-      resp = queue.delete_queue
+      resp = queue.delete
       assert_equal 200, resp.code, "API must respond with HTTP 200 status, but returned HTTP #{resp.code}"
 
       ch << quicky.results
