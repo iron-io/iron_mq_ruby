@@ -22,9 +22,9 @@ module IronMQ
       super('iron', 'mq', options, default_options,
             [:project_id, :token, :api_version])
 
-       if @token.nil?
-         IronCore::Logger.error 'IronMQ', 'Token is not set', IronCore::Error
-       end
+      if @token.nil?
+        IronCore::Logger.error 'IronMQ', 'Token is not set', IronCore::Error
+      end
 
       check_id(@project_id, 'project_id')
 
@@ -49,7 +49,7 @@ module IronMQ
       if is_raw
         response.map{ |q_info| ResponseBase.new(q_info) }
       else
-        response['queues'].map{ |q_info| Queue.new(self, q_info['name']) }
+        response['queues'].map { |q_info| Queue.new(self, q_info['name']) }
       end
     end
 
@@ -97,5 +97,7 @@ module IronMQ
 
       ResponseBase.new(queue_hash['queue'])
     end
+
+  end
 
 end
