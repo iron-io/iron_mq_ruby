@@ -82,41 +82,20 @@ module IronMQ
       self
     end
 
-    def create_queue(queue_name, options = {})
-      body = prepare_options(options)
+    def create_queue(queue_name, options)
       response = self.put("/#{CGI::escape(queue_name).gsub('+', '%20')}",
-                          {queue: body})
+                          {queue: options})
       queue_hash = JSON.parse(response.body.to_s)
 
       ResponseBase.new(queue_hash['queue'])
     end
 
-    def update_queue(queue_name, options = {})
+    def update_queue(queue_name, options)
       response = self.patch("/#{CGI::escape(queue_name).gsub('+', '%20')}",
-                            {queue: prepare_options(options)})
+                            {queue: options})
       queue_hash = JSON.parse(response.body.to_s)
 
       ResponseBase.new(queue_hash['queue'])
     end
-
-    private
-
-    def prepare_options(options)
-      if options[:subscribers]
-        push = {}
-        push[:subscribers] = options.delete(:subscribers)
-        options[:push] = push
-      end
-      push[:retries] = options[:retries] unless options[:retries].nil?
-      unless options[:retries_delay].nil?
-        push[:retries_delay] = options[:retries_delay]
-      end
-      unless options[:error_queue].nil?
-        push[:error_queue] = options[:error_queue]
-      end
-
-      options
-    end
-  end
 
 end

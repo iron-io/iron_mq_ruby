@@ -180,6 +180,51 @@ Queue will be created automatically on post of first message or queue configurat
 
 ## Queues
 
+### Create a Queue
+
+```ruby
+ironmq = IronMQ::Client.new
+options = {
+  message_timeout: 120,
+  message_expiration: 24 * 3600,
+  push: {
+    subscribers: [
+      {
+        name: 'subscriber_name',
+        url: 'http://rest-test.iron.io/code/200?store=key1',
+        headers: {
+          'Content-Type' => 'application/json'
+        }
+      }
+    ],
+    retries: 3,
+    retries_delay: 30,
+    error_queue: 'error_queue_name'
+  }
+}
+
+ironmq.create_queue(options)
+```
+
+**Options:**
+
+* `type`: String or symbol. Queue type. `:pull`, `:multicast`, `:unicast`. Field required and static.
+* `message_timeout`: Integer. Number of seconds before message back to queue if it will not be deleted or touched.
+* `message_expiration`: Integer. Number of seconds between message post to queue and before message will be expired.
+
+**Push queues only:**
+
+* `push: subscribers`: An array of subscriber hashes containing a `name` and a `url` required fields,
+and optional `headers` hash. `headers`'s keys are names and values are means of HTTP headers.
+This set of subscribers will replace the existing subscribers.
+To add or remove subscribers, see the add subscribers endpoint or the remove subscribers endpoint.
+See below for example json.
+* `push: retries`: How many times to retry on failure. Default is 3. Maximum is 100.
+* `push: retries_delay`: Delay between each retry in seconds. Default is 60.
+* `push: error_queue`: String. Queue name to post push errors to.
+
+--
+
 ### Retrieve Queue Information
 
 ```ruby
@@ -399,19 +444,40 @@ IronMQ push queues allow you to setup a queue that will push to an endpoint, rat
 ### Update a Message Queue
 
 ```ruby
+options = {
+  message_timeout: 120,
+  message_expiration: 24 * 3600,
+  push: {
+    subscribers: [
+      {
+        name: 'subscriber_name',
+        url: 'http://rest-test.iron.io/code/200?store=key1',
+        headers: {
+          'Content-Type' => 'application/json'
+        }
+      }
+    ],
+    retries: 3,
+    retries_delay: 30,
+    error_queue: 'error_queue_name'
+  }
+}
+
 queue.update(options)
 ```
 
 **The following parameters are all related to Push Queues:**
 
-* `subscribers`: An array of subscriber hashes containing a `name` and a `url` required fields,
+* `push: subscribers`: An array of subscriber hashes containing a `name` and a `url` required fields,
 and optional `headers` hash. `headers`'s keys are names and values are means of HTTP headers.
 This set of subscribers will replace the existing subscribers.
 To add or remove subscribers, see the add subscribers endpoint or the remove subscribers endpoint.
 See below for example json.
-* `type`: Either `multicast` to push to all subscribers or `unicast` to push to one and only one subscriber. Default is `multicast`.
-* `retries`: How many times to retry on failure. Default is 3. Maximum is 100.
-* `retries_delay`: Delay between each retry in seconds. Default is 60.
+* `push: retries`: How many times to retry on failure. Default is 3. Maximum is 100.
+* `push: retries_delay`: Delay between each retry in seconds. Default is 60.
+* `push: error_queue`: String. Queue name to post push errors to.
+
+**Note:** queue type cannot be changed.
 
 --
 
@@ -424,7 +490,6 @@ Subscribers can be any HTTP endpoint. push `type` is one of:
 
 ```ruby
 ironmq = IronMQ::Client.new
-ptype = :multicast
 subscribers =
   [
    {
@@ -436,8 +501,8 @@ subscribers =
      url: 'http://rest-test.iron.io/code/200?store=key2'
    }
   ]
-ironmq.create_queue('queue_name',
-                    subscribers: subscribers, type: ptype )
+ironmq.create_queue('queue_name', type: :multicast,
+                    push: {subscribers: subscribers})
 ```
 
 --
@@ -447,13 +512,16 @@ ironmq.create_queue('queue_name',
 ```ruby
 queue.add_subscriber({
                        name: 'nowhere',
-                       url: 'http://nowhere.com'
+                       url: 'http://nowhere.com/push'
                      })
 
 queue.add_subscribers([
                        {
                          name: 'first',
-                         url: 'http://first.endpoint.xx/process'
+                         url: 'http://first.endpoint.xx/process',
+                         headers: {
+                           'Content-Type': 'application/json'
+                         }
                        },
                        {
                          name: 'second',
@@ -476,7 +544,7 @@ to `true`.
 message = queue.post('push me!', instantiate: true)
 # => #<IronMQ::Message:...>
 
-msgs = queue([{body: 'push'}, {body: 'me'}], instantiate: true)
+msgs = queue.post([{body: 'push'}, {body: 'me'}], instantiate: true)
 # => [#<IronMQ::Message:...>, ...]
 ```
 
