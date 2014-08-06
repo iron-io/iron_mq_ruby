@@ -240,7 +240,7 @@ messages = [{body: 'first'}, {body: 'second'}]
 response = queue.post(messages)
 # => {"ids" => ["5847899158098068288", ...], "msg" => "Messages put on queue."}
 # or
-response = queue.post(messages, :timeout => 300)
+response = queue.post(messages, timeout: 300)
 # => {"ids" => ["5847899158098068288", ...], "msg" => "Messages put on queue."}
 ```
 
