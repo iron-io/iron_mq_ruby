@@ -51,7 +51,7 @@ module IronMQ
     end
 
     def update(options)
-      call_api_and_parse_response(:put, '', options)
+      call_api_and_parse_response(:put, '', {queue: options})
     end
 
     alias_method :update_queue, :update
