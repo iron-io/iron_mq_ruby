@@ -7,6 +7,8 @@ much as possible so if you see an option in the API docs, you can use it in the 
 **WARNING: Version 5+ has some small breaking changes. Version 4 ignored 404's on delete operations, Version
 5 will now raise exceptions.
 
+[Important Notes](#important-notes).
+
 ## Getting Started
 
 1\. Install the gem:
@@ -21,7 +23,7 @@ gem install iron_mq
 We don't have v3 in rubygems yet, but you can use Bundler to easily use this gem. Add this to your Gemfile:
 
 ```ruby
-gem 'iron_mq', :git => 'https://github.com/iron-io/iron_mq_ruby.git', :branch => 'v3'
+gem 'iron_mq', git: 'https://github.com/iron-io/iron_mq_ruby.git', branch: 'v3'
 ```
 
 Then do a `bundle update` and when executing, be sure to use `bundle exec` like so:
@@ -41,12 +43,15 @@ ironmq = IronMQ::Client.new
 Or pass in credentials if you don't want to use an iron.json file or set ENV variables:
 
 ```ruby
-ironmq = IronMQ::Client.new(:token => "MY_TOKEN", :project_id => "MY_PROJECT_ID")
+ironmq = IronMQ::Client.new(token: 'MY_TOKEN',
+                            project_id: 'MY_PROJECT_ID')
 ```
 You can also change the host if you want to use a different cloud or region, for example, to use Rackspace ORD:
 
 ```ruby
-ironmq = IronMQ::Client.new(:host => "mq-rackspace-ord.iron.io", :token => "MY_TOKEN", :project_id => "MY_PROJECT_ID")
+ironmq = IronMQ::Client.new(host: 'mq-rackspace-ord.iron.io',
+                            token:'MY_TOKEN',
+                            project_id: 'MY_PROJECT_ID')
 ```
 The default host is AWS us-east-1 zone (mq-aws-us-east-1.iron.io). [See all available hosts/clouds/regions](http://dev.iron.io/mq/reference/clouds/).
 
@@ -65,7 +70,7 @@ list_queues = ironmq.queues # => [#<IronMQ::Queue:...>, ...]
 You can have as many queues as you want, each with their own unique set of messages.
 
 ```ruby
-queue = ironmq.queue("my_queue")
+queue = ironmq.queue('my_queue')
 ```
 
 Now you can use it.
@@ -78,7 +83,7 @@ Messages are placed on the queue in a FIFO arrangement.
 If a queue does not exist, it will be created upon the first posting of a message.
 
 ```ruby
-queue.post("hello world!")
+queue.post('hello world!')
 ```
 
 --
@@ -86,8 +91,10 @@ queue.post("hello world!")
 ### Retrieve Queue Information
 
 ```ruby
-queue.info # => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
-queue.id   # => "5127bf043264140e863e2283"
+queue.info
+# => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
+queue.id
+# => "5127bf043264140e863e2283"
 ```
 
 --
@@ -96,7 +103,8 @@ queue.id   # => "5127bf043264140e863e2283"
 
 ```ruby
 msg = queue.reserve
-msg.body # => "hello world!"
+msg.body
+# => "hello world!"
 ```
 
 When you pop/get a message from the queue, it is no longer on the queue but it still exists within the system.
@@ -119,7 +127,9 @@ Be sure to delete a message from the queue when you're done with it.
 messages = queue.reserve(n: 3)
 queue.delete_reserved_messages(messages)
 ```
+
 Delete reserved messages when you're done with it.
+
 --
 
 
@@ -128,15 +138,18 @@ Delete reserved messages when you're done with it.
 `IronMQ::Client` is based on `IronCore::Client` and provides easy access to the queues.
 
 ```ruby
-ironmq = IronMQ::Client.new(:token => "MY_TOKEN", :project_id => "MY_PROJECT_ID")
+ironmq = IronMQ::Client.new(token: 'MY_TOKEN',
+                            project_id: 'MY_PROJECT_ID')
 ```
 
 ### List Queues
 
 ```ruby
-all_queues = ironmq.queues.list # => [#<IronMQ::Queue:...>, ...]
+all_queues = ironmq.queues.list
+# => [#<IronMQ::Queue:...>, ...]
 # or
-all_queues = ironmq.queues.all  # => [#<IronMQ::Queue:...>, ...]
+all_queues = ironmq.queues.all
+# => [#<IronMQ::Queue:...>, ...]
 ```
 
 **Optional parameters:**
@@ -148,7 +161,7 @@ all_queues = ironmq.queues.all  # => [#<IronMQ::Queue:...>, ...]
 * `raw`: Set it to true to obtain data in raw format. The default is false.
 
 ```ruby
-queues = ironmq.queues.all(:page => 1, :per_page => 10)
+queues = ironmq.queues.all(page: 1, per_page: 10)
 ```
 
 --
@@ -156,7 +169,8 @@ queues = ironmq.queues.all(:page => 1, :per_page => 10)
 ### Get Queue by Name
 
 ```ruby
-queue = ironmq.queue "my_queue" # => #<IronMQ::Queue:...>
+queue = ironmq.queue('my_queue')
+# => #<IronMQ::Queue:...>
 ```
 
 **Note:** if queue with desired name does not exist it returns fake queue.
@@ -166,10 +180,56 @@ Queue will be created automatically on post of first message or queue configurat
 
 ## Queues
 
+### Create a Queue
+
+```ruby
+ironmq = IronMQ::Client.new
+options = {
+  message_timeout: 120,
+  message_expiration: 24 * 3600,
+  push: {
+    subscribers: [
+      {
+        name: 'subscriber_name',
+        url: 'http://rest-test.iron.io/code/200?store=key1',
+        headers: {
+          'Content-Type' => 'application/json'
+        }
+      }
+    ],
+    retries: 3,
+    retries_delay: 30,
+    error_queue: 'error_queue_name'
+  }
+}
+
+ironmq.create_queue(options)
+```
+
+**Options:**
+
+* `type`: String or symbol. Queue type. `:pull`, `:multicast`, `:unicast`. Field required and static.
+* `message_timeout`: Integer. Number of seconds before message back to queue if it will not be deleted or touched.
+* `message_expiration`: Integer. Number of seconds between message post to queue and before message will be expired.
+
+**Push queues only:**
+
+* `push: subscribers`: An array of subscriber hashes containing a `name` and a `url` required fields,
+and optional `headers` hash. `headers`'s keys are names and values are means of HTTP headers.
+This set of subscribers will replace the existing subscribers.
+To add or remove subscribers, see the add subscribers endpoint or the remove subscribers endpoint.
+See below for example json.
+* `push: retries`: How many times to retry on failure. Default is 3. Maximum is 100.
+* `push: retries_delay`: Delay between each retry in seconds. Default is 60.
+* `push: error_queue`: String. Queue name to post push errors to.
+
+--
+
 ### Retrieve Queue Information
 
 ```ruby
-info = queue.info # => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
+info = queue.info
+# => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
 ```
 
 Shortcuts for `queue.info[key]`:
@@ -180,7 +240,8 @@ id = queue.id # => "5127bf043264140e863e2283"
 size = queue.size # => 7
 name = queue.name # => "my_queue"
 overall_messages = queue.total_messages # => 13
-subscribers = queue.subscribers # => [{"url" => "http://..."}, ...]
+subscribers = queue.subscribers
+# => [{"url" => "http://..."}, ...]
 
 push_type = queue.push_type # => "multicast"
 # Does queue Push Queue? Alias for `queue.push_type.nil?`
@@ -206,9 +267,10 @@ response = queue.delete # => #<IronMQ::ResponseBase:...>
 **Single message:**
 
 ```ruby
-response = queue.post("something helpful") # => #<IronMQ::ResponseBase:...>
+response = queue.post('something helpful') # => #<IronMQ::ResponseBase:...>
 # or
-response = queue.post("with parameteres", :timeout => 300) # => #<IronMQ::ResponseBase:...>
+response = queue.post('with parameteres', timeout: 300)
+# => #<IronMQ::ResponseBase:...>
 
 message_id = response.id # => "5847899158098068288"
 status_message = response.msg # => "Messages put on queue."
@@ -217,12 +279,14 @@ http_code = response.code # => 200
 
 **Multiple messages:**
 ```ruby
-# [{:body => VALUE}, ...] format is required
-messages = [{:body => "first"}, {:body => "second"}]
+# [{body: VALUE}, ...] format is required
+messages = [{body: 'first'}, {body: 'second'}]
 
-response = queue.post(messages) # => {"ids" => ["5847899158098068288", ...], "msg" => "Messages put on queue."}
+response = queue.post(messages)
+# => {"ids" => ["5847899158098068288", ...], "msg" => "Messages put on queue."}
 # or
-response = queue.post(messages, :timeout => 300) # => {"ids" => ["5847899158098068288", ...], "msg" => "Messages put on queue."}
+response = queue.post(messages, timeout: 300)
+# => {"ids" => ["5847899158098068288", ...], "msg" => "Messages put on queue."}
 ```
 
 **Optional parameters:**
@@ -245,10 +309,11 @@ Default is 604,800 seconds (7 days). Maximum is 2,592,000 seconds (30 days).
 message = queue.reserve # => #<IronMQ::Message:...>
 
 # or N messages
-messages = queue.reserve(:n => 7) # => [#<IronMQ::Message:...>, ...]
+messages = queue.reserve(n: 7) # => [#<IronMQ::Message:...>, ...]
 
 # or message by ID
-message = queue.get_message "5127bf043264140e863e2283" # => #<IronMQ::Message:...>
+message = queue.get_message '5127bf043264140e863e2283'
+# => #<IronMQ::Message:...>
 ```
 
 **Optional parameters:**
@@ -285,7 +350,7 @@ message = queue.reserve # => #<IronMQ::Message:...>
 
 response = message.release # => #<IronMQ::ResponseBase:...>
 # or
-response = message.release(:delay => 42) # => #<IronMQ::ResponseBase:...>
+response = message.release(delay: 42) # => #<IronMQ::ResponseBase:...>
 ```
 
 **Optional parameters:**
@@ -312,7 +377,8 @@ Peeking at a queue returns the next messages on the queue, but it does not reser
 ```ruby
 message = queue.peek # => #<IronMQ::Message:...>
 # or multiple messages
-messages = queue.peek(:n => 13) # => [#<IronMQ::Message:...>, ...]
+messages = queue.peek(n: 13)
+# => [#<IronMQ::Message:...>, ...]
 ```
 
 **Optional parameters:**
@@ -355,15 +421,16 @@ You may add up to 5 alerts per queue.
 * `snooze`: Number of seconds between alerts. If alert must be triggered but snooze is still active, alert will be omitted. Snooze must be integer value greater than or equal to 0.
 
 ```ruby
-queue.add_alert({:type => "progressive",
-                  :trigger => 10,
-                  :queue => "my_alert_queue",
-                  :direction => "asc",
-                  :snooze => 0
-                 })
-queue.clear #  => #<IronMQ::ResponseBase:0x007f95d3b25438 @raw={"msg"=>"Updated"}, @code=200>
+queue.add_alert({
+                  type: 'progressive',
+                  trigger: 10,
+                  queue: 'my_alert_queue',
+                  direction: 'asc',
+                  snooze: 0
+                })
+queue.clear
+# => #<IronMQ::ResponseBase:0x007f95d3b25438 @raw={"msg"=>"Updated"}, @code=200>
 ```
-
 
 
 --
@@ -377,18 +444,40 @@ IronMQ push queues allow you to setup a queue that will push to an endpoint, rat
 ### Update a Message Queue
 
 ```ruby
-queue_info = queue.update(options) # => {"id"=>"5127bf043264140e863e2283", "name"=>"my_queue", ...}
+options = {
+  message_timeout: 120,
+  message_expiration: 24 * 3600,
+  push: {
+    subscribers: [
+      {
+        name: 'subscriber_name',
+        url: 'http://rest-test.iron.io/code/200?store=key1',
+        headers: {
+          'Content-Type' => 'application/json'
+        }
+      }
+    ],
+    retries: 3,
+    retries_delay: 30,
+    error_queue: 'error_queue_name'
+  }
+}
+
+queue.update(options)
 ```
 
 **The following parameters are all related to Push Queues:**
 
-* `subscribers`: An array of subscriber hashes containing a “url” field.
+* `push: subscribers`: An array of subscriber hashes containing a `name` and a `url` required fields,
+and optional `headers` hash. `headers`'s keys are names and values are means of HTTP headers.
 This set of subscribers will replace the existing subscribers.
 To add or remove subscribers, see the add subscribers endpoint or the remove subscribers endpoint.
 See below for example json.
-* `type`: Either `multicast` to push to all subscribers or `unicast` to push to one and only one subscriber. Default is `multicast`.
-* `retries`: How many times to retry on failure. Default is 3. Maximum is 100.
-* `retries_delay`: Delay between each retry in seconds. Default is 60.
+* `push: retries`: How many times to retry on failure. Default is 3. Maximum is 100.
+* `push: retries_delay`: Delay between each retry in seconds. Default is 60.
+* `push: error_queue`: String. Queue name to post push errors to.
+
+**Note:** queue type cannot be changed.
 
 --
 
@@ -401,9 +490,19 @@ Subscribers can be any HTTP endpoint. push `type` is one of:
 
 ```ruby
 ironmq = IronMQ::Client.new
-ptype = :multicast
-subscribers = ["http://rest-test.iron.io/code/200?store=key1", "http://rest-test.iron.io/code/200?store=key2"]
-ironmq.create_queue("queue_name",:subscribers => subscribers, :type => ptype )
+subscribers =
+  [
+   {
+     name: 'key-one-sub',
+     url: 'http://rest-test.iron.io/code/200?store=key1'
+   },
+   {
+     name: 'key-two-sub',
+     url: 'http://rest-test.iron.io/code/200?store=key2'
+   }
+  ]
+ironmq.create_queue('queue_name', type: :multicast,
+                    push: {subscribers: subscribers})
 ```
 
 --
@@ -411,9 +510,24 @@ ironmq.create_queue("queue_name",:subscribers => subscribers, :type => ptype )
 ### Add/Remove Subscribers on a Queue
 
 ```ruby
-queue.add_subscriber("http://nowhere.com")
+queue.add_subscriber({
+                       name: 'nowhere',
+                       url: 'http://nowhere.com/push'
+                     })
 
-queue.add_subscribers(['http://first.endpoint.xx/process', 'http://second.endpoint.xx/process'])
+queue.add_subscribers([
+                       {
+                         name: 'first',
+                         url: 'http://first.endpoint.xx/process',
+                         headers: {
+                           'Content-Type': 'application/json'
+                         }
+                       },
+                       {
+                         name: 'second',
+                         url: 'http://second.endpoint.xx/process'
+                       }
+                      ])
 
 queue.clear_subscribers
 ```
@@ -427,9 +541,11 @@ instead getting it by ID returned in API response. To do this just set `:instant
 to `true`.
 
 ```ruby
-message = queue.post('push me!', :instantiate => true) # => #<IronMQ::Message:...>
+message = queue.post('push me!', instantiate: true)
+# => #<IronMQ::Message:...>
 
-msgs = queue([{:body => 'push'}, {:body => 'me'}], :instantiate => true) # => [#<IronMQ::Message:...>, ...]
+msgs = queue.post([{body: 'push'}, {body: 'me'}], instantiate: true)
+# => [#<IronMQ::Message:...>, ...]
 ```
 
 This creates fake `Message` objects. They contain only IDs.
@@ -441,9 +557,12 @@ This creates fake `Message` objects. They contain only IDs.
 After pushing a message:
 
 ```ruby
-subscribers = queue.get_message(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
+statuses = queue.get_message(msg.id).push_statuses
+# => [#<IronMQ::Subscriber:...>, ...]
 
-subscribers.each { |ss| puts "#{ss.id}: #{(ss.code == 200) ? 'Success' : 'Fail'}" }
+statuses.each do |s|
+  puts "#{s.subscriber_name}: #{(s.code == 200) ? 'Success' : 'Fail'}"
+end
 ```
 
 Returns an array of subscribers with status.
@@ -456,22 +575,13 @@ This creates fake `IronMQ::Message` instance on which you call for subscribers' 
 ### Acknowledge / Delete Message Push Status
 
 ```ruby
-subscribers = queue.get_message(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
+subscribers = queue.get_message(msg.id).subscribers
+# => [#<IronMQ::Subscriber:...>, ...]
 
 subscribers.each do |ss|
   ss.delete
-  # ss.acknowledge # This is `delete` alias
+  # ss.acknowledge # This is `delete`'s alias
 end
-```
-
---
-
-### Revert Queue Back to Pull Queue
-
-If you want to revert you queue just update `push_type` to `'pull'`.
-
-```ruby
-queue.update(:push_type => 'pull');
 ```
 
 --
@@ -525,12 +635,12 @@ To add single alert to a queue.
 
 ```ruby
 queue.add_alert({
-  :type => 'fixed',
-  :direction => 'asc',
-  :trigger => 1,
-  :queue => 'alerts-queue',
-  :snooze => 600
-})
+                  type: 'fixed',
+                  direction: 'asc',
+                  trigger: 1,
+                  queue: 'alerts-queue',
+                  snooze: 600
+                })
 # => #<IronMQ::ResponseBase:0x007f8d22980420 @raw={"msg"=>"Alerts were added."}, @code=200>
 ```
 
@@ -538,18 +648,18 @@ To add multiple alerts at a time.
 
 ```ruby
 queue.add_alerts([
-  {
-    :type => 'fixed',
-    :direction => 'desc',
-    :trigger => 1,
-    :queue => 'alerts-queue'
-  },
-  {
-    :type => "progressive",
-    :trigger => 1000,
-    :queue => 'critical-alerts-queue'
-  }
-])
+                  {
+                    type: 'fixed',
+                    direction: 'desc',
+                    trigger: 1,
+                    queue: 'alerts-queue'
+                  },
+                  {
+                    type: 'progressive',
+                    trigger: 1000,
+                    queue: 'critical-alerts-queue'
+                  }
+                 ])
 # => #<IronMQ::ResponseBase:0x00abcdf1980420 @raw={"msg"=>"Alerts were added."}, @code=200>
 ```
 
@@ -558,7 +668,7 @@ queue.add_alerts([
 To remove single alert by its ID.
 
 ```ruby
-queue.remove_alert({ :id => '5eee546df4a4140e8638a7e5' })
+queue.remove_alert({ id: '5eee546df4a4140e8638a7e5' })
 # => #<IronMQ::ResponseBase:0x007f8d229a1878 @raw={"msg"=>"Alerts were deleted."}, @code=200>
 ```
 
@@ -566,8 +676,8 @@ Remove multiple alerts by IDs.
 
 ```ruby
 queue.remove_alerts([
-  { :id => '53060b541185ab3eaf04c83f' },
-  { :id => '99a50b541185ab3eaf9bcfff' }
+  { id: '53060b541185ab3eaf04c83f' },
+  { id: '99a50b541185ab3eaf9bcfff' }
 ])
 # => #<IronMQ::ResponseBase:0x093b8d229a18af @raw={"msg"=>"Alerts were deleted."}, @code=200>
 ```
@@ -578,12 +688,12 @@ Following code sample shows how to replace alerts on a queue.
 
 ```ruby
 queue.replace_alerts([
-  {
-    :type => 'fixed',
-    :trigger => 100,
-    :queue => 'alerts'
-  }
-])
+                      {
+                        type: 'fixed',
+                        trigger: 100,
+                        queue: 'alerts'
+                      }
+                     ])
 # => #<IronMQ::ResponseBase:0x00008d229a16bf @raw={"msg"=>"Alerts were replaced."}, @code=200>
 ```
 
@@ -596,6 +706,11 @@ queue.clear_alerts
 
 **Note:** `Queue#clear_alerts` is a helper, which represents
   `Queue#replace_alerts` call with empty `Array` of alerts.
+
+## Important Notes
+
+* [Ruby 1.8 is no more supported](https://www.ruby-lang.org/en/news/2013/06/30/we-retire-1-8-7/).
+* Queue type is static now. Once it is set, it cannot be changed.
 
 ## Further Links
 

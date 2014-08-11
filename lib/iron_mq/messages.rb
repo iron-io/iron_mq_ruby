@@ -39,16 +39,16 @@ module IronMQ
     end
 
     def touch
-      call_api_and_parse_response(:post, "/touch")
+      call_api_and_parse_response(:post, '/touch')
     end
 
     def release(options = {})
-      call_api_and_parse_response(:post, "/release", options)
+      call_api_and_parse_response(:post, '/release', options)
     end
 
     # `options` was kept for backward compatibility
     def subscribers(options = {})
-      response = call_api_and_parse_response(:get, "/subscribers", {}, false)
+      response = call_api_and_parse_response(:get, '/subscribers', {}, false)
 
       response['subscribers'].map { |s| Subscriber.new(s, self, options) }
     end
@@ -57,17 +57,22 @@ module IronMQ
       call_api_and_parse_response(:delete)
     rescue Rest::HttpError => ex
       #if ex.code == 404
-      #  Rest.logger.info("Delete got 404, safe to ignore.")
+      #  Rest.logger.info('Delete got 404, safe to ignore.')
       #  # return ResponseBase as normal
-      #  ResponseBase.new({"msg" => "Deleted"}, 404)
+      #  ResponseBase.new({'msg' => 'Deleted'}, 404)
       #else
       raise ex
       #end
     end
 
-    def call_api_and_parse_response(meth, ext_path = "", options = {}, instantiate = true)
-      options[:reservation_id] = self.reservation_id if self.reservation_id && !self.reservation_id.empty?
-      @queue.call_api_and_parse_response(meth, "#{path(ext_path)}", options, instantiate)
+    def call_api_and_parse_response(meth, ext_path = '',
+                                    options = {}, instantiate = true)
+      if self.reservation_id && !self.reservation_id.empty?
+        options[:reservation_id] = self.reservation_id
+      end
+      @queue.call_api_and_parse_response(meth,
+                                         "#{path(ext_path)}",
+                                         options, instantiate)
     end
 
     private
