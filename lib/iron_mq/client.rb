@@ -33,7 +33,7 @@ module IronMQ
     end
 
     def headers
-      super.merge({'Authorization' => "OAuth #{@token}"})
+      super.merge({'Authorization' => "OAuth #{@token_provider.nil? ? @token : @token_provider.token}"})
     end
 
     def base_url
