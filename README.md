@@ -55,6 +55,36 @@ ironmq = IronMQ::Client.new(host: 'mq-rackspace-ord.iron.io',
 ```
 The default host is AWS us-east-1 zone (mq-aws-us-east-1.iron.io). [See all available hosts/clouds/regions](http://dev.iron.io/mq/reference/clouds/).
 
+### Using Keystone authentication
+
+#### Via Configuration File
+
+Add `keystone` section to your iron.json file:
+
+```javascript
+{
+  "project_id": "57a7b7b35e8e331d45000001",
+  "keystone": {
+    "server": "http://your.keystone.host/v2.0/",
+    "tenant": "some-group",
+    "username": "name",
+    "password": "password"
+  }
+}
+```
+
+#### In Code
+
+```ruby
+keystone = {
+  server: "http://your.keystone.host/v2.0/",
+  tenant: "some-gorup",
+  username: "name",
+  password: "password"
+}
+client = IronMQ::Client.new(project_id: "57a7b7b35e8e331d45000001", keystone: keystone)
+```
+
 ## The Basics
 
 ### Get Queues List
