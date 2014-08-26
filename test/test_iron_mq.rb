@@ -762,30 +762,5 @@ class IronMQTests < TestBase
     message.delete
     assert_equal 0, queue.reload.size
   end
-
-  def test_add_alerts
-    queue_name = 'test_add_alerts'
-    queue = @client.queue(queue_name)
-    clear_queue(queue_name)
-    queue.post('hey alerts')
-    queue.add_alerts([{type: "fixed",
-                       trigger: 100,
-                       direction: "asc",
-                       queue: "target_queue_name",
-                       snooze: 60
-                      }])
-    alerts = queue.reload.info['alerts']
-    assert_equal 1, alerts.length
-  end
-
-  def test_add_subscribers
-    queue_name = rand(36**6).to_s(36)
-    @client.create_queue(queue_name, type: 'multicast', subscribers: ['www.test1.com'])
-    queue = @client.queue(queue_name)
-    clear_queue(queue_name)
-    queue.add_subscribers(['www.test2.com', 'www.test3.com'])
-    subscribers = queue.reload.info['push']['subscribers']
-    assert_equal 2, subscribers.length
-  end
 end
 

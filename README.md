@@ -225,6 +225,51 @@ See below for example json.
 
 --
 
+### Add subscribers to a push queue
+
+```ruby
+subscribers = [
+    {
+        name: 'first',
+        url: 'http://first.endpoint.xx/process',
+        headers: {
+            Content-Type: 'application/json'
+        }
+    },
+    {
+        name: 'second',
+        url: 'http://second.endpoint.xx/process',
+    }
+]
+queue.add_subscribers(subscribers)
+```
+
+### Replace subscribers on a push queue
+
+Sets list of subscribers to a queue. Older subscribers will be removed.
+
+```ruby
+subscribers = [
+    {
+        name: 'the_only',
+        url: 'http://my.over9k.host.com/push'
+    }
+]
+queue.replace_subscribers(subscribers);
+```
+
+### Remove subscribers by a name from a push queue
+
+```ruby
+subscribers = [
+    {
+        name: 'the_only'
+    }
+]
+queue.remove_subscribers(subscribers)
+```
+--
+
 ### Retrieve Queue Information
 
 ```ruby
