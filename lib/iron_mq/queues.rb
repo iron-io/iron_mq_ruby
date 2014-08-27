@@ -102,8 +102,7 @@ module IronMQ
     end
 
     def add_subscribers(subscribers)
-      call_api_and_parse_response(:patch, '',
-                                  queue: {push: {subscribers: subscribers}})
+      call_api_and_parse_response(:post, '/subscribers',{subscribers: subscribers})
     end
 
     # `options` for backward compatibility
@@ -126,9 +125,19 @@ module IronMQ
       remove_subscribers([subscriber])
     end
 
-    def clear_subscribers
-      call_api_and_parse_response(:patch, '',
-                                  queue: {push: {subscribers: [{}]}})
+    def replace_subscribers(subscribers)
+      call_api_and_parse_response(:put,
+                                  '/subscribers',
+                                  {
+                                      subscribers: subscribers,
+                                      headers: {
+                                          'Content-Type' => @client.content_type
+                                      }
+                                  })
+    end
+
+    def replace_subscriber(subscriber)
+      replace_subscribers([subscriber])
     end
 
     # `options` was kept for backward compatibility
