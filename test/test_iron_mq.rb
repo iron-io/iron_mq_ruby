@@ -237,43 +237,19 @@ class IronMQTests < TestBase
   end
 
   def test_queues
-    puts 'test_queues'
+    puts "test_queues-#{Time.now.to_i}"
 
     qname = "some_queue_that_does_not_exist_1"
     queue = @client.queue(qname)
-    # delete it before the test
-    begin
-      queue.delete_queue
-    rescue => ex
-      #ignore
-    end
-
-    assert_raise Rest::HttpError do
-      # should raise a 404
-      m = queue.size
-    end
-
     # create at least one queue
     queue.post('create queue message')
     # queue should exist now
     m = queue.get
     assert_not_nil m
 
-    res = @client.queues.list
+    res = @client.queues.list(page: 1, per_page: 30)
     # puts "res.size: #{res.size}"
-    assert res.size > 0
-    lastq = nil
-    res.each do |q|
-      puts "queue_name: " + q.name
-      # puts "queue size: " + q.size.to_s
-      assert q.size >= 0
-      lastq = q
-    end
-    res = @client.queues.list(:previous => lastq.name)
-    # puts "res.size 2: #{res.size}"
-    # res.each do |q| { p q.name }
-
-    assert_equal 0, res.size
+    assert_equal 30, res.size
 
     # delete queue on test complete
     resp = queue.delete_queue
@@ -480,56 +456,51 @@ class IronMQTests < TestBase
   def test_release
     puts 'test_release'
 
-    queue_name = "test_release_6"
+    queue_name = "test_release_#{Time.now.to_i}"
     clear_queue(queue_name)
 
-    msg_txt = "testMessage-"+Time.now.to_s
+    msg_txt = "testMessage-#{Time.now.to_i}"
     # puts msgTxt
 
     queue = @client.queue(queue_name)
 
     msg_id = queue.post(msg_txt, {:timeout => 60*5}).id
     # puts "msg_id: #{msg_id}"
-    message = queue.get
+    message = queue.reserve
     # p msg
     assert_equal msg_id, message.id
     # Ok, so should have received same message, now let's release it quicker than the original timeout
 
     # but first, ensure the next get is nil
-    msg = queue.get
+    msg = queue.reserve
     # p msg
     assert_nil msg
 
     # now release it instantly
-    message.release
-    msg = queue.get
-    # p msg
-    assert msg
-    assert_equal msg_id, msg.id
+    re = message.release
+    msg = queue.reserve
 
-    # ok, so should be reserved again
-    msgr = queue.get
-    # p msgr
-    assert_nil msgr
+    assert msg.raw
+    assert_equal msg_id, msg.id
 
     # let's release it in 10 seconds
     msg.release(:delay => 10)
-    msgr = queue.get
+    msgr = queue.reserve
     # p msg
     assert_nil msgr
 
     sleep 11
-    msg = queue.get
+    msg = queue.reserve
     assert_not_nil msg
     assert_equal msg_id, msg.id
 
     msg.release(:delay => 5)
-    msg = queue.get
+    msg = queue.reserve
     # p msg
     assert_nil msg
 
     sleep 6
-    msg = queue.get
+    msg = queue.reserve
     assert_not_nil msg
     assert_equal msg_id, msg.id
 
@@ -701,37 +672,6 @@ class IronMQTests < TestBase
     assert_equal nil, msg
   end
 
-  def test_long_polling
-    queue_name = "test_long_polling"
-    clear_queue(queue_name)
-    queue = @client.queue(queue_name)
-    msg = queue.get
-    assert_nil msg
-    v = "hello long"
-    # ok, nothing in the queue, let's do a long poll
-    starti = Time.now.to_i
-    thr = Thread.new {
-      sleep 5
-      puts "Posting now"
-      begin
-        queue.post(v)
-      rescue Exception => ex
-        p ex
-      end
-
-    }
-    puts "Now going to wait for it..."
-    msg = queue.get(wait: 20)
-    # p msg
-    endi = Time.now.to_i
-    duration = endi - starti
-    p duration
-    assert duration > 4 && duration <= 7
-    assert_not_nil msg
-    assert_equal v, msg.body
-    msg.delete
-
-  end
 
   def test_delete_reserved_messages
     queue_name = 'test_delete_reserved_messages'
