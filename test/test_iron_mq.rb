@@ -672,6 +672,36 @@ class IronMQTests < TestBase
     assert_equal nil, msg
   end
 
+  def test_long_polling
+    queue_name = "test_long_polling#{Time.now.to_i}"
+    clear_queue(queue_name)
+    queue = @client.queue(queue_name)
+    msg = queue.get
+    assert_nil msg
+    v = "hello long"
+    # ok, nothing in the queue, let's do a long poll
+    starti = Time.now.to_i
+    thr = Thread.new {
+      sleep 5
+      puts "Posting now"
+      begin
+        queue.post(v)
+      rescue Exception => ex
+        p ex
+      end
+
+    }
+    puts "Now going to wait for it..."
+    msg = queue.get(wait: 20)
+    # p msg
+    endi = Time.now.to_i
+    duration = endi - starti
+    p duration
+    assert duration > 4 && duration <= 7
+    assert_not_nil msg
+    assert_equal v, msg.body
+    msg.delete
+  end
 
   def test_delete_reserved_messages
     queue_name = 'test_delete_reserved_messages'
