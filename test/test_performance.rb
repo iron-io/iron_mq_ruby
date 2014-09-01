@@ -21,7 +21,7 @@ class TmpTests < TestBase
       end
 
       # delete queue on test complete
-      resp = queue.delete
+      resp = queue.delete_queue
       assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
     end
   end
