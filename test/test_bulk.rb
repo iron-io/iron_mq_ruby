@@ -10,7 +10,7 @@ class TestBulk < TestBase
   def test_bulk
     LOG.info "test_bulk"
 
-    q_name = 'ironmq-gem-bulk'
+    q_name = "ironmq-gem-bulk#{Time.now.to_i}"
     queue = @client.queue(q_name)
 
     times = 50
@@ -29,7 +29,7 @@ class TestBulk < TestBase
     LOG.info "#{times} gets and deletes took #{Time.now.to_f - t.to_f}"
 
     # delete queue on test complete
-    resp = queue.delete
+    resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 

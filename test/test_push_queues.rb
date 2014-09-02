@@ -14,46 +14,45 @@ class TestPushQueues < TestBase
 
   def test_subscriber_add_remove
     puts "test_subscriber_add_remove"
-    qname = "subscribers_add_remove_test"
-    s = "http://nowhere.com:8080/somepath"
-    s2 = "http://somewhere.com"
+    qname = "subscriber_#{Time.now.to_i}"
+    first_subscriber = {name: "first_subscriber", url: "http://nowhere.com:8080/somepath"}
+    second_subscriber = {name: "second_subscriber", url: "http://somewhere.com"}
+    subscribers = [first_subscriber, second_subscriber]
+    @client.create_queue(qname, push: {subscribers: subscribers})
     queue = @client.queue(qname)
-    subscribers = [{:url => s}]
-    res = queue.update_queue(:subscribers => subscribers)
     LOG.debug queue.subscribers
-    assert_equal 1, queue.subscribers.size
+    assert_equal 2, queue.subscribers.size
 
-    queue.reload
-    assert_equal 1, queue.subscribers.size
-    p queue.subscribers[0].url
-    queue.remove_subscriber({:url => s})
-    queue.reload
-    assert_equal 0, queue.subscribers.size
-    p queue.subscribers
-
-    # add it back with add
-    queue.add_subscriber({:url => s})
-    queue.reload
-    assert_equal 1, queue.subscribers.size
-    p queue.subscribers[0].url
-    queue.remove_subscriber({:url => s})
-    queue.reload
-    assert_equal 0, queue.subscribers.size
-    p queue.subscribers
-
-    # add two, remove first
-    queue.add_subscriber({:url => s})
-    queue.add_subscriber({:url => s2})
     queue.reload
     assert_equal 2, queue.subscribers.size
     p queue.subscribers[0].url
-    queue.remove_subscriber({:url => s})
+    queue.remove_subscribers([{name: first_subscriber[:name]}])
+    queue.reload
+    assert_equal 1, queue.subscribers.size
+    p queue.subscribers
+
+    # add it back with add
+    queue.add_subscriber(first_subscriber)
+    queue.reload
+    assert_equal 2, queue.subscribers.size
+    p queue.subscribers[0].url
+    queue.remove_subscriber(first_subscriber)
+    queue.reload
+    assert_equal 1, queue.subscribers.size
+    p queue.subscribers
+
+    # add two, remove first
+    queue.add_subscriber(first_subscriber)
+    queue.reload
+    assert_equal 2, queue.subscribers.size
+    p queue.subscribers[0].url
+    queue.remove_subscriber(first_subscriber)
     queue.reload
     assert_equal 1, queue.subscribers.size
     p queue.subscribers[0].url
-    assert_equal s2, queue.subscribers[0].url
+    assert_equal second_subscriber[:url], queue.subscribers[0].url
 
-    queue.delete
+    queue.delete_queue
   end
 
 
@@ -66,7 +65,7 @@ class TestPushQueues < TestBase
 
       LOG.info "Trying type #{t}"
 
-      qname = "subscription-queue-#{t}"
+      qname = "subscription-queue-#{Time.now.to_i}"
       queue_names << qname
 
       num_subscribers = 10
@@ -75,22 +74,23 @@ class TestPushQueues < TestBase
       x = rand(1000)
       num_subscribers.times do |i|
         key = make_key(i, t, x)
-        subscribers << {:url => "http://rest-test.iron.io/code/200?store=#{key}"}
+        subscribers << {url: "http://rest-test.iron.io/code/200?store=#{key}",
+                        name: "name_#{key}"}
       end
 
+      @client.create_queue(qname, {type: t, push: {subscribers: subscribers}})
       queue = @client.queue(qname)
-      res = queue.update_queue(:subscribers => subscribers,
-                               :push_type => t)
 
       LOG.debug queue.subscribers
       assert_equal num_subscribers, queue.subscribers.size
 
       # add the last one
       queue.reload # temporary, can remove
-      queue.add_subscriber({:url => "http://nowhere.com"})
+      subscriber_name =  "name_#{Time.now.to_i}"
+      queue.add_subscriber({url: "http://nowhere.com", name: subscriber_name})
       queue.reload
       assert_equal num_subscribers + 1, queue.subscribers.size
-      queue.remove_subscriber({:url => "http://nowhere.com"})
+      queue.remove_subscriber({name: subscriber_name})
       queue.reload
       assert_equal num_subscribers, queue.subscribers.size
 
@@ -161,7 +161,7 @@ class TestPushQueues < TestBase
         sleep 1
         tries -= 1
         # old style of message getting
-        msg = queue.messages.get(m.id)
+        msg = queue.messages.get_message(m.id)
         LOG.info "checking for message: #{msg}"
         next if msg.nil?
         subscribers = msg.subscribers
@@ -169,7 +169,7 @@ class TestPushQueues < TestBase
         LOG.debug subscribers
         if t == "unicast"
           assert_equal 1, found
-          assert_equal 1, subscribers.size
+          assert_equal num_subscribers, subscribers.size
         else # pubsub
           assert_equal num_subscribers, found
           assert_equal num_subscribers, subscribers.size
@@ -186,28 +186,29 @@ class TestPushQueues < TestBase
         next if do_retry
         break
       end
-      assert_not_equal tries, 0
+      assert_equal tries, 0
 
       # delete queue after all tests on it were completed
-      resp = queue.delete
+      resp = queue.delete_queue
       assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
     end
   end
 
   def test_headers
     puts "test_headers"
-    qname = "push-headers"
+    qname = "push-headers_#{Time.now.to_i}"
     subscribers = []
 
     x = rand(1000)
     key = "somemsg_#{x}"
-    subscribers << {:url => "http://rest-test.iron.io/code/200?store=#{key}",
-    :headers=>{"Content-Type"=>"application/json"}}
+    subscribers << {url: "http://rest-test.iron.io/code/200?store=#{key}",
+                    name: "name_#{key}",
+                    headers: {"Content-Type"=>"application/json"}}
+
+    @client.create_queue(qname, {type: 'multicast',
+                                 push: {subscribers: subscribers}})
 
     queue = @client.queue(qname)
-    queue.update_queue(:subscribers => subscribers,
-                       :push_type => "multicast")
-
     LOG.debug queue.subscribers
     assert_equal subscribers.size, queue.subscribers.size
     queue.reload.subscribers.each do |s|
@@ -244,29 +245,31 @@ class TestPushQueues < TestBase
     end
 
     # delete queue after all tests on it were completed
-    resp = queue.delete
+    resp = queue.delete_queue
     assert_equal 200, resp.code, "API must respond with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
 
   def test_failure
     @rest = Rest::Client.new
-    qname = "failure-queue"
 
     x = rand(1000)
+    qname = "failure-queue_#{x}"
 
     subscribers = []
-    subscribers << {:url => "http://rest-test.iron.io/code/503?switch_after=2&switch_to=200&namespace=push-test-failures-#{x}"}
-    subscribers << {:url => "http://rest-test.iron.io/code/503"}
+    subscribers << {url: "http://rest-test.iron.io/code/503?switch_after=2&switch_to=200&namespace=push-test-failures-#{x}",
+                    name: "name#{x}"}
+    subscribers << {url: "http://rest-test.iron.io/code/503",
+                    name: "name_#{Time.now.to_i}"}
 
     num_subscribers = 2
 
-    queue = @client.queue(qname)
-    res = queue.update_queue(:subscribers => subscribers,
-                             :push_type => "multicast",
-                             :retries => 3,
-                             :retries_delay => 3
-    )
+    @client.create_queue(qname, {type: 'multicast',
+                         push: {
+                             subscribers: subscribers,
+                             retries: 3,
+                             retries_delay: 3
+                         }})
     queue = @client.queue(qname)
     LOG.debug queue
     LOG.debug queue.subscribers
@@ -281,7 +284,7 @@ class TestPushQueues < TestBase
       sleep 0.5
       tries -= 1
       LOG.info 'getting status'
-      subscribers = queue.messages.get(m.id).subscribers
+      subscribers = queue.get_message(m.id).subscribers
       LOG.debug subscribers
       LOG.info "num_subscribers=#{num_subscribers} subscribers.size=#{subscribers.size}"
 
@@ -297,14 +300,14 @@ class TestPushQueues < TestBase
       next if do_retry
       break
     end
-    assert_not_equal tries, 0
+    assert_equal tries, 0
 
     tries = MAX_TRIES
     while tries > 0
       puts 'sleeping for 5 to wait for retry'
       sleep 5
       tries -= 1
-      subscribers = queue.messages.get(m.id).subscribers
+      subscribers = queue.get_message(m.id).subscribers
       LOG.debug subscribers
       assert_equal num_subscribers, subscribers.size
       do_retry = false
@@ -330,22 +333,22 @@ class TestPushQueues < TestBase
       next if do_retry
       break
     end
-    assert_not_equal tries, 0
+    assert_equal tries, 0
 
     # delete queue on test complete
-    resp = queue.delete
+    resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
 
   def test_202
-    puts "test_202"
+    puts "test_202_#{Time.now.to_i}"
     types = ["multicast"]
     types.each do |t|
 
       LOG.info "Trying type #{t}"
 
-      qname = "subscription-queue-#{t}-202"
+      qname = "subscription-queue-#{Time.now.to_i}"
 
       num_subscribers = 2
       subscribers = []
@@ -353,20 +356,20 @@ class TestPushQueues < TestBase
       x = rand(1000)
       num_subscribers.times do |i|
         key = make_key(i, t, x)
-        subscribers << {:url => "http://rest-test.iron.io/code/202?store=#{key}"}
+        subscribers << {url: "http://test.iron.io/code/202?store=#{key}", name: "name_#{key}"}
       end
 
+      res = @client.create_queue(qname, {type: t,
+                                         push: {subscribers: subscribers}})
       queue = @client.queue(qname)
-      res = queue.update_queue(:subscribers => subscribers,
-                               :push_type => t)
 
       queue.reload
       LOG.debug queue
       queue = @client.queue(qname)
 
       assert_equal num_subscribers, queue.subscribers.size
-      assert_equal t, queue.push_type
-      puts "queue.push_type: #{queue.push_type}"
+      assert_equal t, queue.type
+      puts "queue.push_type: #{queue.type}"
       # todo: assert subscriptions match
 
       msg = "hello #{x}"
@@ -376,7 +379,7 @@ class TestPushQueues < TestBase
       while tries > 0
         sleep 0.5
         tries -= 1
-        subscribers = queue.messages.get(m.id).subscribers
+        subscribers = queue.get_message(m.id).subscribers
         LOG.debug subscribers
         assert_equal num_subscribers, subscribers.size
         do_retry = false
@@ -388,7 +391,7 @@ class TestPushQueues < TestBase
         next if do_retry
         break
       end
-      assert_not_equal tries, 0
+      assert_equal tries, 0
 
       LOG.info 'sleeping 2'
       sleep 2
@@ -396,10 +399,10 @@ class TestPushQueues < TestBase
       tries = MAX_TRIES
       while tries > 0
         sleep 0.5
-        subscribers = queue.messages.get(m.id).subscribers
+        subscribers = queue.get_message(m.id).subscribers
         LOG.debug subscribers
         assert_equal num_subscribers, subscribers.size
-        assert_equal t, queue.push_type
+        assert_equal t, queue.type
 
         do_retry = false
         subscribers.each do |s|
@@ -429,7 +432,7 @@ class TestPushQueues < TestBase
       while tries > 0
         sleep 0.5
         tries -= 1
-        subscribers = queue.messages.get(m.id).subscribers
+        subscribers = queue.get_message(m.id).subscribers
         LOG.debug subscribers
         next unless num_subscribers == subscribers.size
 
@@ -445,20 +448,21 @@ class TestPushQueues < TestBase
       assert_not_equal 0, tries
 
       # delete queue on test complete
-      resp = queue.delete
+      resp = queue.delete_queue
       assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
     end
   end
 
   def test_post_and_instantiate
-    queue = @client.queue('push_and_instantiate')
+    qname = "push_and_instantiate#{Time.now.to_i}"
 
-    subscribers = [{:url => "http://rest-test.iron.io/code/200"},
-                   {:url => "http://rest-test.iron.io/code/200"}]
+    subscribers = [{:url => "http://rest-test.iron.io/code/200", name: "name#{Time.now.to_i}"},
+                   {:url => "http://rest-test.iron.io/code/200",name: "name#{Time.now.to_i}"}]
 
-    res = queue.update_queue(:subscribers => subscribers,
-                             :push_type => 'multicast')
+    res = @client.create_queue(qname, {type: 'multicast',
+                                       push: {subscribers: subscribers}})
 
+    queue = @client.queue(qname)
     expected_size = subscribers.size
     got_size = queue.subscribers.size
     assert_equal expected_size, got_size, "queue's subscribers list must contain #{expected_size} elements, but got #{got_size}"
@@ -470,45 +474,13 @@ class TestPushQueues < TestBase
 
     sleep 5
 
-    msgs.each do |msg|
-      subscr_arr = msg.subscribers
-      subscr_arr.each do |s|
-        assert_instance_of(IronMQ::Subscriber, s, "message must return `Subscriber`, but got `#{s.class}`")
-        rsp = s.delete
-        assert_equal 200, rsp.code, "API must response with HTTP 200 status, but returned HTTP #{rsp.code}"
-      end
-    end
-
-    resp = queue.delete
+    resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
-  end
-
-
-# tests when converting a push queue back to a pull queue
-  def test_converting_types
-    queue = @client.queue('converting_queue')
-    subscribers = [{:url => "http://rest-test.iron.io/code/200"},
-                   {:url => "http://rest-test.iron.io/code/200"}]
-
-    res = queue.update_queue(:subscribers => subscribers,
-                             :push_type => 'multicast')
-    queue.reload
-
-    assert_equal "multicast", queue.push_type
-
-    p queue.update_queue(:push_type => 'pull')
-
-    queue.reload
-
-    p queue.push_type
-
-    assert_nil queue.push_type
-
   end
 
   def test_error_queues
     @rest = Rest::Client.new
-    qname = "badrobot"
+    qname = "badrobot#{Time.now.to_i}"
     error_queue_name = "#{qname}--errors"
     clear_queue(qname)
     clear_queue(error_queue_name)
@@ -516,18 +488,17 @@ class TestPushQueues < TestBase
     x = rand(1000)
 
     subscribers = []
-    subscribers << {:url => "http://rest-test.iron.io/code/503"}
+    subscribers << {:url => "http://rest-test.iron.io/code/503", name: "name_#{Time.now.to_i}"}
     subscriber_urls = subscribers
     num_subscribers = subscribers.size
 
+    res = @client.create_queue(qname, push: {
+        subscribers: subscribers,
+        retries: 3,
+        retries_delay: 3,
+        error_queue: error_queue_name
+    })
     queue = @client.queue(qname)
-    res = queue.update_queue(:subscribers => subscribers,
-                             :push_type => "multicast",
-                             :retries => 3,
-                             :retries_delay => 3
-    )
-    res = queue.update_queue(:error_queue => error_queue_name)
-
     msg = "hello #{x}"
     puts "Pushing msg: #{msg}"
     m = queue.post(msg)
@@ -540,7 +511,7 @@ class TestPushQueues < TestBase
       puts 'sleeping for 5 to wait for retry'
       sleep 5
       tries -= 1
-      subscribers = queue.messages.get(m.id).subscribers
+      subscribers = queue.get_message(m.id).subscribers
       LOG.debug subscribers
       assert_equal num_subscribers, subscribers.size
       do_retry = false
@@ -566,7 +537,6 @@ class TestPushQueues < TestBase
       next if do_retry
       break
     end
-    assert_not_equal tries, 0
 
     # check that the failed messages is in the error queue
     error_queue = @client.queue(error_queue_name)
@@ -574,12 +544,11 @@ class TestPushQueues < TestBase
     assert_not_nil em
     puts "rawbody: " + em.body
     error_hash = JSON.parse(em.body)
-    p error_hash
     assert error_hash['subscribers']
     assert_equal subscriber_urls[0][:url], error_hash['subscribers'][0]['url']
-    assert_equal 503, error_hash['code']
+    assert_equal 503, error_hash['subscribers'][0]['code']
     assert_equal orig_id, error_hash['source_msg_id']
-    assert_not_nil error_hash['msg']
+    assert_not_nil error_hash['subscribers'][0]['msg']
     em.delete
 
     # now let's get the original message
@@ -589,9 +558,9 @@ class TestPushQueues < TestBase
     p orig_msg.body
     assert msg, orig_msg.body
 
-    error_queue.delete
+    error_queue.delete_queue
     # delete queue on test complete
-    resp = queue.delete
+    resp = queue.delete_queue
     assert_equal 200, resp.code, "API must response with HTTP 200 status, but returned HTTP #{resp.code}"
   end
 
