@@ -55,6 +55,36 @@ ironmq = IronMQ::Client.new(host: 'mq-rackspace-ord.iron.io',
 ```
 The default host is AWS us-east-1 zone (mq-aws-us-east-1.iron.io). [See all available hosts/clouds/regions](http://dev.iron.io/mq/reference/clouds/).
 
+### Keystone Authentication
+
+#### Via Configuration File
+
+Add `keystone` section to your iron.json file:
+
+```javascript
+{
+  "project_id": "57a7b7b35e8e331d45000001",
+  "keystone": {
+    "server": "http://your.keystone.host/v2.0/",
+    "tenant": "some-group",
+    "username": "name",
+    "password": "password"
+  }
+}
+```
+
+#### In Code
+
+```ruby
+keystone = {
+  server: "http://your.keystone.host/v2.0/",
+  tenant: "some-gorup",
+  username: "name",
+  password: "password"
+}
+client = IronMQ::Client.new(project_id: "57a7b7b35e8e331d45000001", keystone: keystone)
+```
+
 ## The Basics
 
 ### Get Queues List
@@ -107,7 +137,7 @@ msg.body
 # => "hello world!"
 ```
 
-When you pop/get a message from the queue, it is no longer on the queue but it still exists within the system.
+When you reserve a message from the queue, it is no longer on the queue but it still exists within the system.
 You have to explicitly delete the message or else it will go back onto the queue after the `timeout`.
 The default `timeout` is 60 seconds. Minimal `timeout` is 30 seconds.
 
@@ -154,14 +184,14 @@ all_queues = ironmq.queues.all
 
 **Optional parameters:**
 
-* `per_page` - number of elements in response, default is 30.
-* `previous` - this is the last queue on the previous page, it will start from the next one. If queue with specified 
+* `per_page`: number of elements in response, default is 30.
+* `previous`: this is the last queue on the previous page, it will start from the next one. If queue with specified
                name doesn’t exist result will contain first per_page queues that lexicographically greater than previous
-* `prefix` - an optional queue prefix to search on. e.g., prefix=ca could return queues `["cars", "cats", etc.]`
+* `prefix`: an optional queue prefix to search on. e.g., prefix=ca could return queues `["cars", "cats", etc.]`
 * `raw`: Set it to true to obtain data in raw format. The default is false.
 
 ```ruby
-queues = ironmq.queues.all(page: 1, per_page: 10)
+queues = ironmq.queues.all(per_page: 10, previous: 'test_queue')
 ```
 
 --
