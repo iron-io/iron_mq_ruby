@@ -22,11 +22,13 @@ module IronMQ
       super('iron', 'mq', options, default_options,
             [:project_id, :token, :api_version])
 
-      if @token.nil?
-        IronCore::Logger.error 'IronMQ', 'Token is not set', IronCore::Error
-      end
+      if @keystone.nil?
+        if @token.nil?
+          IronCore::Logger.error 'IronMQ', 'Token is not set', IronCore::Error
+        end
 
-      check_id(@project_id, 'project_id')
+        check_id(@project_id, 'project_id')
+      end
 
       @logger = Logger.new(STDOUT)
       @logger.level = Logger::INFO
