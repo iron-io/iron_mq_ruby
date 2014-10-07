@@ -27,8 +27,8 @@ class QuickRun < TestBase
         puts "post"
         res = queue.post(body)
         # p res
-        assert_not_nil res
-        assert_not_nil res.id
+        refute_nil res
+        refute_nil res.id
         post_id = res.id
         assert !(res.msg.nil? || res.msg.empty?)
       end
@@ -36,7 +36,7 @@ class QuickRun < TestBase
       quicky.time(:get) do
         puts "get"
         msg = queue.get
-        assert_not_nil msg.id
+        refute_nil msg.id
         assert_equal msg.id, post_id
         assert !(msg.body.nil? || msg.body.empty?)
         assert_equal body, msg.body
@@ -46,7 +46,7 @@ class QuickRun < TestBase
         puts "delete"
         res = queue.delete(post_id)
         # p res
-        assert_not_nil res
+        refute_nil res
         assert !(res.msg.nil? || res.msg.empty?)
       end
 

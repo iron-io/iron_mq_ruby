@@ -1,5 +1,5 @@
 require 'rubygems'
-require 'test/unit'
+require 'minitest/autorun'
 require 'yaml'
 require 'uber_config'
 
@@ -14,7 +14,7 @@ LOG = Logger.new(STDOUT)
 LOG.level = Logger::INFO
 MAX_TRIES = 10
 
-class TestBase < Test::Unit::TestCase
+class TestBase < Minitest::Test
 
   def setup
     puts 'setup'
