@@ -20,7 +20,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency "iron_core", ">= 0.5.1"
 
   gem.add_development_dependency "test-unit"
-  gem.add_development_dependency "minitest"
+  gem.add_development_dependency "minitest", ">= 5.0"
   gem.add_development_dependency "rake"
   gem.add_development_dependency "beanstalk-client"
   gem.add_development_dependency "uber_config"
