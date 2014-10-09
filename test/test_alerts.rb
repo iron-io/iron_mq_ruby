@@ -17,19 +17,19 @@ class TestAlerts < TestBase
 
     # no configuration
     alert = {}
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     # only type is specified
     alert[:type] = 'fixed'
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     # type and trigger value specified
     alert[:trigger] = 30
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     # type, trigger, and direction
     alert[:direction] = 'asc'
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     # type, trigger, direction, and alert queue name - alright
     aq_name = 'bad-alerts-params-alerts'
@@ -38,7 +38,7 @@ class TestAlerts < TestBase
 
     # type, trigger, direction, queue name, and snooze - alert duplication
     alert[:snooze] = 8
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     # alright, no alert duplication
     alert[:trigger] = 50
@@ -47,25 +47,25 @@ class TestAlerts < TestBase
 
     # wrong snooze
     alert[:snooze] = -13
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     alert[:snooze] = '1234'
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     # wrong type
     alert[:snooze] = 0
     alert[:type] = 'wrong'
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     # wrong trigger
     alert[:type] = 'progressive'
     alert[:trigger] = 'c'
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     # wrong direction
     alert[:trigger] = 30
     alert[:direction] = 'both'
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     # default direction is "asc"
     alert.delete(:direction)
@@ -76,10 +76,10 @@ class TestAlerts < TestBase
     # Test max alerts number
     alert[:direction] = 'asc'
     # insert 6 alerts
-    assert_raise(Rest::HttpError) { queue.add_alerts(Array.new(6, alert)) }
+    assert_raises(Rest::HttpError) { queue.add_alerts(Array.new(6, alert)) }
 
     queue.add_alerts(Array.new(5, alert))
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     delete_queues queue
 
@@ -87,14 +87,14 @@ class TestAlerts < TestBase
     # Progressive alert posts to its queue (queue is the same as alert queue)
     alert[:queue] = q_name
     alert[:type] = 'progressive'
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     # Q1 progressive alert posts to Q2, Q2 progressive alert posts to Q1
     a_queue = @client.queue aq_name
     delete_queues a_queue
 
     queue.add_alert(alert.merge({:queue => aq_name}))
-    assert_raise(Rest::HttpError) do
+    assert_raises(Rest::HttpError) do
       a_queue.add_alert(alert.merge({:queue => q_name}))
     end
 
@@ -105,13 +105,13 @@ class TestAlerts < TestBase
     delete_queues queue
 
     queue.add_subscriber({ :url => 'http://iron.io/receiver' })
-    assert_raise(Rest::HttpError) { queue.add_alert(alert) }
+    assert_raises(Rest::HttpError) { queue.add_alert(alert) }
 
     delete_queues queue
 
     assert_nothing_raised(Rest::HttpError) { queue.add_alert(alert) }
     # conversion queue with alerts to push queue must raise exception
-    assert_raise(Rest::HttpError) { queue.update({ :push_type => 'multicast' }) }
+    assert_raises(Rest::HttpError) { queue.update({ :push_type => 'multicast' }) }
 
     delete_queues queue
   end

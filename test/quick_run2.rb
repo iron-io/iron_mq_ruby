@@ -59,8 +59,8 @@ class QuickRun < TestBase
         quicky.time(:post) do
           res = queue.post("hello world!")
           # p res
-          assert_not_nil res
-          assert_not_nil res.id
+          refute_nil res
+          refute_nil res.id
           post_id = res.id
           assert !(res.msg.nil? || res.msg.empty?)
         end

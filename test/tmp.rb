@@ -12,7 +12,5 @@ class TmpTests < TestBase
 
 
 
-
-
 end
 

@@ -124,7 +124,7 @@ class TestPushQueues < TestBase
               assert_equal 404, ex.code
             end
           end
-          assert_not_equal tries, 0
+          refute_equal tries, 0
         end
       elsif t == "unicast"
         tries = MAX_TRIES
@@ -149,7 +149,7 @@ class TestPushQueues < TestBase
           end
           break if found == 1
         end
-        assert_not_equal tries, 0
+        refute_equal tries, 0
       end
 
       tries = MAX_TRIES
@@ -213,7 +213,7 @@ class TestPushQueues < TestBase
     assert_equal subscribers.size, queue.subscribers.size
     queue.reload.subscribers.each do |s|
       p s.headers
-      assert_not_nil s.headers['Content-Type']
+      refute_nil s.headers['Content-Type']
     end
 
     msg = "{\"hello\": #{x}}"
@@ -234,14 +234,14 @@ class TestPushQueues < TestBase
         parsed = JSON.parse(response.body)
         LOG.debug parsed['body']
         assert_equal msg, parsed['body']
-        assert_not_nil parsed['headers']['Content-Type']
+        refute_nil parsed['headers']['Content-Type']
         assert_equal 'application/json', parsed['headers']['Content-Type']
         break
       rescue Rest::HttpError => ex
         LOG.debug ex.code
         assert_equal 404, ex.code
       end
-      assert_not_equal tries, 0
+      refute_equal tries, 0
     end
 
     # delete queue after all tests on it were completed
@@ -426,7 +426,7 @@ class TestPushQueues < TestBase
         end
         break
       end
-      assert_not_equal 0, tries
+      refute_equal 0, tries
 
       tries = MAX_TRIES
       while tries > 0
@@ -445,7 +445,7 @@ class TestPushQueues < TestBase
         next if do_retry
         break
       end
-      assert_not_equal 0, tries
+      refute_equal 0, tries
 
       # delete queue on test complete
       resp = queue.delete_queue
@@ -541,14 +541,14 @@ class TestPushQueues < TestBase
     # check that the failed messages is in the error queue
     error_queue = @client.queue(error_queue_name)
     em = error_queue.get
-    assert_not_nil em
+    refute_nil em
     puts "rawbody: " + em.body
     error_hash = JSON.parse(em.body)
     assert error_hash['subscribers']
     assert_equal subscriber_urls[0][:url], error_hash['subscribers'][0]['url']
     assert_equal 503, error_hash['subscribers'][0]['code']
     assert_equal orig_id, error_hash['source_msg_id']
-    assert_not_nil error_hash['subscribers'][0]['msg']
+    refute_nil error_hash['subscribers'][0]['msg']
     em.delete
 
     # now let's get the original message

@@ -50,7 +50,7 @@ module IronMQ
       load['push']
     end
 
-    def update(options)
+    def update(options={})
       call_api_and_parse_response(:put, '', {queue: options})
     end
 

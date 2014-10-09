@@ -29,12 +29,12 @@ class TestWorkerSubscribers < TestBase
 
     # test for bad subscribers
     puts "raising..."
-    assert_raise Rest::HttpError do
+    assert_raises Rest::HttpError do
       # can't subscribe to self
       res = queue.update_queue(:subscribers => [{:url => "ironmq:///#{publisher_name}"}])
     end
     
-    assert_raise Rest::HttpError do
+    assert_raises Rest::HttpError do
       # must have a token if sending to different project_id
       res = queue.update_queue(:subscribers => [{:url => "ironmq://ABCDEFG@/somerandomqueue"}])
     end
