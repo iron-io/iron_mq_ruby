@@ -1,6 +1,6 @@
 require 'yaml'
-
 require 'iron_core'
+require_relative 'schedules'
 
 module IronMQ
 
@@ -39,13 +39,13 @@ module IronMQ
     end
 
     def base_url
-      @base_url ||= "#{super}#{@api_version}/projects/#{@project_id}/queues"
+      @base_url ||= "#{super}#{@api_version}/projects/#{@project_id}"
     end
 
     def queues_list(options = {})
       is_raw = [options.delete(:raw),
                 options.delete('raw')].compact.first
-      response = parse_response(get('', options)) # GET base_url
+      response = parse_response(get('/queues', options)) # GET base_url
       # p response
       # returns list of evaluated queues
       if is_raw
@@ -85,7 +85,7 @@ module IronMQ
     end
 
     def create_queue(queue_name, options)
-      response = self.put("/#{CGI::escape(queue_name).gsub('+', '%20')}",
+      response = self.put("/queues/#{CGI::escape(queue_name).gsub('+', '%20')}",
                           {queue: options})
       queue_hash = JSON.parse(response.body.to_s)
 
@@ -93,11 +93,46 @@ module IronMQ
     end
 
     def update_queue(queue_name, options)
-      response = self.patch("/#{CGI::escape(queue_name).gsub('+', '%20')}",
+      response = self.patch("/queues/#{CGI::escape(queue_name).gsub('+', '%20')}",
                             {queue: options})
       queue_hash = JSON.parse(response.body.to_s)
 
       ResponseBase.new(queue_hash['queue'])
+    end
+
+    def schedule_create(name, options)
+      response = self.put("/schedules/#{CGI::escape(name).gsub('+', '%20')}",
+                          {schedule: options})
+      queue_hash = JSON.parse(response.body.to_s)
+      Schedule.new(queue_hash['schedule'])
+    end
+
+    def schedule_get(name)
+      response = self.get("/schedules/#{CGI::escape(name).gsub('+', '%20')}",
+                          {})
+      queue_hash = JSON.parse(response.body.to_s)
+      if queue_hash['schedule'] == nil
+        return nil
+      end
+      Schedule.new(queue_hash['schedule'])
+    end
+
+    def schedule_delete(name)
+      response = self.delete("/schedules/#{CGI::escape(name).gsub('+', '%20')}",
+                          {})
+      queue_hash = JSON.parse(response.body.to_s)
+      true
+    end
+
+    def schedules_list()
+      response = self.get("/schedules",
+                             {})
+      queue_hash = JSON.parse(response.body.to_s)
+      list = []
+      queue_hash['schedules'].each do |v|
+        list << Schedule.new(v)
+      end
+      return list
     end
 
   end

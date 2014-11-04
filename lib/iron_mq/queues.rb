@@ -292,7 +292,7 @@ module IronMQ
     end
 
     def path(ext_path)
-      "/#{CGI::escape(@name).gsub('+', '%20')}#{ext_path}"
+      "/queues/#{CGI::escape(@name).gsub('+', '%20')}#{ext_path}"
     end
 
     def process_messages(messages, options)
