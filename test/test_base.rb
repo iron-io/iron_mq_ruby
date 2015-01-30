@@ -63,4 +63,11 @@ class TestBase < Minitest::Test
     assert execution_time < time, "Execution time too big #{execution_time.round(2)}, should be #{time}"
   end
 
+  alias_method :assert_not_nil, :refute_nil
+  alias_method :assert_not_equal, :refute_equal
+  alias_method :assert_raise, :assert_raises
+
+  def assert_nothing_raised(*)
+    yield
+  end
 end
