@@ -443,7 +443,7 @@ This creates fake `IronMQ::Message` instance on which you call for subscribers' 
 
 --
 
-### Acknowledge / Delete Message Push Status
+### Acknowledge / Delete Push Message for a Subscriber
 
 ```ruby
 subscribers = queue.get(msg.id).subscribers # => [#<IronMQ::Subscriber:...>, ...]
