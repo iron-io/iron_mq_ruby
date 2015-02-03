@@ -41,7 +41,7 @@ module IronMQ
     private
 
     def path
-      "/subscribers/#{name}"
+      '' # path is the same as for message delete endpoint
     end
   end
 
