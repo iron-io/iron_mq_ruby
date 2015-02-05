@@ -196,8 +196,9 @@ module IronMQ
 
     def get_messages(options = {})
       if options.is_a?(String)
-        # assume it's an id
-        return Message.new(self, {"id" => options})
+        # assume options is an id queue.get("010120141231")
+        resp = call_api_and_parse_response(:get, "/messages/#{options}", {}, false)
+        return Message.new(self, resp)
       end
 
       resp = call_api_and_parse_response(:get, "/messages", options, false)
@@ -267,7 +268,6 @@ module IronMQ
 
     def process_messages(messages, options)
       multiple = wait_for_multiple?(options)
-
       if messages.is_a?(Array) && messages.size > 0
         msgs = messages.map { |m| Message.new(self, m) }
 
