@@ -22,4 +22,3 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "minitest", ">= 5.0"
   gem.add_development_dependency "rake"
 end
-

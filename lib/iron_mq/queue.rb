@@ -266,7 +266,7 @@ module IronMQ
 
       opts = keywordise_keys(poll_opts)
       slp, break_empty = opts.values_at(:sleep_duration, :break_if_empty)
-      slp = slp.to_i
+      slp = slp.to_f # supports a fraction of a second
       loop do
         msgs = reserve_messages(api_opts)
         if msgs.empty?
