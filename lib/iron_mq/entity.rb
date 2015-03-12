@@ -39,6 +39,10 @@ module IronMQ
         entity.dup
       end
 
+      def to_s
+        entity.to_s
+      end
+
       protected
 
       def entity
@@ -69,26 +73,3 @@ module IronMQ
     end
   end
 end
-
-# class T
-#   include IronMQ::Entity
-
-#   define_fields :a, :b
-#   define_fields :a, :name
-
-#   def initialize(opts = {})
-#     self.entity = opts
-#   end
-# end
-
-# class X < T
-#   define_fields :x, :class
-# end
-
-# t = T.new(a: 'the A', b: 'a B', z: 'Zee')
-# puts "T.fields = '#{T.fields.inspect}'"
-# puts "t.a = '#{t.a}', t.b = '#{t.b}', t.name = '#{t.name}'"
-
-# x = X.new(a: 'a copy of a', name: 'the X', x: 'value of X')
-# puts "X.fields = '#{X.fields.inspect}'"
-# puts "x.a = '#{x.a}', x.b = '#{x.b}', x.name = '#{x.name}', x.x = '#{x.x}'"
