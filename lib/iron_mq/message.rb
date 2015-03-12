@@ -75,6 +75,12 @@ module IronMQ
       end
     end
 
+    def ==(other)
+      id == other.id
+    end
+
+    def hash; id.hash end
+
     private
 
     def path(ext_path = '')
