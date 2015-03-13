@@ -35,6 +35,7 @@ module IronMQ
 
     def get_info!
       with_info_reload { @client.call_api(:get, path) }
+      to_h
     end
 
     alias info! get_info!
@@ -44,16 +45,6 @@ module IronMQ
     end
 
     alias info get_info
-
-    def push_queue?
-      ['multicast', 'unicast'].include?(type)
-    end
-
-    def push_info; push end
-
-    def subscribers
-      push_queue? ? push_info[:subscribers] : nil
-    end
 
     def update!(options = {})
       with_info_reload { @client.call_api(:patch, path, queue: options) }
@@ -260,6 +251,16 @@ module IronMQ
 
     alias clear delete_all_messages
     alias clear_queue delete_all_messages
+
+    def push_queue?
+      ['multicast', 'unicast'].include?(type)
+    end
+
+    def push_info; push end
+
+    def subscribers
+      push_queue? ? push_info[:subscribers] : nil
+    end
 
     def poll_messages(api_opts = {}, poll_opts = {}, &block)
       return unless block_given?

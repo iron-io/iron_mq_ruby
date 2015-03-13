@@ -481,13 +481,28 @@ messages = queue.reserve_messages(n: 7) # => [#<IronMQ::Message:...>, ...]
 #   Queue#reserve
 
 # or message by ID
-message = queue.get_message_by_id('5127bf043264140e863e2283')
+message = queue.get_message_by_id('1234567890')
 # => #<IronMQ::Message:...>
 # alias:
 #   Queue#get_message
+
+# instantiate messages on post and get it later
+msg = queue.post_message('test', instantiate: true)
+# Note, that bang method changes receiver
+msg.get! # => {'message' => {'id' => '1234567890', ...}}
+puts msg
+# alias:
+#   Message#get_message!
+
+# Non-bang method does not changes the receiver, it just returns response
+msg = IronMQ::Message.new(client, 'my-queue', id: '1234567890')
+response = msg.get # => {'message' => {'id' => '1234567890', ...}}
+# alias:
+#   Message#get_message
+puts msg
 ```
 
-**Optional parameters:**
+**Optional parameters to reserve messages:**
 
 * `n`: The maximum number of messages to get. Default is 1. Maximum is 100.
 * `timeout`: After timeout (in seconds), item will be placed back onto queue.

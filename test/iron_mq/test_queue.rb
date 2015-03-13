@@ -60,10 +60,9 @@ class TestQueue < Minitest::Test
     assert_response resp, 'queue'
     assert_basic_fields_exist q
 
-    resp = @queue.get_info!
-    assert_response resp, 'queue'
+    qinfo = @queue.get_info!
+    assert_instance_of Hash, qinfo
     assert_equal q, @queue
-    assert resp.member?('queue')
 
     remake_default_queue
 
@@ -104,8 +103,7 @@ class TestQueue < Minitest::Test
 
     resp = @queue.add_subscribers([sub2])
     assert_response resp, 'msg'
-    resp = @queue.get_info!
-    assert_response resp, 'queue'
+    @queue.get_info!
     assert_subscribers_equal [sub1, sub2], @queue.subscribers
 
     resp = @queue.add_subscribers([sub3], true)
@@ -122,8 +120,7 @@ class TestQueue < Minitest::Test
 
     resp = @queue.remove_subscribers([sub1])
     assert_response resp, 'msg'
-    resp = @queue.get_info!
-    assert_response resp, 'queue'
+    @queue.get_info!
     assert_subscribers_equal [sub2, sub3], @queue.subscribers
 
     resp = @queue.remove_subscribers([sub2], true)
@@ -140,8 +137,7 @@ class TestQueue < Minitest::Test
 
     resp = @queue.replace_subscribers([sub1, sub3])
     assert_response resp, 'msg'
-    resp = @queue.get_info!
-    assert_response resp, 'queue'
+    @queue.get_info!
     assert_subscribers_equal [sub1, sub3], @queue.subscribers
 
     resp = @queue.replace_subscribers([sub2], true)
