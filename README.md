@@ -132,7 +132,7 @@ queue.get_info # => {name: "my_queue", ...}
 #   Queue#info
 
 # load via IronMQ API, Queue instance will be updated in-place
-queue.get_info! # => {"queue" => {"name" => "my_queue", ...}}
+queue.get_info! # => {name: "my_queue", ...}
 # alias:
 #   Queue#info!
 ```
@@ -319,7 +319,7 @@ queue.subscribers # => [{name: "sub-name", url: "http://..."}, ...]
 This method retrieves information from the IronMQ API and patches instance in-place.
 
 ```ruby
-response = queue.get_info! # => {"queue" => {"name" => "my-queue", ...}}
+response = queue.get_info! # => {name: "my-queue", ...}
 # alias:
 #   Queue#info!
 ```
