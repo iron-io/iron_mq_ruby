@@ -18,10 +18,14 @@ module IronMQ
       fail ArgumentError, 'msg_fields must contain message ID' unless id
     end
 
+    def get
+      @client.call_api(:get, path)
+    end
+
+    alias get_message get
+
     def get!
-      response = @client.call_api(:get, path)
-      self.entity = response['message']
-      response
+      get.tap { |response| self.entity = response['message'] }
     end
 
     alias get_message! get!
@@ -30,9 +34,9 @@ module IronMQ
       return if reservation_id.nil? || reservation_id.empty?
 
       opts = keywordise_keys(options).merge!(reservation_id: reservation_id)
-      response = @client.call_api(:post, path('/touch'), opts)
-      self.entity = to_h.update(reservation_id: response['reservation_id'])
-      response
+      @client.call_api(:post, path('/touch'), opts).tap do |response|
+        self.entity = to_h.update(reservation_id: response['reservation_id'])
+      end
     end
 
     alias touch_message! touch!
@@ -41,9 +45,9 @@ module IronMQ
       return if reservation_id.nil? || reservation_id.empty?
 
       opts = keywordise_keys(options).merge!(reservation_id: reservation_id)
-      response = @client.call_api(:post, path('/release'), opts)
-      self.entity = to_h.update(reservation_id: nil)
-      response
+      @client.call_api(:post, path('/release'), opts).tap do |response|
+        self.entity = to_h.update(reservation_id: nil)
+      end
     end
 
     alias release_message! release!
@@ -63,10 +67,14 @@ module IronMQ
 
     alias delete_message! delete!
 
+    def get_push_statuses
+      @client.call_api(:get, path('/subscribers'))
+    end
+
     def get_push_statuses!
-      response = @client.call_api(:get, path('/subscribers'))
-      self.entity = to_h.update(push_statuses: response['subscribers'])
-      response
+      get_push_statuses.tap do |response|
+        self.entity = to_h.update(push_statuses: response['subscribers'])
+      end
     end
 
     def ids
