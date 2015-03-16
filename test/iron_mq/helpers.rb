@@ -1,3 +1,5 @@
+require 'iron_mq'
+
 module Helpers
   def delete_queue(client, qname)
     client.delete_queue(qname)
@@ -20,6 +22,21 @@ module Helpers
     assert_instance_of Hash, resp
     keys.each do |key|
       assert resp.member?(key), "key #{key} is not member of response"
+    end
+  end
+
+  def make_alerts(num)
+    types = IronMQ::Queue::ALERT_TYPES
+    dirs = IronMQ::Queue::ALERT_DIRECTIONS
+    num.times.map do |n|
+      {
+        name: "alert-#{n}",
+        type: types.at(rand(types.size)),
+        trigger: 1 + rand(50),
+        queue: "alert-queue-#{n}",
+        direction: dirs.at(rand(dirs.size)),
+        snooze: rand(30)
+      }
     end
   end
 

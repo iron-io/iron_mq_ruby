@@ -3,9 +3,6 @@ require 'minitest/autorun'
 
 require 'helpers'
 
-require 'iron_mq/client'
-require 'iron_mq/message'
-
 class TestMessage < Minitest::Test
   include Helpers
 
@@ -130,6 +127,31 @@ class TestMessage < Minitest::Test
   end
 
   def test_get_push_statuses
-    skip
+    subs = [{name: 'zen',
+             url: 'http://i-hope-nobody-register-this-domain.com/push'}]
+    resp = @queue.create!(push: {subscribers: subs})
+    assert_response resp, 'queue'
+    assert_subscribers_equal subs, @queue.subscribers
+
+    msg = @queue.post_message('push message', instantiate: true)
+    assert_instance_of IronMQ::Message, msg
+    # NOTE: sleep grants pusher some time to process the message.
+    #       If one of assertions fails, make sure, that higher wait time
+    #       does not resolve the issue, before try to fix test itself.
+    #
+    # To run only this test do the following in terminal:
+    #   $ rake test TEST=test/iron_mq/test_message.rb \
+    #               TESTOPTS="--name=test_get_push_statuses -v"
+    sleep 5
+    resp = msg.get_push_statuses
+    assert_response resp, 'subscribers'
+    assert_equal subs.size, resp['subscribers'].size
+    assert_equal subs.first[:name], resp['subscribers'].first['subscriber_name']
+    assert_nil msg.push_statuses
+
+    msg.get_push_statuses!
+    refute_nil msg.push_statuses
+    assert_equal subs.size, msg.push_statuses.size
+    assert_equal subs.first[:name], msg.push_statuses.first[:subscriber_name]
   end
 end

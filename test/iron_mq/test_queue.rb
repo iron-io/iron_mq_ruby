@@ -3,8 +3,6 @@ require 'minitest/autorun'
 
 require 'helpers'
 
-require 'iron_mq'
-
 class TestQueue < Minitest::Test
   include Helpers
 
@@ -145,16 +143,70 @@ class TestQueue < Minitest::Test
     assert_subscribers_equal [sub2], @queue.subscribers
   end
 
+  # FIXME: when alerts API of IronMQ v3 will be completed,
+  #        remove `skip`s and test the tests ( ;
   def test_add_alerts
     skip
+    alerts = make_alerts(3)
+
+    resp = @queue.create!
+    assert_response resp, 'queue'
+
+    resp = @queue.add_alerts(alerts)
+    assert_response resp, 'msg'
+    assert_nil @queue.alerts
+    @queue.get_info!
+    assert_alerts_equal alerts, @queue.alerts
+
+    alrt = make_alerts(1)
+    resp = @queue.add_alerts!(alrt)
+    assert_response resp, 'msg'
+    assert_alerts_equal alerts.concat(alrt), @queue.alerts
   end
 
   def test_remove_alerts
     skip
+    alerts = make_alerts(3)
+
+    resp = @queue.create!
+    assert_response resp, 'queue'
+    resp = @queue.add_alerts!(alerts)
+    assert_response resp, 'msg'
+    assert_alerts_equal alerts, @queue.alerts
+
+    rm, *keep = alerts
+    resp = @queue.remove_alerts([rm])
+    assert_response resp, 'msg'
+    assert_alerts_equal alerts, @queue.alerts
+    @queue.get_info!
+    assert_alerts_equal keep, @queue.alerts
+
+    rm, *keep = keep
+    resp = @queue.remove_alerts!([rm])
+    assert_response resp, 'msg'
+    assert_alerts_equal keep, @queue.alerts
   end
 
   def test_replace_alerts
     skip
+    alerts1 = make_alerts(3)
+    alerts2 = make_alerts(2)
+
+    resp = @queue.create!
+    assert_response resp, 'queue'
+    resp = @queue.add_alerts!(alerts1)
+    assert_response resp, 'msg'
+    assert_alerts_equal alerts1, @queue.alerts
+
+    resp = @queue.replace_alerts(alerts2)
+    assert_response resp, 'msg'
+    assert_alerts_equal alerts1, @queue.alerts
+    @queue.get_info!
+    assert_alerts_equal alerts2, @queue.alerts
+
+    resp = @queue.replace_alerts!(alerts1)
+    assert_response resp, 'msg'
+    assert_alerts_equal alerts1, @queue.alerts
   end
 
   def test_post_messages_bodies
