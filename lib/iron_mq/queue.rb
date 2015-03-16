@@ -4,6 +4,10 @@ module IronMQ
   class Queue
     include Entity
 
+    PUSH_TYPES = %w(multicast unicast)
+    ALERT_TYPES = %w(fixed progressive)
+    ALERT_DIRECTIONS = %w(asc desc)
+
     define_fields :name, :project_id, :type, :size, :total_messages,
                   :message_timeout, :message_expiration, :alerts, :push
 
@@ -117,7 +121,7 @@ module IronMQ
 
     def add_alerts(alerts, reload = false)
       with_info_reload(reload) do
-        @client.call_api(:patch, path('/alerts'), queue: {alerts: alerts})
+        @client.call_api(:patch, path('/alerts'), alerts: alerts)
       end
     end
 
@@ -253,7 +257,7 @@ module IronMQ
     alias clear_queue delete_all_messages
 
     def push_queue?
-      ['multicast', 'unicast'].include?(type)
+      PUSH_TYPES.include?(type)
     end
 
     def push_info; push end
