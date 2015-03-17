@@ -22,7 +22,7 @@ module IronMQ
             next
           end
 
-          define_method(field) { entity[field] }
+          define_method(field) { entity.dup[field] }
           fields.add(field)
         end
 
