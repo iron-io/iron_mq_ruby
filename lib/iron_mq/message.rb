@@ -31,7 +31,7 @@ module IronMQ
     alias get_message! get!
 
     def touch!(options = {})
-      return if reservation_id.nil? || reservation_id.empty?
+      return unless reserved?
 
       opts = keywordise_keys(options).merge!(reservation_id: reservation_id)
       @client.call_api(:post, path('/touch'), opts).tap do |response|
@@ -42,7 +42,7 @@ module IronMQ
     alias touch_message! touch!
 
     def release!(options = {})
-      return if reservation_id.nil? || reservation_id.empty?
+      return unless reserved?
 
       opts = keywordise_keys(options).merge!(reservation_id: reservation_id)
       @client.call_api(:post, path('/release'), opts).tap do |response|
@@ -53,13 +53,12 @@ module IronMQ
     alias release_message! release!
 
     def delete!
-      r_id = reservation_id
       response =
-        if r_id.nil? || r_id.empty?
+        if reserved?
+          @client.call_api(:delete, path, reservation_id: reservation_id)
+        else
           @client.call_api(:delete, path, {},
                            'Content-Type' => 'application/json')
-        else
-          @client.call_api(:delete, path, reservation_id: r_id)
         end
       self.entity = to_h.update(reservation_id: nil)
       response
@@ -81,6 +80,10 @@ module IronMQ
       entity.select do |f, v|
         [:id, :reservation_id].include?(f) && v && !v.empty?
       end
+    end
+
+    def reserved?
+      !(reservation_id.nil? || reservation_id.empty?)
     end
 
     def ==(other)
