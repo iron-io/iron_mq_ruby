@@ -7,6 +7,7 @@ much as possible so if you see an option in the API docs, you can use it in the 
 **WARNING:** Version 6 is compatible only with IronMQ v3 API. All backward compatibility code is removed.
 
 [Important Notes](#important-notes).
+[Migration Cheatsheet](https://github.com/iron-io/iron_mq_ruby/blob/master/MIGRATION.md)
 
 ## Getting Started
 
