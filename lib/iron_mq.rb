@@ -1,5 +1,5 @@
-require File.expand_path('iron_mq/client', File.dirname(__FILE__))
-require File.expand_path('iron_mq/entity', File.dirname(__FILE__))
-require File.expand_path('iron_mq/queue', File.dirname(__FILE__))
-require File.expand_path('iron_mq/message', File.dirname(__FILE__))
-require File.expand_path('iron_mq/version', File.dirname(__FILE__))
+require 'iron_mq/version'
+require 'iron_mq/entity'
+require 'iron_mq/client'
+require 'iron_mq/queue'
+require 'iron_mq/message'
