@@ -399,6 +399,7 @@ class TestPushQueues < TestBase
       tries = MAX_TRIES
       while tries > 0
         sleep 0.5
+        tries -= 1
         subscribers = queue.get_message(m.id).subscribers
         LOG.debug subscribers
         assert_equal num_subscribers, subscribers.size
