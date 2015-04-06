@@ -1,13 +1,11 @@
 require 'yaml'
-
 require 'iron_core'
 
 module IronMQ
-
   class Client < IronCore::Client
-    AWS_US_EAST_HOST = 'mq-aws-us-east-1.iron.io'
+    AWS_US_EAST_HOST = 'mq-aws-us-east-1-1.iron.io'
 
-    attr_accessor :queue_name, :logger
+    attr_accessor :logger
 
     def initialize(options={})
       default_options = {
@@ -22,6 +20,8 @@ module IronMQ
       super('iron', 'mq', options, default_options,
             [:project_id, :token, :api_version])
 
+      fail ArgumentError, 'supported API version is 3+' if api_version < 3
+
       if @keystone.nil?
         if @token.nil?
           IronCore::Logger.error 'IronMQ', 'Token is not set', IronCore::Error
@@ -35,71 +35,52 @@ module IronMQ
     end
 
     def headers
-      super.merge({'Authorization' => "OAuth #{@token_provider.nil? ? @token : @token_provider.token}"})
+      auth = "OAuth #{@token_provider ? @token_provider.token : @token}"
+      super.merge('Authorization' => auth)
     end
 
     def base_url
       @base_url ||= "#{super}#{@api_version}/projects/#{@project_id}/queues"
     end
 
-    def queues_list(options = {})
-      is_raw = [options.delete(:raw),
-                options.delete('raw')].compact.first
-      response = parse_response(get('', options)) # GET base_url
-      # p response
-      # returns list of evaluated queues
-      if is_raw
-        response.map{ |q_info| ResponseBase.new(q_info) }
-      else
-        response['queues'].map { |q_info| Queue.new(self, q_info['name']) }
-      end
+    def call_api(method, *args)
+      parse_response send(method, *args)
     end
 
-    alias_method :list, :queues_list
-    alias_method :all, :queues_list
-
-    def queues_get(name)
-      IronMQ::Queue.new(self, name)
+    def make_queue(queue_name_or_info)
+      Queue.new(self, queue_name_or_info)
     end
 
-    alias_method :queue, :queues_get
+    alias queue make_queue
 
-    # Backward compatibility for
-    #   client.queues.get(name: 'my_queue')
-    #   client.queues.get('name' => 'my_queue')
-    def get(*args)
-      if args.size == 1 && args[0].is_a?(Hash)
-        queue_name = (args[0][:name] || args[0]['name']).to_s
-        queue_name.empty? ? super : queues_get(queue_name)
-      else
-        super
-      end
+    def create_queue(queue_name, options = {})
+      response = call_api(:put, "/#{escape(queue_name)}", queue: options)
+      make_queue response['queue']
     end
 
-    # Backward compatibility, adds possibility to call
-    #   client.queues.all
-    #   client.queues.list
-    #   client.queues.queue(name)
-    def queues
-      self
+    def get_queues(options = {})
+      response = call_api(:get, '', options)
+      response['queues'].map { |qi| make_queue(qi) }
     end
 
-    def create_queue(queue_name, options)
-      response = self.put("/#{CGI::escape(queue_name).gsub('+', '%20')}",
-                          {queue: options})
-      queue_hash = JSON.parse(response.body.to_s)
+    alias queues get_queues
 
-      ResponseBase.new(queue_hash['queue'])
+    def get_queue(queue_name)
+      response = call_api(:get, "/#{escape(queue_name)}")
+      make_queue response['queue']
     end
 
     def update_queue(queue_name, options)
-      response = self.patch("/#{CGI::escape(queue_name).gsub('+', '%20')}",
-                            {queue: options})
-      queue_hash = JSON.parse(response.body.to_s)
-
-      ResponseBase.new(queue_hash['queue'])
+      response = call_api(:patch, "/#{escape(queue_name)}", queue: options)
+      make_queue response['queue']
     end
 
-  end
+    def delete_queue(queue_name)
+      call_api(:delete, "/#{escape(queue_name)}")
+    end
 
+    def escape(str)
+      CGI::escape(str).gsub('+', '%20')
+    end
+  end
 end

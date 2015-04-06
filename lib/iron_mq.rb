@@ -1,7 +1,5 @@
-require File.expand_path('iron_mq/response', File.dirname(__FILE__))
-require File.expand_path('iron_mq/subscribers', File.dirname(__FILE__))
-require File.expand_path('iron_mq/alert', File.dirname(__FILE__))
-require File.expand_path('iron_mq/queues', File.dirname(__FILE__))
-require File.expand_path('iron_mq/messages', File.dirname(__FILE__))
-require File.expand_path('iron_mq/client', File.dirname(__FILE__))
-require File.expand_path('iron_mq/version', File.dirname(__FILE__))
+require 'iron_mq/version'
+require 'iron_mq/entity'
+require 'iron_mq/client'
+require 'iron_mq/queue'
+require 'iron_mq/message'

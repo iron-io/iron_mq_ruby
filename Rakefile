@@ -3,8 +3,8 @@ require 'rake'
 
 require 'rake/testtask'
 Rake::TestTask.new(:test) do |test|
-  test.libs << 'lib' << 'test'
-  test.pattern = 'test/**/test_*.rb'
+  test.libs << 'lib' << 'test/iron_mq'
+  test.pattern = 'test/iron_mq/test_*.rb'
   test.verbose = true
 end
 
