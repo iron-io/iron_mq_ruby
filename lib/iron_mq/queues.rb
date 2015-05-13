@@ -51,7 +51,12 @@ module IronMQ
     end
 
     def update(options={})
-      call_api_and_parse_response(:put, '', {queue: options})
+      res = call_api_and_parse_response(:put, '', {queue: options})
+
+      oldinfo = @raw ? @raw['queue'] : {}
+      @raw = res.raw
+      @raw['queue'].merge!('size' => oldinfo['size'], 'total_messages' => oldinfo['total_messages'])
+      res
     end
 
     alias_method :update_queue, :update
