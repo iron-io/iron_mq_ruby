@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     iron_mq (6.0.0.pre2)
-      iron_core (>= 0.5.1)
+      iron_core (>= 1.0.7)
 
 GEM
   remote: https://rubygems.org/
