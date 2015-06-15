@@ -289,7 +289,7 @@ module IronMQ
     alias poll poll_messages
 
     def ==(other)
-      return false unless other.respond_to?(:id) && other.respond_to?(:project_id)
+      return false unless other.respond_to?(:name) && other.respond_to?(:project_id)
       name == other.name && project_id == other.project_id
     end
 
