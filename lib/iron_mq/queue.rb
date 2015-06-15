@@ -289,6 +289,7 @@ module IronMQ
     alias poll poll_messages
 
     def ==(other)
+      return false if other.class == NilClass
       name == other.name && project_id == other.project_id
     end
 
