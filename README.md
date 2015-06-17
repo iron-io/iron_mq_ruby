@@ -1,12 +1,12 @@
 # Getting Started
 
 1. Install the gem
-```
+```ruby
 gem install iron_client
 ```
 
 2. Set up your credentials and host
-```
+```ruby
 IronClient::Swagger.configure do |c|
 	c.auth_token = AUTH_TOKEN # This is where you oauth token goes.
 	c.host = HOST # defaults to mq-aws-us-east-1-1.iron.io
@@ -31,9 +31,7 @@ response = IronClient::IronMQApi.post_messages(PROJECT_ID, QUEUE_NAME, messages)
 # Here are the ids of the messages we just posted
 id_list = response.ids
 
-
-# Let's grab some messages from our queue and reserve them
-
+# Let's grab a set of reserved messages
 res = IronClient::IronMQApi.reserve_messages(PROJECT_ID, QUEUE_NAME, {n: 5})
 messages = res.messages
 
