@@ -87,6 +87,7 @@ module IronMQ
     end
 
     def ==(other)
+      return false unless other.respond_to? :id
       id == other.id
     end
 

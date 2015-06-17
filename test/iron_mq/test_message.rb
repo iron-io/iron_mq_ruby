@@ -41,6 +41,17 @@ class TestMessage < Minitest::Test
     end
   end
 
+  def test_compare_messages
+    message = IronMQ::Message.new(@client, @qname, id: '6161270473550831393')
+    same_message = IronMQ::Message.new(@client, @qname, id: '6161270473550831393')
+    not_same_message = IronMQ::Message.new(@client, @qname, id: '6161270473550831394')
+    nil_message = nil
+
+    assert message == same_message
+    assert message != not_same_message
+    assert message != nil_message
+  end
+
   def test_touch
     bodies = make_messages_bodies(2)
     resp = @queue.post_messages(bodies)
