@@ -27,6 +27,16 @@ class TestQueue < Minitest::Test
     BASIC_FIELDS.each { |f| refute_nil queue.public_send(f) }
   end
 
+  def test_compare_queues
+    same_queue = @client.queue(@qname + '')
+    not_same_queue = @client.queue(@qname + '_suffix')
+    nil_queue = nil
+
+    assert @queue == same_queue
+    assert @queue != not_same_queue
+    assert @queue != nil_queue
+  end
+
   def test_create_queue
     @queue.create!
     assert_basic_fields_exist @queue
