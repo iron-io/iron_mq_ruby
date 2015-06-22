@@ -148,7 +148,7 @@ The default `timeout` is 60 seconds. Minimal `timeout` is 30 seconds.
 ```ruby
 msg.delete
 # or
-queue.delete(msg.id)
+queue.delete(message_id, reservation_id)
 ```
 
 Be sure to delete a message from the queue when you're done with it.
