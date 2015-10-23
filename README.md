@@ -186,7 +186,7 @@ response = queue.delete_queue # => #<IronMQ::ResponseBase:...>
 ```ruby
 response = queue.post("something helpful") # => #<IronMQ::ResponseBase:...>
 # or
-response = queue.post("with parameteres", :timeout => 300) # => #<IronMQ::ResponseBase:...>
+response = queue.post("with parameters", :timeout => 300) # => #<IronMQ::ResponseBase:...>
 
 message_id = response.id # => "5847899158098068288"
 status_message = response.msg # => "Messages put on queue."
