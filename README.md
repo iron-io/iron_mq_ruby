@@ -1,11 +1,8 @@
 IronMQ Ruby Client
 -------------
 
-The [full API documentation is here](http://dev.iron.io/mq/reference/api/) and this client tries to stick to the API as
+The [full API documentation is here](http://dev.iron.io/mq/3/reference/api/) and this client tries to stick to the API as
 much as possible so if you see an option in the API docs, you can use it in the methods below.
-
-**WARNING: Version 5+ has some small breaking changes. Version 4 ignored 404's on delete operations, Version
-5 will now raise exceptions.
 
 [Important Notes](#important-notes).
 
@@ -13,23 +10,8 @@ much as possible so if you see an option in the API docs, you can use it in the 
 
 1\. Install the gem:
 
-<!---
-
 ```ruby
 gem install iron_mq
-```
--->
-
-We don't have v3 in rubygems yet, but you can use Bundler to easily use this gem. Add this to your Gemfile:
-
-```ruby
-gem 'iron_mq', git: 'https://github.com/iron-io/iron_mq_ruby.git', branch: 'v3'
-```
-
-Then do a `bundle update` and when executing, be sure to use `bundle exec` like so:
-
-```
-bundle exec ruby script.rb
 ```
 
 2\. [Setup your Iron.io credentials](http://dev.iron.io/mq/reference/configuration/)
