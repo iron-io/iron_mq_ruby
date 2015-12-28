@@ -233,7 +233,7 @@ options = {
   }
 }
 
-ironmq.create_queue(options)
+ironmq.create_queue("my_queue_name", options)
 ```
 
 **Options:**
