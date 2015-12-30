@@ -4,7 +4,10 @@ IronMQ Ruby Client
 The [full API documentation is here](http://dev.iron.io/mq/3/reference/api/) and this client tries to stick to the API as
 much as possible so if you see an option in the API docs, you can use it in the methods below.
 
-[Important Notes](#important-notes).
+The versioning of this gem can be confusing when mapping it onto our API
+versions. For the v3 version of the MQ API you will want to use a version >= 6.x.x
+(this should be you). If you are still using version v2 of the MQ API
+(deprecated), you will need to stay at version <= 5.x.
 
 ## Getting Started
 
