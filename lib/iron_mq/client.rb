@@ -5,7 +5,7 @@ require 'iron_core'
 module IronMQ
 
   class Client < IronCore::Client
-    AWS_US_EAST_HOST = 'mq-aws-us-east-1.iron.io'
+    AWS_US_EAST_HOST = 'mq-aws-us-east-1-1.iron.io'
 
     attr_accessor :queue_name, :logger
 
