@@ -24,7 +24,7 @@ class TestBase < Minitest::Test
     puts "config=" + @config.inspect
 
     config = @config['iron']
-    @host = "#{config['host'] || "mq-aws-us-east-1.iron.io"}"
+    @host = "#{config['host'] || "mq-aws-us-east-1-1.iron.io"}"
 
     @client = IronMQ::Client.new(@config['iron'])
     puts "IronMQ::VERSION = #{IronMQ::VERSION}"
