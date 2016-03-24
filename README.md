@@ -75,7 +75,7 @@ client = IronMQ::Client.new(project_id: "57a7b7b35e8e331d45000001", keystone: ke
 ### Get Queues List
 
 ```ruby
-list_queues = ironmq.queues # => [#<IronMQ::Queue:...>, ...]
+list_queues = ironmq.queues.list # => [#<IronMQ::Queue:...>, ...]
 ```
 
 --
