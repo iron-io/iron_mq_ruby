@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    iron_mq (5.0.2)
+    iron_mq (6.0.3)
       iron_core (>= 0.5.1)
 
 GEM
@@ -48,7 +48,7 @@ DEPENDENCIES
   iron_mq!
   iron_worker_ng
   minitest (>= 5.0)
-  net-http-persistent
+  net-http-persistent (= 2.9.4)
   parallel
   quicky
   rake
