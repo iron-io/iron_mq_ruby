@@ -38,7 +38,7 @@ ironmq = IronMQ::Client.new(host: 'mq-rackspace-ord.iron.io',
                             token:'MY_TOKEN',
                             project_id: 'MY_PROJECT_ID')
 ```
-The default host is AWS us-east-1 zone (mq-aws-us-east-1.iron.io). [See all available hosts/clouds/regions](http://dev.iron.io/mq/reference/clouds/).
+The default host is AWS us-east-1 zone (mq-aws-us-east-1.iron.io). 
 
 ### Keystone Authentication
 
