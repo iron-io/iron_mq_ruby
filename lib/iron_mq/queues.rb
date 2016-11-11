@@ -14,6 +14,11 @@ module IronMQ
       load
     end
 
+    def info_only
+      # special endpoint that doesn't return size/total, don't save this to @raw
+      call_api_and_parse_response(:get, '/info', {}, false, true)['queue']
+    end
+
     # this is only run once if it hasn't been called before unless force is true, then it will force reload.
     def load
       reload if @raw.nil?
