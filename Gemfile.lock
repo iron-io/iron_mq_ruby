@@ -17,18 +17,18 @@ GEM
       bundler
       iron_core (>= 1.0.6)
       rubyzip (>= 1.0.0)
-    minitest (5.9.1)
+    minitest (5.11.3)
     net-http-persistent (2.9.4)
     netrc (0.11.0)
-    parallel (1.9.0)
-    power_assert (0.3.1)
+    parallel (1.12.1)
+    power_assert (1.1.1)
     quicky (0.4.0)
-    rake (11.3.0)
+    rake (12.3.1)
     rest (3.0.8)
       net-http-persistent (>= 2.9.1, < 3)
       netrc
-    rubyzip (1.2.0)
-    test-unit (3.2.1)
+    rubyzip (1.2.1)
+    test-unit (3.2.7)
       power_assert
     uber_config (1.1.3)
 
@@ -48,4 +48,4 @@ DEPENDENCIES
   uber_config
 
 BUNDLED WITH
-   1.13.3
+   1.16.1
