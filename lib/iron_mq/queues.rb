@@ -153,36 +153,6 @@ module IronMQ
       info['push']['subscribers'].map { |s| Subscriber.new(s, self, options) }
     end
 
-    def add_alerts(alerts)
-      call_api_and_parse_response(:patch, '', queue: {alerts: alerts})
-    end
-
-    def add_alert(alert)
-      add_alerts([alert])
-    end
-
-    def remove_alerts(alerts)
-      call_api_and_parse_response(:delete, '/alerts', alerts: alerts)
-    end
-
-    def remove_alert(alert)
-      remove_alerts([alert])
-    end
-
-    def replace_alerts(alerts)
-      call_api_and_parse_response(:put, '/alerts', alerts: alerts)
-    end
-
-    def clear_alerts
-      replace_alerts([])
-    end
-
-    def alerts
-      load
-      return nil unless @raw['alerts']
-      to_alerts(@raw['alerts'])
-    end
-
     def post_messages(payload, options = {})
       batch = false
 
@@ -291,10 +261,6 @@ module IronMQ
     end
 
     private
-
-    def to_alerts(alert_array)
-      alert_array.each_with_object([]) { |a, res| res << Alert.new(self, a) }
-    end
 
     def path(ext_path)
       "/#{CGI::escape(@name).gsub('+', '%20')}#{ext_path}"
