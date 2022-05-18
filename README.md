@@ -455,36 +455,6 @@ Polling will automatically delete the message at the end of the block.
 ```ruby
 queue.clear # => #<IronMQ::ResponseBase:...>
 ```
-### Add an Alert to a Queue
-
-[Check out our Blog Post on Queue Alerts](http://blog.iron.io).
-
-Alerts have now been incorporated into IronMQ. This feature lets developers control actions based on the activity within a queue. With alerts, actions can be triggered when the number of messages in a queue reach a certain threshold. These actions can include things like auto-scaling, failure detection, load-monitoring, and system health.
-
-You may add up to 5 alerts per queue.
-
-**Required parameters:**
-* `type`: required - "fixed" or "progressive". In case of alert's type set to "fixed", alert will be triggered when queue size pass value set by trigger parameter. When type set to "progressive", alert will be triggered when queue size pass any of values, calculated by trigger * N where N >= 1. For example, if trigger set to 10, alert will be triggered at queue sizes 10, 20, 30, etc.
-* `direction`: required - "asc" or "desc". Set direction in which queue size must be changed when pass trigger value. If direction set to "asc" queue size must growing to trigger alert. When direction is "desc" queue size must decreasing to trigger alert.
-* `trigger`: required. It will be used to calculate actual values of queue size when alert must be triggered. See type field description. Trigger must be integer value greater than 0.
-* `queue`: required. Name of queue which will be used to post alert messages.
-
-**Optional parameters:**
-
-* `snooze`: Number of seconds between alerts. If alert must be triggered but snooze is still active, alert will be omitted. Snooze must be integer value greater than or equal to 0.
-
-```ruby
-queue.add_alert({
-                  type: 'progressive',
-                  trigger: 10,
-                  queue: 'my_alert_queue',
-                  direction: 'asc',
-                  snooze: 0
-                })
-queue.clear
-# => #<IronMQ::ResponseBase:0x007f95d3b25438 @raw={"msg"=>"Updated"}, @code=200>
-```
-
 
 --
 
