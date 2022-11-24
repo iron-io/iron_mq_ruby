@@ -5,7 +5,7 @@ Dir.chdir(File.dirname(__FILE__) + '/..')
 
 Rake::TestTask.new do |t|
   if ENV['NEW_PROJECT']
-    require_relative '../lib/iron_worker_ng.rb'
+    require_relative '../lib/iron_worker.rb'
 
     client = IronWorkerNG::Client.new
     name = 'IWtest ' + Time.now.strftime('%b %-d %T')

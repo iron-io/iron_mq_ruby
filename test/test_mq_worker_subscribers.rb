@@ -5,7 +5,7 @@
 
 require File.expand_path('test_base.rb', File.dirname(__FILE__))
 require 'logger'
-require 'iron_worker_ng'
+require 'iron_worker'
 
 
 class TestWorkerSubscribers < TestBase
@@ -62,7 +62,7 @@ class TestWorkerSubscribers < TestBase
 
     wc = @config['iron']
     wc[:host] = wc[:worker_host] if wc[:worker_host]
-    iron_worker = IronWorkerNG::Client.new(wc)
+    iron_worker = IronWorker::Client.new(wc)
     tasks = iron_worker.tasks.list(:code_name=>code_name, :from_time=>(Time.now - 30).to_i)
     assert_equal 1, tasks.size
   end
