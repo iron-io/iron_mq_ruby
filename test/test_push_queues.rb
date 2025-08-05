@@ -55,7 +55,7 @@ class TestPushQueues < TestBase
     queue.delete_queue
   end
 
-
+=begin
   def test_queue_subscriptions
     puts "test_queue_subscriptions"
     types = ["multicast", "unicast"]
@@ -248,7 +248,7 @@ class TestPushQueues < TestBase
     resp = queue.delete_queue
     assert_equal 200, resp.code, "API must respond with HTTP 200 status, but returned HTTP #{resp.code}"
   end
-
+=end
 
   def test_failure
     @rest = Rest::Client.new

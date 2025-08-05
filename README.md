@@ -17,7 +17,7 @@ versions. For the v3 version of the MQ API you will want to use a version >= 6.x
 gem install iron_mq
 ```
 
-2\. [Setup your Iron.io credentials](http://dev.iron.io/mq/reference/configuration/)
+2\. [Setup your Iron.io credentials](http://dev.iron.io/mq/3/reference/configuration/)
 
 3\. Create an IronMQ client object:
 
@@ -31,44 +31,14 @@ Or pass in credentials if you don't want to use an iron.json file or set ENV var
 ironmq = IronMQ::Client.new(token: 'MY_TOKEN',
                             project_id: 'MY_PROJECT_ID')
 ```
-You can also change the host if you want to use a different cloud or region, for example, to use Rackspace ORD:
+You can also change the host if you want to use a different cloud or region, for example, to use eu-west-1:
 
 ```ruby
-ironmq = IronMQ::Client.new(host: 'mq-rackspace-ord.iron.io',
+ironmq = IronMQ::Client.new(host: 'mq-aws-eu-west-1-1.iron.io',
                             token:'MY_TOKEN',
                             project_id: 'MY_PROJECT_ID')
 ```
-The default host is AWS us-east-1 zone (mq-aws-us-east-1.iron.io). 
-
-### Keystone Authentication
-
-#### Via Configuration File
-
-Add `keystone` section to your iron.json file:
-
-```javascript
-{
-  "project_id": "57a7b7b35e8e331d45000001",
-  "keystone": {
-    "server": "http://your.keystone.host/v2.0/",
-    "tenant": "some-group",
-    "username": "name",
-    "password": "password"
-  }
-}
-```
-
-#### In Code
-
-```ruby
-keystone = {
-  server: "http://your.keystone.host/v2.0/",
-  tenant: "some-gorup",
-  username: "name",
-  password: "password"
-}
-client = IronMQ::Client.new(project_id: "57a7b7b35e8e331d45000001", keystone: keystone)
-```
+The default host is AWS us-east-1 zone (mq-aws-us-east-1-1.iron.io). 
 
 ## The Basics
 
@@ -610,18 +580,12 @@ end
 --
 
 
-## Important Notes
-
-* [Ruby 1.8 is no more supported](https://www.ruby-lang.org/en/news/2013/06/30/we-retire-1-8-7/).
-* Queue type is static now. Once it is set, it cannot be changed.
-
 ## Further Links
 
-* [IronMQ Overview](http://dev.iron.io/mq/)
-* [IronMQ REST/HTTP API](http://dev.iron.io/mq/reference/api/)
-* [Push Queues](http://dev.iron.io/mq/reference/push_queues/)
-* [Other Client Libraries](http://dev.iron.io/mq/libraries/)
-* [Live Chat, Support & Fun](http://get.iron.io/chat)
+* [IronMQ Overview](http://dev.iron.io/mq/3/)
+* [IronMQ REST/HTTP API](http://dev.iron.io/mq/3/reference/api/)
+* [Push Queues](http://dev.iron.io/mq/3/reference/push_queues/)
+* [Other Client Libraries](http://dev.iron.io/mq/3/libraries/)
 
 -------------
-© 2011 - 2013 Iron.io Inc. All Rights Reserved.
+© 2011 - 2025 Iron.io Inc. All Rights Reserved.
